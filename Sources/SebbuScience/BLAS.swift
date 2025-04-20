@@ -99,107 +99,107 @@ internal enum BLAS {
 extension BLAS {
     // Flot functions
     @usableFromInline
-    typealias CBLAS_SAXPY = @convention(c) (_ n: blasint, _ alpha: Float, _ x: UnsafePointer<Float>?, _ incx: blasint, _ y: UnsafeMutablePointer<Float>?, _ incy: blasint) -> Void
+    typealias CBLAS_SAXPY = @convention(c) (_ n: Int32, _ alpha: Float, _ x: UnsafePointer<Float>?, _ incx: Int32, _ y: UnsafeMutablePointer<Float>?, _ incy: Int32) -> Void
     @usableFromInline
-    typealias CBLAS_SSCAL = @convention(c) (_ N: blasint, _ alpha: Float, _ X: UnsafeMutablePointer<Float>?, _ incX: blasint) -> Void
+    typealias CBLAS_SSCAL = @convention(c) (_ N: Int32, _ alpha: Float, _ X: UnsafeMutablePointer<Float>?, _ incX: Int32) -> Void
     @usableFromInline
     typealias CBLAS_SGEMM = @convention(c) (_ Order: CBLAS_ORDER, _ TransA: CBLAS_TRANSPOSE, _ TransB: CBLAS_TRANSPOSE, 
-                                            _ M: blasint, _ N: blasint, _ K: blasint, 
+                                            _ M: Int32, _ N: Int32, _ K: Int32, 
                                             _ alpha: Float, _ A: UnsafePointer<Float>?, 
-                                            _ lda: blasint, _ B: UnsafePointer<Float>?, 
-                                            _ ldb: blasint, _ beta: Float, 
-                                            _ C: UnsafeMutablePointer<Float>?, _ ldc: blasint) -> Void
+                                            _ lda: Int32, _ B: UnsafePointer<Float>?, 
+                                            _ ldb: Int32, _ beta: Float, 
+                                            _ C: UnsafeMutablePointer<Float>?, _ ldc: Int32) -> Void
     @usableFromInline
     typealias CBLAS_SGEMV = @convention(c) (_ order: CBLAS_ORDER, _ trans: CBLAS_TRANSPOSE, 
-                                            _ m: blasint, _ n: blasint, 
+                                            _ m: Int32, _ n: Int32, 
                                             _ alpha: Float, _ a: UnsafePointer<Float>?, 
-                                            _ lda: blasint, _ x: UnsafePointer<Float>?, _ incx: blasint, 
-                                            _ beta: Float, _ y: UnsafeMutablePointer<Float>?, _ incy: blasint) -> Void
+                                            _ lda: Int32, _ x: UnsafePointer<Float>?, _ incx: Int32, 
+                                            _ beta: Float, _ y: UnsafeMutablePointer<Float>?, _ incy: Int32) -> Void
 
     @usableFromInline
-    typealias CBLAS_SDOT = @convention(c) (_ n: blasint, _ x: UnsafePointer<Float>?, _ incx: blasint, 
-                                           _ y: UnsafePointer<Float>?, _ incy: blasint) -> Float
+    typealias CBLAS_SDOT = @convention(c) (_ n: Int32, _ x: UnsafePointer<Float>?, _ incx: Int32, 
+                                           _ y: UnsafePointer<Float>?, _ incy: Int32) -> Float
 
     // Double functions
     @usableFromInline
-    typealias CBLAS_DAXPY = @convention(c) (_ n: blasint, _ alpha: Double, _ x: UnsafePointer<Double>?, _ incx: blasint, _ y: UnsafeMutablePointer<Double>?, _ incy: blasint) -> Void
+    typealias CBLAS_DAXPY = @convention(c) (_ n: Int32, _ alpha: Double, _ x: UnsafePointer<Double>?, _ incx: Int32, _ y: UnsafeMutablePointer<Double>?, _ incy: Int32) -> Void
     @usableFromInline
-    typealias CBLAS_DSCAL = @convention(c) (_ N: blasint, _ alpha: Double, _ X: UnsafeMutablePointer<Double>?, _ incX: blasint) -> Void
+    typealias CBLAS_DSCAL = @convention(c) (_ N: Int32, _ alpha: Double, _ X: UnsafeMutablePointer<Double>?, _ incX: Int32) -> Void
     @usableFromInline
     typealias CBLAS_DGEMM = @convention(c) (_ Order: CBLAS_ORDER, _ TransA: CBLAS_TRANSPOSE, _ TransB: CBLAS_TRANSPOSE, 
-                                            _ M: blasint, _ N: blasint, _ K: blasint, 
+                                            _ M: Int32, _ N: Int32, _ K: Int32, 
                                             _ alpha: Double, _ A: UnsafePointer<Double>?, 
-                                            _ lda: blasint, _ B: UnsafePointer<Double>?, 
-                                            _ ldb: blasint, _ beta: Double, 
-                                            _ C: UnsafeMutablePointer<Double>?, _ ldc: blasint) -> Void
+                                            _ lda: Int32, _ B: UnsafePointer<Double>?, 
+                                            _ ldb: Int32, _ beta: Double, 
+                                            _ C: UnsafeMutablePointer<Double>?, _ ldc: Int32) -> Void
     @usableFromInline
     typealias CBLAS_DGEMV = @convention(c) (_ order: CBLAS_ORDER, _ trans: CBLAS_TRANSPOSE, 
-                                            _ m: blasint, _ n: blasint, 
+                                            _ m: Int32, _ n: Int32, 
                                             _ alpha: Double, _ a: UnsafePointer<Double>?, 
-                                            _ lda: blasint, _ x: UnsafePointer<Double>?, _ incx: blasint, 
-                                            _ beta: Double, _ y: UnsafeMutablePointer<Double>?, _ incy: blasint) -> Void
+                                            _ lda: Int32, _ x: UnsafePointer<Double>?, _ incx: Int32, 
+                                            _ beta: Double, _ y: UnsafeMutablePointer<Double>?, _ incy: Int32) -> Void
 
     @usableFromInline
-    typealias CBLAS_DDOT = @convention(c) (_ n: blasint, _ x: UnsafePointer<Double>?, _ incx: blasint, 
-                                           _ y: UnsafePointer<Double>?, _ incy: blasint) -> Double
+    typealias CBLAS_DDOT = @convention(c) (_ n: Int32, _ x: UnsafePointer<Double>?, _ incx: Int32, 
+                                           _ y: UnsafePointer<Double>?, _ incy: Int32) -> Double
 
     // Single precision complex functions
     @usableFromInline
-    typealias CBLAS_CAXPY = @convention(c) (_ n: blasint, _ alpha: UnsafeRawPointer?, _ x: UnsafeRawPointer?, _ incx: blasint, _ y: UnsafeMutableRawPointer?, _ incy: blasint) -> Void
+    typealias CBLAS_CAXPY = @convention(c) (_ n: Int32, _ alpha: UnsafeRawPointer?, _ x: UnsafeRawPointer?, _ incx: Int32, _ y: UnsafeMutableRawPointer?, _ incy: Int32) -> Void
     @usableFromInline
-    typealias CBLAS_CSCAL = @convention(c) (_ N: blasint, _ alpha: UnsafeRawPointer?, _ X: UnsafeMutableRawPointer?, _ incX: blasint) -> Void
+    typealias CBLAS_CSCAL = @convention(c) (_ N: Int32, _ alpha: UnsafeRawPointer?, _ X: UnsafeMutableRawPointer?, _ incX: Int32) -> Void
     @usableFromInline
-    typealias CBLAS_CSSCAL = @convention(c) (_ N: blasint, _ alpha: Float, _ X: UnsafeMutableRawPointer?, _ incX: blasint) -> Void
+    typealias CBLAS_CSSCAL = @convention(c) (_ N: Int32, _ alpha: Float, _ X: UnsafeMutableRawPointer?, _ incX: Int32) -> Void
     @usableFromInline
     typealias CBLAS_CGEMM = @convention(c) (_ Order: CBLAS_ORDER, _ TransA: CBLAS_TRANSPOSE, _ TransB: CBLAS_TRANSPOSE, 
-                                            _ M: blasint, _ N: blasint, _ K: blasint, 
+                                            _ M: Int32, _ N: Int32, _ K: Int32, 
                                             _ alpha: UnsafeRawPointer?, _ A: UnsafeRawPointer?, 
-                                            _ lda: blasint, _ B: UnsafeRawPointer?, 
-                                            _ ldb: blasint, _ beta: UnsafeRawPointer?, 
-                                            _ C: UnsafeMutableRawPointer?, _ ldc: blasint) -> Void
+                                            _ lda: Int32, _ B: UnsafeRawPointer?, 
+                                            _ ldb: Int32, _ beta: UnsafeRawPointer?, 
+                                            _ C: UnsafeMutableRawPointer?, _ ldc: Int32) -> Void
 
     @usableFromInline
     typealias CBLAS_CGEMV = @convention(c) (_ order: CBLAS_ORDER, _ trans: CBLAS_TRANSPOSE, 
-                                            _ m: blasint, _ n: blasint, 
+                                            _ m: Int32, _ n: Int32, 
                                             _ alpha: UnsafeRawPointer?, _ a: UnsafeRawPointer?, 
-                                            _ lda: blasint, _ x: UnsafeRawPointer?, _ incx: blasint, 
-                                            _ beta: UnsafeRawPointer?, _ y: UnsafeMutableRawPointer?, _ incy: blasint) -> Void
+                                            _ lda: Int32, _ x: UnsafeRawPointer?, _ incx: Int32, 
+                                            _ beta: UnsafeRawPointer?, _ y: UnsafeMutableRawPointer?, _ incy: Int32) -> Void
 
     @usableFromInline
-    typealias CBLAS_CDOTU_SUB = @convention(c) (_ n: blasint, _ x: UnsafeRawPointer?, _ incx: blasint, 
-                                                _ y: UnsafeRawPointer?, _ incy: blasint, _ ret: UnsafeMutableRawPointer?) -> Void
+    typealias CBLAS_CDOTU_SUB = @convention(c) (_ n: Int32, _ x: UnsafeRawPointer?, _ incx: Int32, 
+                                                _ y: UnsafeRawPointer?, _ incy: Int32, _ ret: UnsafeMutableRawPointer?) -> Void
 
     @usableFromInline
-    typealias CBLAS_CDOTC_SUB = @convention(c) (_ n: blasint, _ x: UnsafeRawPointer?, _ incx: blasint, 
-                                                _ y: UnsafeRawPointer?, _ incy: blasint, _ ret: UnsafeMutableRawPointer?) -> Void
+    typealias CBLAS_CDOTC_SUB = @convention(c) (_ n: Int32, _ x: UnsafeRawPointer?, _ incx: Int32, 
+                                                _ y: UnsafeRawPointer?, _ incy: Int32, _ ret: UnsafeMutableRawPointer?) -> Void
 
     // Double precision complex functions
     @usableFromInline
-    typealias CBLAS_ZAXPY = @convention(c) (_ n: blasint, _ alpha: UnsafeRawPointer?, _ x: UnsafeRawPointer?, _ incx: blasint, _ y: UnsafeMutableRawPointer?, _ incy: blasint) -> Void
+    typealias CBLAS_ZAXPY = @convention(c) (_ n: Int32, _ alpha: UnsafeRawPointer?, _ x: UnsafeRawPointer?, _ incx: Int32, _ y: UnsafeMutableRawPointer?, _ incy: Int32) -> Void
     @usableFromInline
-    typealias CBLAS_ZSCAL = @convention(c) (_ N: blasint, _ alpha: UnsafeRawPointer?, _ X: UnsafeMutableRawPointer?, _ incX: blasint) -> Void
+    typealias CBLAS_ZSCAL = @convention(c) (_ N: Int32, _ alpha: UnsafeRawPointer?, _ X: UnsafeMutableRawPointer?, _ incX: Int32) -> Void
     @usableFromInline
-    typealias CBLAS_ZDSCAL = @convention(c) (_ N: blasint, _ alpha: Double, _ X: UnsafeMutableRawPointer?, _ incX: blasint) -> Void
+    typealias CBLAS_ZDSCAL = @convention(c) (_ N: Int32, _ alpha: Double, _ X: UnsafeMutableRawPointer?, _ incX: Int32) -> Void
     @usableFromInline
     typealias CBLAS_ZGEMM = @convention(c) (_ Order: CBLAS_ORDER, _ TransA: CBLAS_TRANSPOSE, _ TransB: CBLAS_TRANSPOSE, 
-                                            _ M: blasint, _ N: blasint, _ K: blasint, 
+                                            _ M: Int32, _ N: Int32, _ K: Int32, 
                                             _ alpha: UnsafeRawPointer?, _ A: UnsafeRawPointer?, 
-                                            _ lda: blasint, _ B: UnsafeRawPointer?, 
-                                            _ ldb: blasint, _ beta: UnsafeRawPointer?, 
-                                            _ C: UnsafeMutableRawPointer?, _ ldc: blasint) -> Void
+                                            _ lda: Int32, _ B: UnsafeRawPointer?, 
+                                            _ ldb: Int32, _ beta: UnsafeRawPointer?, 
+                                            _ C: UnsafeMutableRawPointer?, _ ldc: Int32) -> Void
 
     @usableFromInline
     typealias CBLAS_ZGEMV = @convention(c) (_ order: CBLAS_ORDER, _ trans: CBLAS_TRANSPOSE, 
-                                            _ m: blasint, _ n: blasint, 
+                                            _ m: Int32, _ n: Int32, 
                                             _ alpha: UnsafeRawPointer?, _ a: UnsafeRawPointer?, 
-                                            _ lda: blasint, _ x: UnsafeRawPointer?, _ incx: blasint, 
-                                            _ beta: UnsafeRawPointer?, _ y: UnsafeMutableRawPointer?, _ incy: blasint) -> Void
+                                            _ lda: Int32, _ x: UnsafeRawPointer?, _ incx: Int32, 
+                                            _ beta: UnsafeRawPointer?, _ y: UnsafeMutableRawPointer?, _ incy: Int32) -> Void
 
     @usableFromInline
-    typealias CBLAS_ZDOTU_SUB = @convention(c) (_ n: blasint, _ x: UnsafeRawPointer?, _ incx: blasint, 
-                                                _ y: UnsafeRawPointer?, _ incy: blasint, _ ret: UnsafeMutableRawPointer?) -> Void
+    typealias CBLAS_ZDOTU_SUB = @convention(c) (_ n: Int32, _ x: UnsafeRawPointer?, _ incx: Int32, 
+                                                _ y: UnsafeRawPointer?, _ incy: Int32, _ ret: UnsafeMutableRawPointer?) -> Void
 
     @usableFromInline
-    typealias CBLAS_ZDOTC_SUB = @convention(c) (_ n: blasint, _ x: UnsafeRawPointer?, _ incx: blasint, 
-                                                _ y: UnsafeRawPointer?, _ incy: blasint, _ ret: UnsafeMutableRawPointer?) -> Void
+    typealias CBLAS_ZDOTC_SUB = @convention(c) (_ n: Int32, _ x: UnsafeRawPointer?, _ incx: Int32, 
+                                                _ y: UnsafeRawPointer?, _ incy: Int32, _ ret: UnsafeMutableRawPointer?) -> Void
 }
