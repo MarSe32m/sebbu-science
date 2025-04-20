@@ -29,8 +29,7 @@ let package = Package(
             name: "COpenBLAS"
         ),
         .target(
-            name: "CLAPACK", 
-            cSettings: [.define("HAVE_LAPACK_CONFIG_H", to: "1")]
+            name: "CLAPACK"
         ),
         .target(
             name: "SebbuScience",
