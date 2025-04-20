@@ -4,7 +4,9 @@
 /*
 *  Turn on HAVE_LAPACK_CONFIG_H to redefine C-LAPACK datatypes
 */
+#ifdef HAVE_LAPACK_CONFIG_H
 #include "lapacke_config.h"
+#endif
 
 #include "lapacke_mangling.h"
 
