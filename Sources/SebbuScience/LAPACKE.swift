@@ -53,6 +53,10 @@ internal enum LAPACKE {
     static let sgeev: LAPACKE_SGEEV? = load(name: "LAPACKE_sgeev")
     @usableFromInline
     static let sgesv: LAPACKE_SGESV? = load(name: "LAPACKE_sgesv")
+    @usableFromInline
+    static let sgetri: LAPACKE_SGETRI? = load(name: "LAPACKE_sgetri")
+    @usableFromInline
+    static let sgetrf: LAPACKE_SGETRF? = load(name: "LAPACKE_sgetrf")
 
     // Double functions
     @usableFromInline
@@ -61,6 +65,10 @@ internal enum LAPACKE {
     static let dgeev: LAPACKE_DGEEV? = load(name: "LAPACKE_dgeev")
     @usableFromInline
     static let dgesv: LAPACKE_DGESV? = load(name: "LAPACKE_dgesv")
+    @usableFromInline
+    static let dgetri: LAPACKE_DGETRI? = load(name: "LAPACKE_dgetri")
+    @usableFromInline
+    static let dgetrf: LAPACKE_DGETRF? = load(name: "LAPACKE_dgetrf")
 
     // Single precision complex functions
     @usableFromInline
@@ -69,6 +77,10 @@ internal enum LAPACKE {
     static let cgeev: LAPACKE_CGEEV? = load(name: "LAPACKE_cgeev")
     @usableFromInline
     static let cgesv: LAPACKE_CGESV? = load(name: "LAPACKE_cgesv")
+    @usableFromInline
+    static let cgetri: LAPACKE_CGETRI? = load(name: "LAPACKE_cgetri")
+    @usableFromInline
+    static let cgetrf: LAPACKE_CGETRF? = load(name: "LAPACKE_cgetrf")
 
     // Double precision complex functions
     @usableFromInline
@@ -77,15 +89,14 @@ internal enum LAPACKE {
     static let zgeev: LAPACKE_ZGEEV? = load(name: "LAPACKE_zgeev")
     @usableFromInline
     static let zgesv: LAPACKE_ZGESV? = load(name: "LAPACKE_zgesv")
+    @usableFromInline
+    static let zgetri: LAPACKE_ZGETRI? = load(name: "LAPACKE_zgetri")
+    @usableFromInline
+    static let zgetrf: LAPACKE_ZGETRF? = load(name: "LAPACKE_zgetrf")
     #endif
 }
-
 ///MARK: Typealiases
 extension LAPACKE {
-    //TODO: sgetri, sgetrf
-    //TODO: dgetri, dgetrf
-    //TODO: cgetri, cgetrf
-    //TODO: zgetri, zgetrf
     #if os(Windows) || os(Linux)
     // Float functions
     @usableFromInline
@@ -105,6 +116,16 @@ extension LAPACKE {
                                               _ a: UnsafeMutablePointer<Float>?, _ lda: Int32, _ ipiv: UnsafeMutablePointer<Int32>?, 
                                               _ b: UnsafeMutablePointer<Float>?, _ ldb: Int32) -> Int32
 
+    @usableFromInline
+    typealias LAPACKE_SGETRI = @convention(c) (_ matrix_layout: Int32, _ n: Int32, 
+                                               _ a: UnsafeMutablePointer<Float>?, _ lda: Int32, 
+                                               _ ipiv: UnsafePointer<Int32>?) -> Int32
+
+    @usableFromInline
+    typealias LAPACKE_SGETRF = @convention(c) (_ matrix_layout: Int32, _ m: Int32, _ n: Int32, 
+                                               _ a: UnsafeMutablePointer<Float>?, _ lda: Int32, 
+                                               _ ipiv: UnsafeMutablePointer<Int32>?) -> Int32
+
     // Double functions
     @usableFromInline
     typealias LAPACKE_DSYEVD = @convention(c) (_ matrix_layout: Int32, _ jobz: CChar, _ uplo: CChar,
@@ -123,6 +144,16 @@ extension LAPACKE {
                                               _ a: UnsafeMutablePointer<Double>?, _ lda: Int32, _ ipiv: UnsafeMutablePointer<Int32>?, 
                                               _ b: UnsafeMutablePointer<Double>?, _ ldb: Int32) -> Int32
 
+    @usableFromInline
+    typealias LAPACKE_DGETRI = @convention(c) (_ matrix_layout: Int32, _ n: Int32, 
+                                               _ a: UnsafeMutablePointer<Double>?, _ lda: Int32, 
+                                               _ ipiv: UnsafePointer<Int32>?) -> Int32
+
+    @usableFromInline
+    typealias LAPACKE_DGETRF = @convention(c) (_ matrix_layout: Int32, _ m: Int32, _ n: Int32, 
+                                               _ a: UnsafeMutablePointer<Double>?, _ lda: Int32, 
+                                               _ ipiv: UnsafeMutablePointer<Int32>?) -> Int32
+
     // Single precision complex functions
     @usableFromInline
     typealias LAPACKE_CHEEVD = @convention(c) (_ matrix_layout: Int32, _ jobz: CChar, _ uplo: CChar, 
@@ -139,6 +170,16 @@ extension LAPACKE {
     typealias LAPACKE_CGESV = @convention(c) (_ matrix_layout: Int32, _ n: Int32, _ nrhs: Int32, 
                                               _ a: UnsafeMutableRawPointer?, _ lda: Int32, _ ipiv: UnsafeMutablePointer<Int32>?,
                                                _ b: UnsafeMutableRawPointer?, _ ldb: Int32) -> Int32
+
+    @usableFromInline
+    typealias LAPACKE_CGETRI = @convention(c) (_ matrix_layout: Int32, _ n: Int32, 
+                                               _ a: UnsafeMutableRawPointer?, _ lda: Int32, 
+                                               _ ipiv: UnsafePointer<Int32>?) -> Int32
+    
+    @usableFromInline
+    typealias LAPACKE_CGETRF = @convention(c) (_ matrix_layout: Int32, _ m: Int32, _ n: Int32, 
+                                               _ a: UnsafeMutableRawPointer?, _ lda: Int32,
+                                               _ ipiv: UnsafeMutablePointer<Int32>?) -> Int32
 
     // Double precision complex functions
     @usableFromInline
@@ -157,39 +198,15 @@ extension LAPACKE {
                                               _ a: UnsafeMutableRawPointer?, _ lda: Int32, _ ipiv: UnsafeMutablePointer<Int32>?,
                                                _ b: UnsafeMutableRawPointer?, _ ldb: Int32) -> Int32
 
-// WITH COMPLEX<> DEFINITIONS
-//    // Single precision complex functions
-//    @usableFromInline
-//    typealias LAPACKE_CHEEVD = @convention(c) (_ matrix_layout: Int32, _ jobz: CChar, _ uplo: CChar, 
-//                                               _ n: Int32, _ a: UnsafeMutablePointer<Complex<Float>>?, 
-//                                               _ lda: Int32, _ w: UnsafeMutablePointer<Float>?) -> Int32
-//
-//    @usableFromInline
-//    typealias LAPACKE_CGEEV = @convention(c) (_ matrix_layout: Int32, _ jobvl: CChar, _ jobvr: CChar, 
-//                                              _ n: Int32, _ a: UnsafeMutablePointer<Complex<Float>>?, _ lda: Int32, 
-//                                              _ w: UnsafeMutablePointer<Complex<Float>>?, _ vl: UnsafeMutablePointer<Complex<Float>>?, 
-//                                              _ ldvl: Int32, _ vr: UnsafeMutablePointer<Complex<Float>>?, _ ldvr: Int32) -> Int32
-//
-//    @usableFromInline
-//    typealias LAPACKE_CGESV = @convention(c) (_ matrix_layout: Int32, _ n: Int32, _ nrhs: Int32, 
-//                                              _ a: UnsafeMutablePointer<Complex<Float>>?, _ lda: Int32, _ ipiv: UnsafeMutablePointer<Int32>?,
-//                                               _ b: UnsafeMutablePointer<Complex<Float>>?, _ ldb: Int32) -> Int32
-//
-//    // Double precision complex functions
-//    @usableFromInline
-//    typealias LAPACKE_ZHEEVD = @convention(c) (_ matrix_layout: Int32, _ jobz: CChar, _ uplo: CChar, 
-//                                               _ n: Int32, _ a: UnsafeMutablePointer<Complex<Double>>?, 
-//                                               _ lda: Int32, _ w: UnsafeMutablePointer<Double>?) -> Int32
-//
-//    @usableFromInline
-//    typealias LAPACKE_ZGEEV = @convention(c) (_ matrix_layout: Int32, _ jobvl: CChar, _ jobvr: CChar, 
-//                                              _ n: Int32, _ a: UnsafeMutablePointer<Complex<Double>>?, _ lda: Int32, 
-//                                              _ w: UnsafeMutablePointer<Complex<Double>>?, _ vl: UnsafeMutablePointer<Complex<Double>>?, 
-//                                              _ ldvl: Int32, _ vr: UnsafeMutablePointer<Complex<Double>>?, _ ldvr: Int32) -> Int32
-//
-//    @usableFromInline
-//    typealias LAPACKE_ZGESV = @convention(c) (_ matrix_layout: Int32, _ n: Int32, _ nrhs: Int32, 
-//                                              _ a: UnsafeMutablePointer<Complex<Double>>?, _ lda: Int32, _ ipiv: UnsafeMutablePointer<Int32>?,
-//                                               _ b: UnsafeMutablePointer<Complex<Double>>?, _ ldb: Int32) -> Int32
+    @usableFromInline
+    typealias LAPACKE_ZGETRI = @convention(c) (_ matrix_layout: Int32, _ n: Int32, 
+                                               _ a: UnsafeMutableRawPointer?, _ lda: Int32, 
+                                               _ ipiv: UnsafePointer<Int32>?) -> Int32
+    
+    @usableFromInline
+    typealias LAPACKE_ZGETRF = @convention(c) (_ matrix_layout: Int32, _ m: Int32, _ n: Int32, 
+                                               _ a: UnsafeMutableRawPointer?, _ lda: Int32,
+                                               _ ipiv: UnsafeMutablePointer<Int32>?) -> Int32
+
     #endif
 }

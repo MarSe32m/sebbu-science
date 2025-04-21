@@ -25,6 +25,19 @@ public extension Matrix<Float> {
     /// Thus you should store the inverse if you need it later again.
     var inverse: Self? {
         #if os(Windows) || os(Linux)
+        if let LAPACKE_sgetrf = LAPACKE.sgetrf, 
+           let LAPACKE_sgetri = LAPACKE.sgetri {
+            if rows != columns { return nil }
+            var a = elements
+            var m = rows
+            var lda = columns
+            var ipiv: [Int32] = .init(repeating: .zero, count: m)
+            var info = LAPACKE_sgetrf(LAPACK_ROW_MAJOR, numericCast(m), numericCast(m), &a, numericCast(lda), &ipiv)
+            if info != 0 { return nil }
+            info = LAPACKE_sgetri(LAPACK_ROW_MAJOR, numericCast(m), &a, numericCast(lda), ipiv)
+            if info != 0 { return nil }
+            return .init(elements: a, rows: rows, columns: columns)
+        }
         fatalError("TODO: Not yet implemented")
         #elseif os(macOS)
         if rows != columns { return nil }
@@ -367,6 +380,7 @@ public extension MatrixOperations {
             }
             return (eigenValues, eigenVectors)
         }
+        fatalError("TODO: Default implementation not yet implemented")
         #elseif os(macOS)
         precondition(A.rows == A.columns)
         var a: [Float] = []
@@ -426,6 +440,7 @@ public extension MatrixOperations {
             if info != 0 { throw MatrixOperationError.info(Int(info)) }
             return eigenValues
         }
+        fatalError("TODO: Default implementation not yet implemented")
         #elseif os(macOS)
         precondition(A.rows == A.columns)
         var a: [Float] = []
@@ -504,6 +519,7 @@ public extension MatrixOperations {
             }
             return (eigenValues, leftEigenVectors, rightEigenVectors)
         }
+        fatalError("TODO: Default implementation not yet implemented")
         #elseif os(macOS)
         precondition(A.rows == A.columns)
         var a: [Float] = []
@@ -595,6 +611,7 @@ public extension MatrixOperations {
             }
             return (eigenValues, leftEigenVectors)
         }
+        fatalError("TODO: Default implementation not yet implemented")
         #elseif os(macOS)
         precondition(A.rows == A.columns)
         var a: [Float] = []
@@ -682,6 +699,7 @@ public extension MatrixOperations {
             }
             return (eigenValues, rightEigenVectors)
         }
+        fatalError("TODO: Default implementation not yet implemented")
         #elseif os(macOS)
         precondition(A.rows == A.columns)
         var a: [Float] = []
@@ -751,6 +769,7 @@ public extension MatrixOperations {
             let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Float>($0, $1) })
             return eigenValues
         }
+        fatalError("TODO: Default implementation not yet implemented")
         #elseif os(macOS)
         precondition(A.rows == A.columns)
         var a: [Float] = []
@@ -797,6 +816,7 @@ public extension MatrixOperations {
             if info != 0 { throw MatrixOperationError.info(Int(info))}
             return Vector(_b)
         }
+        fatalError("TODO: Default implementation not yet implemented")
         #elseif os(macOS)
         precondition(A.rows == A.columns)
         var a: [Float] = []

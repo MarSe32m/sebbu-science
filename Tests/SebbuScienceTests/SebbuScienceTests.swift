@@ -41,15 +41,23 @@ struct SebbuScienceTests {
         #expect(LAPACKE.ssyevd != nil)
         #expect(LAPACKE.sgeev != nil)
         #expect(LAPACKE.sgesv != nil)
+        #expect(LAPACKE.sgetri != nil)
+        #expect(LAPACKE.sgetrf != nil)
         #expect(LAPACKE.dsyevd != nil)
         #expect(LAPACKE.dgeev != nil)
         #expect(LAPACKE.dgesv != nil)
+        #expect(LAPACKE.dgetri != nil)
+        #expect(LAPACKE.dgetrf != nil)
         #expect(LAPACKE.cheevd != nil)
         #expect(LAPACKE.cgeev != nil)
         #expect(LAPACKE.cgesv != nil)
+        #expect(LAPACKE.cgetri != nil)
+        #expect(LAPACKE.cgetrf != nil)
         #expect(LAPACKE.zheevd != nil)
         #expect(LAPACKE.zgeev != nil)
         #expect(LAPACKE.zgesv != nil)
+        #expect(LAPACKE.zgetri != nil)
+        #expect(LAPACKE.zgetrf != nil)
         #endif
     }
 }
