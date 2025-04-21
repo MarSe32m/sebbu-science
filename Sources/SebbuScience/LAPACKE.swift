@@ -1,7 +1,5 @@
-#if canImport(COpenBLAS)
-@_exported import CLAPACK
-#elseif canImport(Accelerate)
-import Accelerate
+#if canImport(CLAPACK)
+import CLAPACK
 #endif
 
 #if canImport(WinSDK)
@@ -46,50 +44,49 @@ internal enum LAPACKE {
         return nil
     }
     #endif
-
+    
+    #if os(Windows) || os(Linux)
     // Float functions
     @usableFromInline
     static let ssyevd: LAPACKE_SSYEVD? = load(name: "LAPACKE_ssyevd")
-
     @usableFromInline
     static let sgeev: LAPACKE_SGEEV? = load(name: "LAPACKE_sgeev")
-
     @usableFromInline
     static let sgesv: LAPACKE_SGESV? = load(name: "LAPACKE_sgesv")
 
     // Double functions
     @usableFromInline
     static let dsyevd: LAPACKE_DSYEVD? = load(name: "LAPACKE_dsyevd")
-
     @usableFromInline
     static let dgeev: LAPACKE_DGEEV? = load(name: "LAPACKE_dgeev")
-
     @usableFromInline
     static let dgesv: LAPACKE_DGESV? = load(name: "LAPACKE_dgesv")
 
     // Single precision complex functions
     @usableFromInline
     static let cheevd: LAPACKE_CHEEVD? = load(name: "LAPACKE_cheevd")
-
     @usableFromInline
     static let cgeev: LAPACKE_CGEEV? = load(name: "LAPACKE_cgeev")
-
     @usableFromInline
     static let cgesv: LAPACKE_CGESV? = load(name: "LAPACKE_cgesv")
 
     // Double precision complex functions
     @usableFromInline
     static let zheevd: LAPACKE_ZHEEVD? = load(name: "LAPACKE_zheevd")
-
     @usableFromInline
     static let zgeev: LAPACKE_ZGEEV? = load(name: "LAPACKE_zgeev")
-
     @usableFromInline
     static let zgesv: LAPACKE_ZGESV? = load(name: "LAPACKE_zgesv")
+    #endif
 }
 
 ///MARK: Typealiases
 extension LAPACKE {
+    //TODO: sgetri, sgetrf
+    //TODO: dgetri, dgetrf
+    //TODO: cgetri, cgetrf
+    //TODO: zgetri, zgetrf
+    #if os(Windows) || os(Linux)
     // Float functions
     @usableFromInline
     typealias LAPACKE_SSYEVD = @convention(c) (_ matrix_layout: Int32, _ jobz: CChar, _ uplo: CChar,
@@ -194,5 +191,5 @@ extension LAPACKE {
 //    typealias LAPACKE_ZGESV = @convention(c) (_ matrix_layout: Int32, _ n: Int32, _ nrhs: Int32, 
 //                                              _ a: UnsafeMutablePointer<Complex<Double>>?, _ lda: Int32, _ ipiv: UnsafeMutablePointer<Int32>?,
 //                                               _ b: UnsafeMutablePointer<Complex<Double>>?, _ ldb: Int32) -> Int32
-
+    #endif
 }

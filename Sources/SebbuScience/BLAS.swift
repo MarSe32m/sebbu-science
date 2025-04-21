@@ -1,7 +1,5 @@
 #if canImport(COpenBLAS)
-@_exported import COpenBLAS
-#elseif canImport(Accelerate)
-import Accelerate
+import COpenBLAS
 #endif
 
 #if canImport(WinSDK)
@@ -32,12 +30,15 @@ internal enum BLAS {
         return nil
     }()
     #endif
-
+    
+    #if os(Windows) || os(Linux)
     @inlinable
     internal static func load<T>(name: String, as type: T.Type = T.self) -> T? {
         loadSymbol(name:name, handle: handle)
     }
+    #endif
     
+    #if os(Windows) || os(Linux)
     // Float functions
     @usableFromInline
     internal static let sgemm: CBLAS_SGEMM? = load(name: "cblas_sgemm")
@@ -93,10 +94,12 @@ internal enum BLAS {
     internal static let zdotu_sub: CBLAS_ZDOTU_SUB? = load(name: "cblas_zdotu_sub")
     @usableFromInline
     internal static let zdotc_sub: CBLAS_ZDOTC_SUB? = load(name: "cblas_zdotc_sub")
+    #endif
 }
 
 ///MARK: Typealiases
 extension BLAS {
+    #if os(Windows) || os(Linux)
     // Flot functions
     @usableFromInline
     typealias CBLAS_SAXPY = @convention(c) (_ n: Int32, _ alpha: Float, _ x: UnsafePointer<Float>?, _ incx: Int32, _ y: UnsafeMutablePointer<Float>?, _ incy: Int32) -> Void
@@ -202,4 +205,5 @@ extension BLAS {
     @usableFromInline
     typealias CBLAS_ZDOTC_SUB = @convention(c) (_ n: Int32, _ x: UnsafeRawPointer?, _ incx: Int32, 
                                                 _ y: UnsafeRawPointer?, _ incy: Int32, _ ret: UnsafeMutableRawPointer?) -> Void
+    #endif
 }

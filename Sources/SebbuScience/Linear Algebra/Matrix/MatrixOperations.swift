@@ -25,7 +25,7 @@ public enum MatrixOperations {
         // Store the absolute values of the singular values
         let values = singularValues.enumerated().map { ($0.offset, abs($0.element)) }
         let complexEigenVectors = eigenVectors.map {
-            $0.map { value in
+            $0.components.map { value in
                 Complex(value)
             }
         }

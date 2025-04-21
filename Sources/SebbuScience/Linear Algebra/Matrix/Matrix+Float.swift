@@ -11,11 +11,58 @@ import COpenBLAS
 #if canImport(CLAPACK)
 import CLAPACK
 #endif
+
+#if canImport(Accelerate)
+import Accelerate
+#endif
+
 import RealModule
 import ComplexModule
 
 public extension Matrix<Float> {
-    var inverse: Self { fatalError("TODO: Not yet implemented") }
+    /// The inverse of the matrix, if invertible.
+    /// - Note: This operation is very expensive and will be calculated each time this variable is accessed.
+    /// Thus you should store the inverse if you need it later again.
+    var inverse: Self? {
+        #if os(Windows) || os(Linux)
+        fatalError("TODO: Not yet implemented")
+        #elseif os(macOS)
+        if rows != columns { return nil }
+        var a: [Float] = []
+        a.reserveCapacity(elements.count)
+        for j in 0..<columns {
+            for i in 0..<rows {
+                a.append(self[i, j])
+            }
+        }
+        var m = rows
+        var n = columns
+        var lda = rows
+        var ipiv: [Int] = .init(repeating: .zero, count: Swift.min(m, n))
+        var info = 0
+        sgetrf_(&m, &n, &a, &lda, &ipiv, &info)
+        if info != 0 { return nil }
+        
+        var work: [Float] = [.zero]
+        var lwork = -1
+        
+        sgetri_(&n, &a, &lda, &ipiv, &work, &lwork, &info)
+        if info != 0 { return nil }
+        lwork = Int(work[0])
+        work = .init(repeating: .zero, count: lwork)
+        sgetri_(&n, &a, &lda, &ipiv, &work, &lwork, &info)
+        if info != 0 { return nil }
+        return .init(rows: rows, columns: columns) { buffer in
+            for i in 0..<rows {
+                for j in 0..<columns {
+                    buffer[i * n + j] = a[j * n + i]
+                }
+            }
+        }
+        #else
+        fatalError("TODO: Not yet implemented")
+        #endif
+    }
     
     @inlinable
     var frobeniusNorm: Float {
@@ -42,6 +89,7 @@ public extension Matrix<Float> {
     @inline(__always)
     @inlinable
     mutating func add(_ other: Self, scaling: T) {
+        #if os(Windows) || os(Linux)
         precondition(self.rows == other.rows)
         precondition(self.columns == other.columns)
         if let cblas_saxpy = BLAS.saxpy {
@@ -49,6 +97,13 @@ public extension Matrix<Float> {
         } else {
             _add(other, scaling: scaling)
         }
+        #elseif os(macOS)
+        precondition(self.rows == other.rows)
+        precondition(self.columns == other.columns)
+        cblas_saxpy(elements.count, scaling, other.elements, 1, &elements, 1)
+        #else
+        _add(other, scaling: scaling)
+        #endif
     }
     
     @inline(__always)
@@ -109,11 +164,17 @@ public extension Matrix<Float> {
     @inlinable
     @_transparent
     mutating func multiply(by: T) {
+        #if os(Windows) || os(Linux)
         if let cblas_sscal = BLAS.sscal {
             cblas_sscal(numericCast(elements.count), by, &elements, 1)
         } else {
             _multiply(by: by)
         }
+        #elseif os(macOS)
+        cblas_sscal(elements.count, by, &elements, 1)
+        #else
+        _multiply(by: by)
+#endif
     }
     
     //MARK: Division
@@ -172,6 +233,7 @@ public extension Matrix<Float> {
     
     @inlinable
     func dot(_ other: Self, multiplied: T, into: inout Self) {
+        #if os(Windows) || os(Linux)
         if let cblas_sgemm = BLAS.sgemm {
             precondition(columns == other.rows, "The matrices are incompatible for multiplication")
             precondition(into.rows == self.rows, "The resulting matrix has incompatible rows")
@@ -191,6 +253,30 @@ public extension Matrix<Float> {
         } else {
             _dot(other, multiplied: multiplied, into: &into)
         }
+        #elseif os(macOS)
+        precondition(columns == other.rows, "The matrices are incompatible for multiplication")
+        precondition(into.rows == self.rows, "The resulting matrix has incompatible rows")
+        precondition(into.columns == other.columns, "The resulting matrix has incompatible columns")
+        let lda = columns
+        let ldb = other.columns
+        let ldc = into.columns
+        cblas_sgemm(CblasRowMajor,
+                    CblasNoTrans,
+                    CblasNoTrans,
+                    rows,
+                    other.columns,
+                    columns,
+                    multiplied,
+                    elements,
+                    lda,
+                    other.elements,
+                    ldb,
+                    .zero,
+                    &into.elements,
+                    ldc)
+        #else
+        _dot(other, multiplied: multiplied, into: &into)
+#endif
     }
     
     @inlinable
@@ -214,6 +300,7 @@ public extension Matrix<Float> {
     
     @inlinable
     func dot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
+        #if os(Windows) || os(Linux)
         if let cblas_sgemv = BLAS.sgemv {
             precondition(columns == into.count)
             precondition(rows == vector.count)
@@ -230,6 +317,25 @@ public extension Matrix<Float> {
         } else {
             _dot(vector, multiplied: multiplied, into: &into)
         }
+        #elseif os(macOS)
+        precondition(columns == into.count)
+        precondition(rows == vector.count)
+        let lda = columns
+        cblas_sgemv(CblasRowMajor,
+                    CblasNoTrans,
+                    rows,
+                    columns,
+                    multiplied,
+                    elements,
+                    lda,
+                    vector.components,
+                    1,
+                    .zero,
+                    &into.components,
+                    1)
+        #else
+        _dot(vector, multiplied: multiplied, into: &into)
+#endif
     }
 }
 
@@ -242,7 +348,8 @@ public extension MatrixOperations {
     /// - Returns: A tuple containing the eigenvalues and eigenvectors
     //TODO: TESTS!
     @inlinable
-    static func diagonalizeSymmetric(_ A: Matrix<Float>) throws -> (eigenValues: [Float], eigenVectors: [[Float]]) {
+    static func diagonalizeSymmetric(_ A: Matrix<Float>) throws -> (eigenValues: [Float], eigenVectors: [Vector<Float>]) {
+#if os(Windows) || os(Linux)
         if let LAPACKE_ssyevd = LAPACKE.ssyevd {
             let N = A.rows
             let lda = N
@@ -252,7 +359,7 @@ public extension MatrixOperations {
             let U = Int8(bitPattern: UInt8(ascii: "U"))
             let info = LAPACKE_ssyevd(LAPACK_COL_MAJOR, V, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
             if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            var eigenVectors = [[Float]](repeating: .init(repeating: .zero, count: N), count: N)
+            var eigenVectors = [Vector<Float>](repeating: .zero(N), count: N)
             for i in 0..<N {
                 for j in 0..<N {
                     eigenVectors[i][j] = _A[N * i + j]
@@ -260,7 +367,42 @@ public extension MatrixOperations {
             }
             return (eigenValues, eigenVectors)
         }
-        fatalError("TODO: Default implementation not implemented yet")
+        #elseif os(macOS)
+        precondition(A.rows == A.columns)
+        var a: [Float] = []
+        a.reserveCapacity(A.elements.count)
+        for j in 0..<A.columns {
+            for i in 0..<A.rows {
+                a.append(A[i, j])
+            }
+        }
+        var n = A.rows
+        var lda = A.rows
+        var eigenValues: [Float] = .init(repeating: .zero, count: n)
+        
+        var work: [Float] = [.zero]
+        var lwork = -1
+        var iwork: [Int] = [.zero]
+        var liwork = -1
+        var info = 0
+        ssyevd_("V", "U", &n, &a, &lda, &eigenValues, &work, &lwork, &iwork, &liwork, &info)
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        
+        lwork = Int(work[0])
+        work = .init(repeating: .zero, count: lwork)
+        liwork = Int(iwork[0])
+        iwork = .init(repeating: .zero, count: liwork)
+        ssyevd_("V", "U", &n, &a, &lda, &eigenValues, &work, &lwork, &iwork, &liwork, &info)
+        var eigenVectors = [Vector<Float>](repeating: .zero(n), count: n)
+        for i in 0..<n {
+            for j in 0..<n {
+                eigenVectors[i][j] = a[n * i + j]
+            }
+        }
+        return (eigenValues, eigenVectors)
+        #else
+        fatalError("TODO: Default implementation not yet implemented")
+        #endif
     }
 
     /// Computes the eigenvalues of the given symmetric matrix.
@@ -272,6 +414,7 @@ public extension MatrixOperations {
     //TODO: TESTS!
     @inlinable
     static func eigenValuesSymmetric(_ A: Matrix<Float>) throws -> [Float] {
+#if os(Windows) || os(Linux)
         if let LAPACKE_ssyevd = LAPACKE.ssyevd {
             let N = A.rows
             let lda = N
@@ -283,7 +426,37 @@ public extension MatrixOperations {
             if info != 0 { throw MatrixOperationError.info(Int(info)) }
             return eigenValues
         }
-        fatalError("TODO: Default implementation not implemented yet")
+        #elseif os(macOS)
+        precondition(A.rows == A.columns)
+        var a: [Float] = []
+        a.reserveCapacity(A.elements.count)
+        for j in 0..<A.columns {
+            for i in 0..<A.rows {
+                a.append(A[i, j])
+            }
+        }
+        var n = A.rows
+        var lda = A.rows
+        var eigenValues: [Float] = .init(repeating: .zero, count: n)
+        
+        var work: [Float] = [.zero]
+        var lwork = -1
+        var iwork: [Int] = [.zero]
+        var liwork = -1
+        var info = 0
+        ssyevd_("N", "U", &n, &a, &lda, &eigenValues, &work, &lwork, &iwork, &liwork, &info)
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        
+        lwork = Int(work[0])
+        work = .init(repeating: .zero, count: lwork)
+        liwork = Int(iwork[0])
+        iwork = .init(repeating: .zero, count: liwork)
+        ssyevd_("N", "U", &n, &a, &lda, &eigenValues, &work, &lwork, &iwork, &liwork, &info)
+        
+        return eigenValues
+        #else
+        fatalError("TODO: Default implementation not yet implemented")
+        #endif
     }
 
     /// Diagonalizes the given matrix, i.e., computes it's eigenvalues and eigenvectors.
@@ -295,7 +468,8 @@ public extension MatrixOperations {
     /// - Note: If you know your matrix is symmetric, consider using ```diagonalizeSymmetric(_:,rows:)``` method instead.
     //TODO: TESTS!
     @inlinable
-    static func diagonalize(_ A: Matrix<Float>) throws -> (eigenValues: [Complex<Float>], leftEigenVectors: [[Complex<Float>]], rightEigenVectors: [[Complex<Float>]]) {
+    static func diagonalize(_ A: Matrix<Float>) throws -> (eigenValues: [Complex<Float>], leftEigenVectors: [Vector<Complex<Float>>], rightEigenVectors: [Vector<Complex<Float>>]) {
+#if os(Windows) || os(Linux)
         if let LAPACKE_sgeev = LAPACKE.sgeev {
             let N = A.rows
             let lda = N
@@ -310,8 +484,8 @@ public extension MatrixOperations {
             let info = LAPACKE_sgeev(LAPACK_ROW_MAJOR, V, V, numericCast(N), &_A, numericCast(lda), &eigenReal, &eigenImaginary, &vl, numericCast(ldvl), &vr, numericCast(ldvr))
             if info != 0 { throw MatrixOperationError.info(Int(info)) }
             let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Float>($0, $1) })
-            var leftEigenVectors: [[Complex<Float>]] = [[Complex<Float>]](repeating: .init(repeating: .zero, count: N), count: N)
-            var rightEigenVectors: [[Complex<Float>]] = [[Complex<Float>]](repeating: .init(repeating: .zero, count: N), count: N)
+            var leftEigenVectors: [Vector<Complex<Float>>] = .init(repeating: .zero(N), count: N)
+            var rightEigenVectors: [Vector<Complex<Float>>] = .init(repeating: .zero(N), count: N)
             for i in 0..<N {
                 var j = 0
                 while j < N {
@@ -330,7 +504,54 @@ public extension MatrixOperations {
             }
             return (eigenValues, leftEigenVectors, rightEigenVectors)
         }
-        fatalError("TODO: Default implementation not implemented yet")
+        #elseif os(macOS)
+        precondition(A.rows == A.columns)
+        var a: [Float] = []
+        a.reserveCapacity(A.elements.count)
+        for j in 0..<A.columns {
+            for i in 0..<A.rows {
+                a.append(A[i, j])
+            }
+        }
+        var n = A.rows
+        var lda = A.rows
+        var eigenReal: [Float] = .init(repeating: .zero, count: n)
+        var eigenImaginary: [Float] = .init(repeating: .zero, count: n)
+        var vl: [Float] = .init(repeating: .zero, count: n * n)
+        var ldvl = A.rows
+        var vr: [Float] = .init(repeating: .zero, count: n * n)
+        var ldvr = A.rows
+        var work: [Float] = [.zero]
+        var lwork = -1
+        var info = 0
+        sgeev_("V", "V", &n, &a, &lda, &eigenReal, &eigenImaginary, &vl, &ldvl, &vr, &ldvr, &work, &lwork, &info)
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        lwork = Int(work[0])
+        work = .init(repeating: .zero, count: lwork)
+        sgeev_("V", "V", &n, &a, &lda, &eigenReal, &eigenImaginary, &vl, &ldvl, &vr, &ldvr, &work, &lwork, &info)
+        let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Float>($0, $1) })
+        var leftEigenVectors: [Vector<Complex<Float>>] = .init(repeating: .zero(n), count: n)
+        var rightEigenVectors: [Vector<Complex<Float>>] = .init(repeating: .zero(n), count: n)
+        for i in 0..<n {
+            var j = 0
+            while j < n {
+                if eigenImaginary[j] == .zero {
+                    leftEigenVectors[j][i] = Complex<Float>(vl[i * n + j])
+                    rightEigenVectors[j][i] = Complex<Float>(vr[i * n + j])
+                    j += 1
+                } else {
+                    leftEigenVectors[j][i] = Complex<Float>(vl[i * n + j], vl[i * n + j + 1])
+                    leftEigenVectors[j][i] = Complex<Float>(vl[i * n + j], -vl[i * n + j + 1])
+                    rightEigenVectors[j][i] = Complex<Float>(vr[i * n + j], vr[i * n + j + 1])
+                    rightEigenVectors[j][i] = Complex<Float>(vr[i * n + j], -vr[i * n + j + 1])
+                    j += 2
+                }
+            }
+        }
+        return (eigenValues, leftEigenVectors, rightEigenVectors)
+        #else
+        fatalError("TODO: Default implementation not yet implemented")
+        #endif
     }
     
     /// Diagonalizes the given matrix, i.e., computes it's eigenvalues and eigenvectors.
@@ -342,7 +563,8 @@ public extension MatrixOperations {
     /// - Note: If you know your matrix is symmetric, consider using ```diagonalizeSymmetric(_:,rows:)``` method instead.
     //TODO: TESTS!
     @inlinable
-    static func diagonalizeLeft(_ A: Matrix<Float>) throws -> (eigenValues: [Complex<Float>], leftEigenVectors: [[Complex<Float>]]) {
+    static func diagonalizeLeft(_ A: Matrix<Float>) throws -> (eigenValues: [Complex<Float>], leftEigenVectors: [Vector<Complex<Float>>]) {
+#if os(Windows) || os(Linux)
         if let LAPACKE_sgeev = LAPACKE.sgeev {
             let N = A.rows
             let lda = N
@@ -357,7 +579,7 @@ public extension MatrixOperations {
             let info = LAPACKE_sgeev(LAPACK_ROW_MAJOR, V, _N, numericCast(N), &_A, numericCast(lda), &eigenReal, &eigenImaginary, &vl, numericCast(ldvl), nil, numericCast(ldvr))
             if info != 0 { throw MatrixOperationError.info(Int(info)) }
             let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Float>($0, $1) })
-            var leftEigenVectors: [[Complex<Float>]] = [[Complex<Float>]](repeating: .init(repeating: .zero, count: N), count: N)
+            var leftEigenVectors: [Vector<Complex<Float>>] = [Vector<Complex<Float>>](repeating: .zero(N), count: N)
             for i in 0..<N {
                 var j = 0
                 while j < N {
@@ -373,7 +595,49 @@ public extension MatrixOperations {
             }
             return (eigenValues, leftEigenVectors)
         }
+        #elseif os(macOS)
+        precondition(A.rows == A.columns)
+        var a: [Float] = []
+        a.reserveCapacity(A.elements.count)
+        for j in 0..<A.columns {
+            for i in 0..<A.rows {
+                a.append(A[i, j])
+            }
+        }
+        var n = A.rows
+        var lda = A.rows
+        var eigenReal: [Float] = .init(repeating: .zero, count: n)
+        var eigenImaginary: [Float] = .init(repeating: .zero, count: n)
+        var vl: [Float] = .init(repeating: .zero, count: n * n)
+        var ldvl = A.rows
+        var ldvr = A.rows
+        var work: [Float] = [.zero]
+        var lwork = -1
+        var info = 0
+        sgeev_("V", "N", &n, &a, &lda, &eigenReal, &eigenImaginary, &vl, &ldvl, nil, &ldvr, &work, &lwork, &info)
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        lwork = Int(work[0])
+        work = .init(repeating: .zero, count: lwork)
+        sgeev_("V", "N", &n, &a, &lda, &eigenReal, &eigenImaginary, &vl, &ldvl, nil, &ldvr, &work, &lwork, &info)
+        let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Float>($0, $1) })
+        var leftEigenVectors: [Vector<Complex<Float>>] = .init(repeating: .zero(n), count: n)
+        for i in 0..<n {
+            var j = 0
+            while j < n {
+                if eigenImaginary[j] == .zero {
+                    leftEigenVectors[j][i] = Complex<Float>(vl[i * n + j])
+                    j += 1
+                } else {
+                    leftEigenVectors[j][i] = Complex<Float>(vl[i * n + j], vl[i * n + j + 1])
+                    leftEigenVectors[j][i] = Complex<Float>(vl[i * n + j], -vl[i * n + j + 1])
+                    j += 2
+                }
+            }
+        }
+        return (eigenValues, leftEigenVectors)
+        #else
         fatalError("TODO: Default implementation not yet implemented")
+        #endif
     }
 
     /// Diagonalizes the given matrix, i.e., computes it's eigenvalues and eigenvectors.
@@ -385,7 +649,9 @@ public extension MatrixOperations {
     /// - Note: If you know your matrix is symmetric, consider using ```diagonalizeSymmetric(_:,rows:)``` method instead.
     //TODO: TESTS!
     @inlinable
-    static func diagonalizeRight(_ A: Matrix<Float>) throws -> (eigenValues: [Complex<Float>], rightEigenVectors: [[Complex<Float>]]) {
+    static func diagonalizeRight(_ A: Matrix<Float>) throws -> (eigenValues: [Complex<Float>], rightEigenVectors: [Vector<Complex<Float>>]) {
+        precondition(A.rows == A.columns)
+#if os(Windows) || os(Linux)
         if let LAPACKE_sgeev = LAPACKE.sgeev {
             let N = A.rows
             let lda = N
@@ -400,7 +666,7 @@ public extension MatrixOperations {
             let info = LAPACKE_sgeev(LAPACK_ROW_MAJOR, _N, V, numericCast(N), &_A, numericCast(lda), &eigenReal, &eigenImaginary, nil, numericCast(ldvl), &vr, numericCast(ldvr))
             if info != 0 { throw MatrixOperationError.info(Int(info)) }
             let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Float>($0, $1) })
-            var rightEigenVectors: [[Complex<Float>]] = [[Complex<Float>]](repeating: .init(repeating: .zero, count: N), count: N)
+            var rightEigenVectors: [Vector<Complex<Float>>] = .init(repeating: .zero(N), count: N)
             for i in 0..<N {
                 var j = 0
                 while j < N {
@@ -415,8 +681,50 @@ public extension MatrixOperations {
                 }
             }
             return (eigenValues, rightEigenVectors)
-        }        
+        }
+        #elseif os(macOS)
+        precondition(A.rows == A.columns)
+        var a: [Float] = []
+        a.reserveCapacity(A.elements.count)
+        for j in 0..<A.columns {
+            for i in 0..<A.rows {
+                a.append(A[i, j])
+            }
+        }
+        var n = A.rows
+        var lda = A.rows
+        var eigenReal: [Float] = .init(repeating: .zero, count: n)
+        var eigenImaginary: [Float] = .init(repeating: .zero, count: n)
+        var ldvl = A.rows
+        var vr: [Float] = .init(repeating: .zero, count: n * n)
+        var ldvr = A.rows
+        var work: [Float] = [.zero]
+        var lwork = -1
+        var info = 0
+        sgeev_("N", "V", &n, &a, &lda, &eigenReal, &eigenImaginary, nil, &ldvl, &vr, &ldvr, &work, &lwork, &info)
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        lwork = Int(work[0])
+        work = .init(repeating: .zero, count: lwork)
+        sgeev_("N", "V", &n, &a, &lda, &eigenReal, &eigenImaginary, nil, &ldvl, &vr, &ldvr, &work, &lwork, &info)
+        let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Float>($0, $1) })
+        var rightEigenVectors: [Vector<Complex<Float>>] = .init(repeating: .zero(n), count: n)
+        for i in 0..<n {
+            var j = 0
+            while j < n {
+                if eigenImaginary[j] == .zero {
+                    rightEigenVectors[j][i] = Complex<Float>(vr[i * n + j])
+                    j += 1
+                } else {
+                    rightEigenVectors[j][i] = Complex<Float>(vr[i * n + j], vr[i * n + j + 1])
+                    rightEigenVectors[j][i] = Complex<Float>(vr[i * n + j], -vr[i * n + j + 1])
+                    j += 2
+                }
+            }
+        }
+        return (eigenValues, rightEigenVectors)
+        #else
         fatalError("TODO: Default implementation not yet implemented")
+        #endif
     }
     
     /// Computes the eigenvalues of the given symmetric matrix.
@@ -428,6 +736,7 @@ public extension MatrixOperations {
     //TODO: TESTS!
     @inlinable
     static func eigenValues(_ A: Matrix<Float>) throws -> [Complex<Float>] {
+#if os(Windows) || os(Linux)
         if let LAPACKE_sgeev = LAPACKE.sgeev {
             let N = A.rows
             let lda = N
@@ -442,12 +751,40 @@ public extension MatrixOperations {
             let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Float>($0, $1) })
             return eigenValues
         }
+        #elseif os(macOS)
+        precondition(A.rows == A.columns)
+        var a: [Float] = []
+        a.reserveCapacity(A.elements.count)
+        for j in 0..<A.columns {
+            for i in 0..<A.rows {
+                a.append(A[i, j])
+            }
+        }
+        var n = A.rows
+        var lda = A.rows
+        var eigenReal: [Float] = .init(repeating: .zero, count: n)
+        var eigenImaginary: [Float] = .init(repeating: .zero, count: n)
+        var ldvl = A.rows
+        var ldvr = A.rows
+        var work: [Float] = [.zero]
+        var lwork = -1
+        var info = 0
+        sgeev_("N", "N", &n, &a, &lda, &eigenReal, &eigenImaginary, nil, &ldvl, nil, &ldvr, &work, &lwork, &info)
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        lwork = Int(work[0])
+        work = .init(repeating: .zero, count: lwork)
+        sgeev_("N", "N", &n, &a, &lda, &eigenReal, &eigenImaginary, nil, &ldvl, nil, &ldvr, &work, &lwork, &info)
+        let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Float>($0, $1) })
+        return eigenValues
+        #else
         fatalError("TODO: Default implementation not yet implemented")
+        #endif
     }
     
     //TODO: TEST!
     @inlinable
     static func solve(A: Matrix<Float>, b: Vector<Float>) throws -> Vector<Float> {
+#if os(Windows) || os(Linux)
         if let LAPACKE_sgesv = LAPACKE.sgesv {
             let N = A.rows
             let nrhs: Int32 = 1
@@ -460,6 +797,27 @@ public extension MatrixOperations {
             if info != 0 { throw MatrixOperationError.info(Int(info))}
             return Vector(_b)
         }
+        #elseif os(macOS)
+        precondition(A.rows == A.columns)
+        var a: [Float] = []
+        a.reserveCapacity(A.rows * A.columns)
+        for j in 0..<A.columns {
+            for i in 0..<A.rows {
+                a.append(A[i, j])
+            }
+        }
+        var _b = b.components
+        var n = A.rows
+        var nrhs = 1
+        var lda = A.rows
+        var ipiv: [Int] = .init(repeating: .zero, count: n)
+        var ldb = 1
+        var info = 0
+        sgesv_(&n, &nrhs, &a, &lda, &ipiv, &_b, &ldb, &info)
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        return Vector(_b)
+        #else
         fatalError("TODO: Default implementation not yet implemented")
+        #endif
     }
 }

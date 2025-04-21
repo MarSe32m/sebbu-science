@@ -11,6 +11,11 @@ import COpenBLAS
 #if canImport(CLAPACK)
 import CLAPACK
 #endif
+
+#if canImport(Accelerate)
+import Accelerate
+#endif
+
 import RealModule
 
 public extension Vector<Float> {
@@ -43,12 +48,19 @@ public extension Vector<Float> {
     @_transparent
     @inlinable
     mutating func multiply(by: T) {
+        #if os(Windows) || os(Linux)
         if let cblas_sscal = BLAS.sscal {
             let N: Int32 = numericCast(count)
             cblas_sscal(N, by, &components, 1)
         } else {
             _multiply(by: by)
         }
+        #elseif os(macOS)
+        let N = count
+        cblas_sscal(N, by, &components, 1)
+        #else
+        _multiply(by: by)
+        #endif
     }
     
     //MARK: Division
@@ -99,12 +111,20 @@ public extension Vector<Float> {
     @inlinable
     @_transparent
     mutating func add(_ other: Self, scaling: T) {
+        #if os(Windows) || os(Linux)
         if let cblas_saxpy = BLAS.saxpy {
             precondition(other.components.count == self.components.count)
             cblas_saxpy(numericCast(count), scaling, other.components, 1, &components, 1)
         } else {
             _add(other, scaling: scaling)
         }
+        #elseif os(macOS)
+        precondition(other.components.count == self.components.count)
+        let N = count
+        cblas_saxpy(N, scaling, other.components, 1, &components, 1)
+        #else
+        _add(other, scaling: scaling)
+#endif
     }
     
     @inline(__always)
@@ -150,12 +170,20 @@ public extension Vector<Float> {
     @inline(__always)
     @_transparent
     func dot(_ other: Self) -> T {
+        #if os(Windows) || os(Linux)
         if let cblas_sdot = BLAS.sdot {
             precondition(count == other.count)
             return cblas_sdot(numericCast(count), components, 1, other.components, 1)
         } else {
             return _dot(other)
         }
+        #elseif os(macOS)
+        precondition(count == other.count)
+        let N = count
+        return cblas_sdot(count, components, 1, other.components, 1)
+        #else
+        _dot(other)
+        #endif
     }
     
     //MARK: Vector matrix multiply
@@ -183,6 +211,7 @@ public extension Vector<Float> {
     @inlinable
     @inline(__always)
     func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+        #if os(Windows) || os(Linux)
         if let cblas_sgemv = BLAS.sgemv {
             precondition(matrix.rows == self.count)
             precondition(matrix.columns == into.count)
@@ -195,5 +224,13 @@ public extension Vector<Float> {
         } else {
             _dot(matrix, multiplied: multiplied, into: &into)
         }
+        #elseif os(macOS)
+        precondition(matrix.rows == self.count)
+        precondition(matrix.columns == into.count)
+        let lda = matrix.columns
+        cblas_sgemv(CblasRowMajor, CblasTrans, matrix.rows, matrix.columns, multiplied, matrix.elements, lda, components, 1, .zero, &into.components, 1)
+        #else
+        _dot(matrix, multiplied: multiplied, into: &into)
+#endif
     }
 }

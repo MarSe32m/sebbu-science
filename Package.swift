@@ -1,10 +1,11 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "sebbu-science",
+    platforms: [.macOS(.v15)],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(name: "SebbuScience", targets: ["SebbuScience"]),
@@ -38,6 +39,13 @@ let package = Package(
                 .target(name: "CLAPACK", condition: .when(platforms: [.linux, .windows])),
                 .product(name: "Numerics", package: "swift-numerics"),
                 .product(name: "SebbuCollections", package: "sebbu-collections")
+            ],
+            cSettings: [
+                .define("ACCELERATE_NEW_LAPACK", .when(platforms: [.macOS])),
+                .define("ACCELERATE_LAPACK_ILP64", .when(platforms: [.macOS]))
+            ],
+            linkerSettings: [
+                .linkedFramework("Accelerate", .when(platforms: [.macOS]))
             ]
         ),
         .testTarget(

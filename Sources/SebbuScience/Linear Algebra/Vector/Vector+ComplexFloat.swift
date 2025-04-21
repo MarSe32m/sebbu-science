@@ -11,6 +11,11 @@ import COpenBLAS
 #if canImport(CLAPACK)
 import CLAPACK
 #endif
+
+#if canImport(Accelerate)
+import Accelerate
+#endif
+
 import RealModule
 import ComplexModule
 
@@ -48,12 +53,22 @@ public extension Vector<Complex<Float>> {
     @inlinable
     @_transparent
     mutating func multiply(by: T) {
+        #if os(Windows) || os(Linux)
         if let cblas_cscal = BLAS.cscal {
             var alpha: T = by
             cblas_cscal(numericCast(count), &alpha, &components, 1)
         } else {
             _multiply(by: by)
         }
+        #elseif os(macOS)
+        withUnsafePointer(to: by) { alpha in
+            components.withUnsafeMutableBufferPointer { X in
+                cblas_cscal(X.count, OpaquePointer(alpha), OpaquePointer(X.baseAddress), 1)
+            }
+        }
+        #else
+        _multiply(by: by)
+#endif
     }
     
     //MARK: Division
@@ -105,6 +120,7 @@ public extension Vector<Complex<Float>> {
     @inline(__always)
     @inlinable
     mutating func add(_ other: Self, scaling: T) {
+        #if os(Windows) || os(Linux)
         if let cblas_caxpy = BLAS.caxpy {
             precondition(other.count == self.count)
             let N: Int32 = numericCast(count)
@@ -113,6 +129,24 @@ public extension Vector<Complex<Float>> {
         } else {
             _add(other, scaling: scaling)
         }
+        #elseif os(macOS)
+        precondition(other.count == self.count)
+        let N = count
+        withUnsafePointer(to: scaling) { alpha in
+            other.components.withUnsafeBufferPointer { X in
+                components.withUnsafeMutableBufferPointer { Y in
+                    cblas_caxpy(N,
+                                OpaquePointer(alpha),
+                                OpaquePointer(X.baseAddress),
+                                1,
+                                OpaquePointer(Y.baseAddress),
+                                1)
+                }
+            }
+        }
+        #else
+        _add(other, scaling: scaling)
+#endif
     }
     
     @inline(__always)
@@ -157,6 +191,7 @@ public extension Vector<Complex<Float>> {
     /// Instead for ```Vector<Complex<Float>>``` and ```Vector<Complex<Double>>``` use ```inner(_:)``` for a proper inner product
     @inlinable
     func dot(_ other: Self) -> T {
+        #if os(Windows) || os(Linux)
         if let cblas_cdotu_sub = BLAS.cdotu_sub {
             precondition(other.count == count)
             let N: Int32 = numericCast(count)
@@ -166,12 +201,33 @@ public extension Vector<Complex<Float>> {
         } else {
             return _dot(other)
         }
+        #elseif os(macOS)
+        precondition(other.count == count)
+        var result: T = .zero
+        withUnsafeMutablePointer(to: &result) { result in
+            components.withUnsafeBufferPointer { X in
+                other.components.withUnsafeBufferPointer { Y in
+                    cblas_cdotu_sub(count,
+                                    OpaquePointer(X.baseAddress),
+                                    1,
+                                    OpaquePointer(Y.baseAddress),
+                                    1,
+                                    OpaquePointer(result))
+                }
+            }
+        }
+        return result
+        
+        #else
+        _dot(other)
+        #endif
     }
     
     //MARK: Inner product
     @inlinable
     @inline(__always)
     func inner(_ other: Self) -> T {
+        #if os(Windows) || os(Linux)
         if let cblas_cdotc_sub = BLAS.cdotc_sub {
             precondition(other.count == count)
             let N: Int32 = numericCast(count)
@@ -181,6 +237,25 @@ public extension Vector<Complex<Float>> {
         } else {
             return _inner(other)
         }
+        #elseif os(macOS)
+        precondition(other.count == count)
+        var result: T = .zero
+        withUnsafeMutablePointer(to: &result) { result in
+            components.withUnsafeBufferPointer { X in
+                other.components.withUnsafeBufferPointer { Y in
+                    cblas_cdotc_sub(count,
+                                    OpaquePointer(X.baseAddress),
+                                    1,
+                                    OpaquePointer(Y.baseAddress),
+                                    1,
+                                    OpaquePointer(result))
+                }
+            }
+        }
+        return result
+        #else
+        _inner(other)
+        #endif
     }
 
     @inlinable
@@ -232,6 +307,7 @@ public extension Vector<Complex<Float>> {
     @inlinable
     @inline(__always)
     func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+        #if os(Windows) || os(Linux)
         if let cblas_cgemv = BLAS.cgemv {
             precondition(matrix.rows == self.count)
             precondition(matrix.columns == into.count)
@@ -246,6 +322,34 @@ public extension Vector<Complex<Float>> {
         } else {
             _dot(matrix, multiplied: multiplied, into: &into)
         }
+        #elseif os(macOS)
+        let beta: T = .zero
+        let lda = matrix.columns
+        withUnsafePointer(to: multiplied) { alpha in
+            withUnsafePointer(to: beta) { beta in
+                matrix.elements.withUnsafeBufferPointer { A in
+                    components.withUnsafeBufferPointer { X in
+                        into.components.withUnsafeMutableBufferPointer { Y in
+                            cblas_cgemv(CblasRowMajor,
+                                        CblasTrans,
+                                        matrix.rows,
+                                        matrix.columns,
+                                        OpaquePointer(alpha),
+                                        OpaquePointer(A.baseAddress),
+                                        lda,
+                                        OpaquePointer(X.baseAddress),
+                                        1,
+                                        OpaquePointer(beta),
+                                        OpaquePointer(Y.baseAddress),
+                                        1)
+                        }
+                    }
+                }
+            }
+        }
+        #else
+        _dot(matrix, multiplied: multiplied, into: &into)
+        #endif
     }
 }
 
@@ -287,11 +391,19 @@ public extension Vector<Complex<Float>> {
     @inlinable
     @_transparent
     mutating func multiply(by: Float) {
+        #if os(Windows) || os(Linux)
         if let cblas_csscal = BLAS.csscal {
             cblas_csscal(numericCast(components.count), by, &components, 1)
         } else {
             multiply(by: Complex(by))
         }
+        #elseif os(macOS)
+        components.withUnsafeMutableBufferPointer { X in
+            cblas_csscal(X.count, by, OpaquePointer(X.baseAddress), 1)
+        }
+        #else
+        multiply(by: Complex(by))
+        #endif
     }
     
     //MARK: Division

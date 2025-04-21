@@ -345,7 +345,10 @@ public extension Matrix where T: AlgebraicField {
         return result
     }
     
-    var inverse: Self { fatalError("TODO: Not yet implemented") }
+    /// The inverse of the matrix, if invertible.
+    /// - Note: This operation is very expensive and will be calculated each time this variable is accessed.
+    /// Thus you should store the inverse if you need it later again.
+    var inverse: Self? { fatalError("TODO: Not yet implemented") }
     
     @inline(__always)
     @inlinable

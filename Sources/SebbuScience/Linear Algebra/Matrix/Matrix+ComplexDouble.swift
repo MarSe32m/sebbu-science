@@ -11,11 +11,67 @@ import COpenBLAS
 #if canImport(CLAPACK)
 import CLAPACK
 #endif
+
+#if canImport(Accelerate)
+import Accelerate
+#endif
+
 import RealModule
 import ComplexModule
 
 public extension Matrix<Complex<Double>> {
-    var inverse: Self { fatalError("TODO: Not yet implemented") }
+    /// The inverse of the matrix, if invertible.
+    /// - Note: This operation is very expensive and will be calculated each time this variable is accessed.
+    /// Thus you should store the inverse if you need it later again.
+    var inverse: Self? {
+        #if os(Windows) || os(Linux)
+        fatalError("TODO: Not yet implemented")
+        #elseif os(macOS)
+        if rows != columns { return nil }
+        var a: [Complex<Double>] = []
+        a.reserveCapacity(elements.count)
+        for j in 0..<columns {
+            for i in 0..<rows {
+                a.append(self[i, j])
+            }
+        }
+        var m = rows
+        var n = columns
+        var lda = rows
+        var ipiv: [Int] = .init(repeating: .zero, count: Swift.min(m, n))
+        var info = 0
+        a.withUnsafeMutableBufferPointer { a in
+            zgetrf_(&m, &n, OpaquePointer(a.baseAddress), &lda, &ipiv, &info)
+        }
+        if info != 0 { return nil }
+        
+        var work: [Complex<Double>] = [.zero]
+        var lwork = -1
+        a.withUnsafeMutableBufferPointer { a in
+            work.withUnsafeMutableBufferPointer { work in
+                zgetri_(&n, OpaquePointer(a.baseAddress), &lda, &ipiv, OpaquePointer(work.baseAddress!), &lwork, &info)
+            }
+        }
+        if info != 0 { return nil }
+        lwork = Int(work[0].real)
+        work = .init(repeating: .zero, count: lwork)
+        a.withUnsafeMutableBufferPointer { a in
+            work.withUnsafeMutableBufferPointer { work in
+                zgetri_(&n, OpaquePointer(a.baseAddress), &lda, &ipiv, OpaquePointer(work.baseAddress!), &lwork, &info)
+            }
+        }
+        if info != 0 { return nil }
+        return .init(rows: rows, columns: columns) { buffer in
+            for i in 0..<rows {
+                for j in 0..<columns {
+                    buffer[i * n + j] = a[j * n + i]
+                }
+            }
+        }
+        #else
+        fatalError("TODO: Not yet implemented")
+        #endif
+    }
     
     //MARK: Addition
     @inline(__always)
@@ -37,6 +93,7 @@ public extension Matrix<Complex<Double>> {
     @inline(__always)
     @inlinable
     mutating func add(_ other: Self, scaling: T) {
+        #if os(Windows) || os(Linux)
         if let cblas_zaxpy = BLAS.zaxpy {
             precondition(self.rows == other.rows)
             precondition(self.columns == other.columns)
@@ -46,13 +103,31 @@ public extension Matrix<Complex<Double>> {
         } else {
             _add(other, scaling: scaling)
         }
+        #elseif os(macOS)
+        precondition(self.rows == other.rows)
+        precondition(self.columns == other.columns)
+        withUnsafePointer(to: scaling) { alpha in
+            other.elements.withUnsafeBufferPointer { X in
+                elements.withUnsafeMutableBufferPointer { Y in
+                    cblas_zaxpy(X.count,
+                                OpaquePointer(alpha),
+                                OpaquePointer(X.baseAddress),
+                                1,
+                                OpaquePointer(Y.baseAddress),
+                                1)
+                }
+            }
+        }
+        #else
+        _add(other, scaling: scaling)
+        #endif
     }
     
     @inline(__always)
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
-        add(other, scaling: 1.0)
+        add(other, scaling: Complex(1.0))
     }
     
     //MARK: Subtraction
@@ -83,7 +158,7 @@ public extension Matrix<Complex<Double>> {
     @inlinable
     @_transparent
     mutating func subtract(_ other: Self) {
-        subtract(other, scaling: 1.0)
+        subtract(other, scaling: Complex(1.0))
     }
     
     //MARK: Scaling
@@ -105,6 +180,7 @@ public extension Matrix<Complex<Double>> {
     @inline(__always)
     @inlinable
     mutating func multiply(by: T) {
+        #if os(Windows) || os(Linux)
         if let cblas_zscal = BLAS.zscal {
             let N: Int32 = numericCast(elements.count)
             var alpha = by
@@ -112,6 +188,18 @@ public extension Matrix<Complex<Double>> {
         } else {
             _multiply(by: by)
         }
+        #elseif os(macOS)
+        withUnsafePointer(to: by) { alpha in
+            elements.withUnsafeMutableBufferPointer { X in
+                cblas_zscal(X.count,
+                            OpaquePointer(alpha),
+                            OpaquePointer(X.baseAddress),
+                            1)
+            }
+        }
+        #else
+        _multiply(by: by)
+        #endif
     }
     
     //MARK: Division
@@ -171,6 +259,7 @@ public extension Matrix<Complex<Double>> {
     
     @inlinable
     func dot(_ other: Self, multiplied: T, into: inout Self) {
+        #if os(Windows) || os(Linux)
         if let cblas_zgemm = BLAS.zgemm {
             precondition(self.columns == other.rows, "The matrices are incompatible for multiplication")
             precondition(into.rows == self.rows, "The resulting matrix has incompatible rows")
@@ -180,7 +269,7 @@ public extension Matrix<Complex<Double>> {
             let transb: CBLAS_TRANSPOSE = CblasNoTrans
             let m: Int32 = numericCast(self.rows)
             let n: Int32 = numericCast(other.columns)
-            let k: Int32 = numericCast(self.rows)
+            let k: Int32 = numericCast(self.columns)
             var alpha: T = multiplied
             let lda: Int32 = k
             var beta: T = .zero
@@ -190,6 +279,41 @@ public extension Matrix<Complex<Double>> {
         } else {
             _dot(other, multiplied: multiplied, into: &into)
         }
+        #elseif os(macOS)
+        precondition(self.columns == other.rows, "The matrices are incompatible for multiplication")
+        precondition(into.rows == self.rows, "The resulting matrix has incompatible rows")
+        precondition(into.columns == other.columns, "The resulting matrix has incompatible columns")
+        let beta: T = .zero
+        let lda = columns
+        let ldb = other.columns
+        let ldc = into.columns
+        withUnsafePointer(to: multiplied) { alpha in
+            withUnsafePointer(to: beta) { beta in
+                elements.withUnsafeBufferPointer { A in
+                    other.elements.withUnsafeBufferPointer { B in
+                        into.elements.withUnsafeMutableBufferPointer { C in
+                            cblas_zgemm(CblasRowMajor,
+                                        CblasNoTrans,
+                                        CblasNoTrans,
+                                        rows,
+                                        other.columns,
+                                        columns,
+                                        OpaquePointer(alpha),
+                                        OpaquePointer(A.baseAddress),
+                                        lda,
+                                        OpaquePointer(B.baseAddress),
+                                        ldb,
+                                        OpaquePointer(beta),
+                                        OpaquePointer(C.baseAddress),
+                                        ldc)
+                        }
+                    }
+                }
+            }
+        }
+        #else
+        _dot(other, multiplied: multiplied, into: &into)
+        #endif
     }
     
     @inlinable
@@ -213,6 +337,7 @@ public extension Matrix<Complex<Double>> {
     
     @inlinable
     func dot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
+        #if os(Windows) || os(Linux)
         if let cblas_zgemv = BLAS.zgemv {
             precondition(self.columns == vector.components.count)
             precondition(self.rows == into.components.count)
@@ -229,6 +354,36 @@ public extension Matrix<Complex<Double>> {
         } else {
             _dot(vector, multiplied: multiplied, into: &into)
         }
+        #elseif os(macOS)
+        precondition(self.columns == vector.components.count)
+        precondition(self.rows == into.components.count)
+        let beta: T = .zero
+        let lda = columns
+        withUnsafePointer(to: multiplied) { alpha in
+            withUnsafePointer(to: beta) { beta in
+                elements.withUnsafeBufferPointer { A in
+                    vector.components.withUnsafeBufferPointer { X in
+                        into.components.withUnsafeMutableBufferPointer { Y in
+                            cblas_zgemv(CblasRowMajor,
+                                        CblasNoTrans,
+                                        rows,
+                                        columns,
+                                        OpaquePointer(alpha),
+                                        OpaquePointer(A.baseAddress),
+                                        lda,
+                                        OpaquePointer(X.baseAddress),
+                                        1,
+                                        OpaquePointer(beta),
+                                        OpaquePointer(Y.baseAddress),
+                                        1)
+                        }
+                    }
+                }
+            }
+        }
+        #else
+        _dot(vector, multiplied: multiplied, into: &into)
+        #endif
     }
 }
 
@@ -268,11 +423,19 @@ public extension Matrix<Complex<Double>> {
     @inline(__always)
     @inlinable
     mutating func multiply(by: Double) {
+        #if os(Windows) || os(Linux)
         if let cblas_zdscal = BLAS.zdscal {
             cblas_zdscal(numericCast(elements.count), by, &elements, 1)
         } else {
             multiply(by: Complex(by))
         }
+        #elseif os(macOS)
+        elements.withUnsafeMutableBufferPointer { X in
+            cblas_zdscal(X.count, by, OpaquePointer(X.baseAddress), 1)
+        }
+        #else
+        multiply(by: Complex(by))
+        #endif
     }
     
     //MARK: Division
@@ -313,17 +476,19 @@ public extension MatrixOperations {
     /// - Returns: A tuple containing the eigenvalues and eigenvectors
     //TODO: TESTS!
     @inlinable
-    static func diagonalizeHermitian(_ A: Matrix<Complex<Double>>) throws -> (eigenValues: [Double], eigenVectors: [[Complex<Double>]]) {
+    static func diagonalizeHermitian(_ A: Matrix<Complex<Double>>) throws -> (eigenValues: [Double], eigenVectors: [Vector<Complex<Double>>]) {
+        #if os(Windows) || os(Linux)
         if let LAPACKE_zheevd = LAPACKE.zheevd {
+            precondition(A.rows == A.columns)
             let N = A.rows
             let lda = N
             var eigenValues: [Double] = .init(repeating: .zero, count: N)
             var _A: [Complex<Double>] = Array(A.elements)
             let V = Int8(bitPattern: UInt8(ascii: "V"))
             let U = Int8(bitPattern: UInt8(ascii: "U"))
-            let info = LAPACKE_zheevd(LAPACK_COL_MAJOR, V, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
+            let info = LAPACKE_zheevd(LAPACK_ROW_MAJOR, V, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
             if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            var eigenVectors = [[Complex<Double>]](repeating: .init(repeating: .zero, count: N), count: N)
+            var eigenVectors = [Vector<Complex<Double>>](repeating: .zero(N), count: N)
             for i in 0..<N {
                 for j in 0..<N {
                     eigenVectors[i][j] = _A[N * i + j]
@@ -331,7 +496,62 @@ public extension MatrixOperations {
             }
             return (eigenValues, eigenVectors)
         }
-        fatalError("TODO: Default implementation not implemented yet")
+        #elseif os(macOS)
+        precondition(A.rows == A.columns)
+        var a: [Complex<Double>] = []
+        
+        for j in 0..<A.columns {
+            for i in 0..<A.rows {
+                a.append(A[i, j])
+            }
+        }
+        var n = A.rows
+        // LAPACK takes column-major order, so the leading order is the rows of the matrix
+        var lda = A.rows
+        var eigenValues: [Double] = .init(repeating: .zero, count: Int(n))
+        
+        var work: [Complex<Double>] = [.zero]
+        var lwork = -1
+        
+        var rwork: [Double] = [.zero]
+        var lrwork = -1
+        
+        var iwork: [Int] = [.zero]
+        var liwork = -1
+        
+        var info = 0
+        
+        a.withUnsafeMutableBufferPointer { a in
+            work.withUnsafeMutableBufferPointer { work in
+                zheevd_("V", "U", &n, OpaquePointer(a.baseAddress), &lda, &eigenValues, OpaquePointer(work.baseAddress!), &lwork, &rwork, &lrwork, &iwork, &liwork, &info)
+            }
+        }
+        
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        
+        lwork = Int(work[0].real)
+        lrwork = Int(rwork[0])
+        liwork = iwork[0]
+        
+        work = .init(repeating: .zero, count: lwork)
+        rwork = .init(repeating: .zero, count: lrwork)
+        iwork = .init(repeating: .zero, count: liwork)
+
+        a.withUnsafeMutableBufferPointer { a in
+            work.withUnsafeMutableBufferPointer { work in
+                zheevd_("V", "U", &n, OpaquePointer(a.baseAddress), &lda, &eigenValues, OpaquePointer(work.baseAddress!), &lwork, &rwork, &lrwork, &iwork, &liwork, &info)
+            }
+        }
+        var eigenVectors = [Vector<Complex<Double>>](repeating: .zero(n), count: n)
+        for i in 0..<n {
+            for j in 0..<n {
+                eigenVectors[i][j] = a[n * i + j]
+            }
+        }
+        return (eigenValues, eigenVectors)
+        #else
+        fatalError("TODO: Default implementation not yet implemented")
+        #endif
     }
 
     /// Computes the eigenvalues of the given hermitian matrix.
@@ -343,6 +563,7 @@ public extension MatrixOperations {
     //TODO: TESTS!
     @inlinable
     static func eigenValuesHermitian(_ A: Matrix<Complex<Double>>) throws -> [Double] {
+        #if os(Windows) || os(Linux)
         if let LAPACKE_zheevd = LAPACKE.zheevd {
             let N = A.rows
             let lda = N
@@ -354,7 +575,56 @@ public extension MatrixOperations {
             if info != 0 { throw MatrixOperationError.info(Int(info)) }
             return eigenValues
         }
-        fatalError("TODO: Default implementation not implemented yet")
+        #elseif os(macOS)
+        precondition(A.rows == A.columns)
+        var a: [Complex<Double>] = []
+        
+        for j in 0..<A.columns {
+            for i in 0..<A.rows {
+                a.append(A[i, j])
+            }
+        }
+        var n = A.rows
+        // LAPACK takes column-major order, so the leading order is the rows of the matrix
+        var lda = A.rows
+        var eigenValues: [Double] = .init(repeating: .zero, count: Int(n))
+        
+        var work: [Complex<Double>] = [.zero]
+        var lwork = -1
+        
+        var rwork: [Double] = [.zero]
+        var lrwork = -1
+        
+        var iwork: [Int] = [.zero]
+        var liwork = -1
+        
+        var info = 0
+        
+        a.withUnsafeMutableBufferPointer { a in
+            work.withUnsafeMutableBufferPointer { work in
+                zheevd_("N", "U", &n, OpaquePointer(a.baseAddress), &lda, &eigenValues, OpaquePointer(work.baseAddress!), &lwork, &rwork, &lrwork, &iwork, &liwork, &info)
+            }
+        }
+        
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        
+        lwork = Int(work[0].real)
+        lrwork = Int(rwork[0])
+        liwork = iwork[0]
+        
+        work = .init(repeating: .zero, count: lwork)
+        rwork = .init(repeating: .zero, count: lrwork)
+        iwork = .init(repeating: .zero, count: liwork)
+
+        a.withUnsafeMutableBufferPointer { a in
+            work.withUnsafeMutableBufferPointer { work in
+                zheevd_("V", "U", &n, OpaquePointer(a.baseAddress), &lda, &eigenValues, OpaquePointer(work.baseAddress!), &lwork, &rwork, &lrwork, &iwork, &liwork, &info)
+            }
+        }
+        return eigenValues
+        #else
+        fatalError("TODO: Default implementation not yet implemented")
+        #endif
     }
 
     /// Diagonalizes the given matrix, i.e., computes it's eigenvalues and eigenvectors.
@@ -365,8 +635,11 @@ public extension MatrixOperations {
     /// - Returns: A tuple containing the eigenvalues and left eigenvectors and right eigenvectors
     //TODO: TESTS!
     @inlinable
-    static func diagonalize(_ A: Matrix<Complex<Double>>) throws -> (eigenValues: [Complex<Double>], leftEigenVectors: [[Complex<Double>]], rightEigenVectors: [[Complex<Double>]]) {
+    static func diagonalize(_ A: Matrix<Complex<Double>>) throws -> (eigenValues: [Complex<Double>], leftEigenVectors: [Vector<Complex<Double>>], rightEigenVectors: [Vector<Complex<Double>>]) {
+        
+        #if os(Windows) || os(Linux)
         if let LAPACKE_zgeev = LAPACKE.zgeev {
+            precondition(A.rows == A.columns)
             let N = A.rows
             let lda = N
             let ldvl = N
@@ -378,8 +651,8 @@ public extension MatrixOperations {
             let V = Int8(bitPattern: UInt8(ascii: "V"))
             let info = LAPACKE_zgeev(LAPACK_ROW_MAJOR, V, V, numericCast(N), &_A, numericCast(lda), &eigenValues, &vl, numericCast(ldvl), &vr, numericCast(ldvr))
             if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            var leftEigenVectors: [[Complex<Double>]] = [[Complex<Double>]](repeating: .init(repeating: .zero, count: N), count: N)
-            var rightEigenVectors: [[Complex<Double>]] = [[Complex<Double>]](repeating: .init(repeating: .zero, count: N), count: N)
+            var leftEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
+            var rightEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
             for i in 0..<N {
                 for j in 0..<N {
                     leftEigenVectors[j][i] = vl[N * i + j]
@@ -388,7 +661,68 @@ public extension MatrixOperations {
             }
             return (eigenValues, leftEigenVectors, rightEigenVectors)
         }
-        fatalError("TODO: Default implementation not implemented yet")
+        #elseif os(macOS)
+        precondition(A.rows == A.columns)
+        var n = A.rows
+        var a: [Complex<Double>] = []
+        a.reserveCapacity(n * n)
+        for j in 0..<A.columns {
+            for i in 0..<A.rows {
+                a.append(A[i, j])
+            }
+        }
+        
+        var lda = A.rows
+        var eigenValues: [Complex<Double>] = .init(repeating: .zero, count: n)
+        var vl: [Complex<Double>] = .init(repeating: .zero, count: n*n)
+        var ldvl = A.rows
+        var vr: [Complex<Double>] = .init(repeating: .zero, count: n*n)
+        var ldvr = A.rows
+        var work: [Complex<Double>] = [.zero]
+        var lwork = -1
+        var rwork: [Double] = .init(repeating: .zero, count: 2*n)
+        var info = 0
+        
+        a.withUnsafeMutableBufferPointer { a in
+            eigenValues.withUnsafeMutableBufferPointer { w in
+                vl.withUnsafeMutableBufferPointer { vl in
+                    vr.withUnsafeMutableBufferPointer { vr in
+                        work.withUnsafeMutableBufferPointer { work in
+                            zgeev_("V", "V", &n, OpaquePointer(a.baseAddress), &lda, OpaquePointer(w.baseAddress), OpaquePointer(vl.baseAddress), &ldvl, OpaquePointer(vr.baseAddress), &ldvr, OpaquePointer(work.baseAddress!), &lwork, &rwork, &info)
+                        }
+                    }
+                }
+            }
+        }
+        
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        
+        lwork = Int(work[0].real)
+        work = .init(repeating: .zero, count: lwork)
+        a.withUnsafeMutableBufferPointer { a in
+            eigenValues.withUnsafeMutableBufferPointer { w in
+                vl.withUnsafeMutableBufferPointer { vl in
+                    vr.withUnsafeMutableBufferPointer { vr in
+                        work.withUnsafeMutableBufferPointer { work in
+                            zgeev_("V", "V", &n, OpaquePointer(a.baseAddress), &lda, OpaquePointer(w.baseAddress), OpaquePointer(vl.baseAddress), &ldvl, OpaquePointer(vr.baseAddress), &ldvr, OpaquePointer(work.baseAddress!), &lwork, &rwork, &info)
+                        }
+                    }
+                }
+            }
+        }
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        var leftEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(n), count: n)
+        var rightEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(n), count: n)
+        for i in 0..<n {
+            for j in 0..<n {
+                leftEigenVectors[j][i] = vl[n * i + j]
+                rightEigenVectors[j][i] = vr[n * i + j]
+            }
+        }
+        return (eigenValues, leftEigenVectors, rightEigenVectors)
+        #else
+        fatalError("TODO: Default implementation not yet implemented")
+        #endif
     }
     
     /// Diagonalizes the given matrix, i.e., computes it's eigenvalues and eigenvectors.
@@ -399,7 +733,8 @@ public extension MatrixOperations {
     /// - Returns: A tuple containing the eigenvalues and left eigenvectors
     //TODO: TESTS!
     @inlinable
-    static func diagonalizeLeft(_ A: Matrix<Complex<Double>>) throws -> (eigenValues: [Complex<Double>], leftEigenVectors: [[Complex<Double>]]) {
+    static func diagonalizeLeft(_ A: Matrix<Complex<Double>>) throws -> (eigenValues: [Complex<Double>], leftEigenVectors: [Vector<Complex<Double>>]) {
+        #if os(Windows) || os(Linux)
         if let LAPACKE_zgeev = LAPACKE.zgeev {
             let N = A.rows
             let lda = N
@@ -412,7 +747,7 @@ public extension MatrixOperations {
             let _N = Int8(bitPattern: UInt8(ascii: "N"))
             let info = LAPACKE_zgeev(LAPACK_ROW_MAJOR, V, _N, numericCast(N), &_A, numericCast(lda), &eigenValues, &vl, numericCast(ldvl), nil, numericCast(ldvr))
             if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            var leftEigenVectors: [[Complex<Double>]] = [[Complex<Double>]](repeating: .init(repeating: .zero, count: N), count: N)
+            var leftEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
             for i in 0..<N {
                 for j in 0..<N {
                     leftEigenVectors[j][i] = vl[N * i + j]
@@ -420,7 +755,61 @@ public extension MatrixOperations {
             }
             return (eigenValues, leftEigenVectors)
         }
-        fatalError("TODO: Default implementation not implemented yet")
+        #elseif os(macOS)
+        precondition(A.rows == A.columns)
+        var n = A.rows
+        var a: [Complex<Double>] = []
+        a.reserveCapacity(n * n)
+        for j in 0..<A.columns {
+            for i in 0..<A.rows {
+                a.append(A[i, j])
+            }
+        }
+        
+        var lda = A.rows
+        var eigenValues: [Complex<Double>] = .init(repeating: .zero, count: n)
+        var vl: [Complex<Double>] = .init(repeating: .zero, count: n*n)
+        var ldvl = A.rows
+        var ldvr = A.rows
+        var work: [Complex<Double>] = [.zero]
+        var lwork = -1
+        var rwork: [Double] = .init(repeating: .zero, count: 2*n)
+        var info = 0
+        
+        a.withUnsafeMutableBufferPointer { a in
+            eigenValues.withUnsafeMutableBufferPointer { w in
+                vl.withUnsafeMutableBufferPointer { vl in
+                    work.withUnsafeMutableBufferPointer { work in
+                        zgeev_("V", "N", &n, OpaquePointer(a.baseAddress), &lda, OpaquePointer(w.baseAddress), OpaquePointer(vl.baseAddress), &ldvl, nil, &ldvr, OpaquePointer(work.baseAddress!), &lwork, &rwork, &info)
+                    }
+                }
+            }
+        }
+        
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        
+        lwork = Int(work[0].real)
+        work = .init(repeating: .zero, count: lwork)
+        a.withUnsafeMutableBufferPointer { a in
+            eigenValues.withUnsafeMutableBufferPointer { w in
+                vl.withUnsafeMutableBufferPointer { vl in
+                    work.withUnsafeMutableBufferPointer { work in
+                        zgeev_("V", "N", &n, OpaquePointer(a.baseAddress), &lda, OpaquePointer(w.baseAddress), OpaquePointer(vl.baseAddress), &ldvl, nil, &ldvr, OpaquePointer(work.baseAddress!), &lwork, &rwork, &info)
+                    }
+                }
+            }
+        }
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        var leftEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(n), count: n)
+        for i in 0..<n {
+            for j in 0..<n {
+                leftEigenVectors[j][i] = vl[n * i + j]
+            }
+        }
+        return (eigenValues, leftEigenVectors)
+        #else
+        fatalError("TODO: Default implementation not yet implemented")
+        #endif
     }
     
     /// Diagonalizes the given matrix, i.e., computes it's eigenvalues and eigenvectors.
@@ -431,7 +820,8 @@ public extension MatrixOperations {
     /// - Returns: A tuple containing the eigenvalues and right eigenvectors
     //TODO: TESTS!
     @inlinable
-    static func diagonalizeRight(_ A: Matrix<Complex<Double>>) throws -> (eigenValues: [Complex<Double>], rightEigenVectors: [[Complex<Double>]]) {
+    static func diagonalizeRight(_ A: Matrix<Complex<Double>>) throws -> (eigenValues: [Complex<Double>], rightEigenVectors: [Vector<Complex<Double>>]) {
+        #if os(Windows) || os(Linux)
         if let LAPACKE_zgeev = LAPACKE.zgeev {
             let N = A.rows
             let lda = N
@@ -444,7 +834,7 @@ public extension MatrixOperations {
             let _N = Int8(bitPattern: UInt8(ascii: "N"))
             let info = LAPACKE_zgeev(LAPACK_ROW_MAJOR, _N, V, numericCast(N), &_A, numericCast(lda), &eigenValues, nil, numericCast(ldvl), &vr, numericCast(ldvr))
             if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            var rightEigenVectors: [[Complex<Double>]] = [[Complex<Double>]](repeating: .init(repeating: .zero, count: N), count: N)
+            var rightEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
             for i in 0..<N {
                 for j in 0..<N {
                     rightEigenVectors[j][i] = vr[N * i + j]
@@ -452,7 +842,61 @@ public extension MatrixOperations {
             }
             return (eigenValues, rightEigenVectors)
         }
-        fatalError("TODO: Default implementation not implemented yet")
+        #elseif os(macOS)
+        precondition(A.rows == A.columns)
+        var n = A.rows
+        var a: [Complex<Double>] = []
+        a.reserveCapacity(n * n)
+        for j in 0..<A.columns {
+            for i in 0..<A.rows {
+                a.append(A[i, j])
+            }
+        }
+        
+        var lda = A.rows
+        var eigenValues: [Complex<Double>] = .init(repeating: .zero, count: n)
+        var ldvl = A.rows
+        var vr: [Complex<Double>] = .init(repeating: .zero, count: n*n)
+        var ldvr = A.rows
+        var work: [Complex<Double>] = [.zero]
+        var lwork = -1
+        var rwork: [Double] = .init(repeating: .zero, count: 2*n)
+        var info = 0
+        
+        a.withUnsafeMutableBufferPointer { a in
+            eigenValues.withUnsafeMutableBufferPointer { w in
+                vr.withUnsafeMutableBufferPointer { vr in
+                    work.withUnsafeMutableBufferPointer { work in
+                        zgeev_("N", "V", &n, OpaquePointer(a.baseAddress), &lda, OpaquePointer(w.baseAddress), nil, &ldvl, OpaquePointer(vr.baseAddress), &ldvr, OpaquePointer(work.baseAddress!), &lwork, &rwork, &info)
+                    }
+                }
+            }
+        }
+        
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        
+        lwork = Int(work[0].real)
+        work = .init(repeating: .zero, count: lwork)
+        a.withUnsafeMutableBufferPointer { a in
+            eigenValues.withUnsafeMutableBufferPointer { w in
+                vr.withUnsafeMutableBufferPointer { vr in
+                    work.withUnsafeMutableBufferPointer { work in
+                        zgeev_("N", "V", &n, OpaquePointer(a.baseAddress), &lda, OpaquePointer(w.baseAddress), nil, &ldvl, OpaquePointer(vr.baseAddress), &ldvr, OpaquePointer(work.baseAddress!), &lwork, &rwork, &info)
+                    }
+                }
+            }
+        }
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        var rightEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(n), count: n)
+        for i in 0..<n {
+            for j in 0..<n {
+                rightEigenVectors[j][i] = vr[n * i + j]
+            }
+        }
+        return (eigenValues, rightEigenVectors)
+        #else
+        fatalError("TODO: Default implementation not yet implemented")
+        #endif
     }
 
     /// Computes the eigenvalues of the given symmetric matrix.
@@ -464,6 +908,7 @@ public extension MatrixOperations {
     //TODO: TESTS!
     @inlinable
     static func eigenValues(_ A: Matrix<Complex<Double>>) throws -> [Complex<Double>] {
+        #if os(Windows) || os(Linux)
         if let LAPACKE_zgeev = LAPACKE.zgeev {
             let N = A.rows
             let lda = N
@@ -476,12 +921,56 @@ public extension MatrixOperations {
             if info != 0 { throw MatrixOperationError.info(Int(info)) }
             return eigenValues
         }
-        fatalError("TODO: Default implementation not implemented yet")
+        #elseif os(macOS)
+        precondition(A.rows == A.columns)
+        var n = A.rows
+        var a: [Complex<Double>] = []
+        a.reserveCapacity(n * n)
+        for j in 0..<A.columns {
+            for i in 0..<A.rows {
+                a.append(A[i, j])
+            }
+        }
+        
+        var lda = A.rows
+        var eigenValues: [Complex<Double>] = .init(repeating: .zero, count: n)
+        var ldvl = A.rows
+        var ldvr = A.rows
+        var work: [Complex<Double>] = [.zero]
+        var lwork = -1
+        var rwork: [Double] = .init(repeating: .zero, count: 2*n)
+        var info = 0
+        
+        a.withUnsafeMutableBufferPointer { a in
+            eigenValues.withUnsafeMutableBufferPointer { w in
+                work.withUnsafeMutableBufferPointer { work in
+                    zgeev_("N", "N", &n, OpaquePointer(a.baseAddress), &lda, OpaquePointer(w.baseAddress), nil, &ldvl, nil, &ldvr, OpaquePointer(work.baseAddress!), &lwork, &rwork, &info)
+                }
+            }
+        }
+        
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        
+        lwork = Int(work[0].real)
+        work = .init(repeating: .zero, count: lwork)
+        a.withUnsafeMutableBufferPointer { a in
+            eigenValues.withUnsafeMutableBufferPointer { w in
+                work.withUnsafeMutableBufferPointer { work in
+                    zgeev_("N", "N", &n, OpaquePointer(a.baseAddress), &lda, OpaquePointer(w.baseAddress), nil, &ldvl, nil, &ldvr, OpaquePointer(work.baseAddress!), &lwork, &rwork, &info)
+                }
+            }
+        }
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        return eigenValues
+        #else
+        fatalError("TODO: Default implementation not yet implemented")
+        #endif
     }
     
     //TODO: TEST
     @inlinable
     static func solve(A: Matrix<Complex<Double>>, b: Vector<Complex<Double>>) throws -> Vector<Complex<Double>> {
+        #if os(Windows) || os(Linux)
         if let LAPACKE_zgesv = LAPACKE.zgesv {
             let N = A.rows
             let nrhs: Int32 = 1
@@ -494,6 +983,87 @@ public extension MatrixOperations {
             if info != 0 { throw MatrixOperationError.info(Int(info))}
             return Vector(_b)
         }
-        fatalError("TODO: Default implementation not implemented yet")
+        #elseif os(macOS)
+        var a: [Complex<Double>] = []
+        a.reserveCapacity(A.elements.count)
+        // Convert to columns major order
+        for j in 0..<A.columns {
+            for i in 0..<A.rows {
+                a.append(A[i, j])
+            }
+        }
+        var _b = b.components
+        var N = A.rows
+        var nrhs = 1
+        var lda = A.columns
+        var ldb = 1
+        var ipiv: [Int] = .init(repeating: .zero, count: N)
+        var info = 0
+        a.withUnsafeMutableBufferPointer { A in
+            _b.withUnsafeMutableBufferPointer { b in
+                zgesv_(&N, &nrhs, OpaquePointer(A.baseAddress), &lda, &ipiv, OpaquePointer(b.baseAddress), &ldb, &info)
+            }
+        }
+        if info != 0 { throw MatrixOperationError.info(info) }
+        return Vector(_b)
+        #else
+        fatalError("TODO: Default implementation not yet implemented")
+        #endif
+    }
+    
+    static func computeGeneralEigenBoth(matrix: Matrix<Double>) -> (
+        eigenvalues: [Complex<Double>],
+        leftEigenvectors: [[Complex<Double>]],
+        rightEigenvectors: [[Complex<Double>]]
+    )? {
+        assert(matrix.rows == matrix.columns)
+        var n = matrix.rows
+        var lda = matrix.columns
+        var ldvl = n
+        var ldvr = n
+        var info = 0
+        var lwork = 0
+        
+        var work = [0.0]
+        
+        var wr = [Double](repeating: 0.0, count: n)
+        var wi = [Double](repeating: 0.0, count: n)
+        var vl = [Double](repeating: 0.0, count: ldvl * n)
+        var vr = [Double](repeating: 0.0, count: ldvr * n)
+        var a: [Double] = []
+        for j in 0..<matrix.columns {
+            for i in 0..<matrix.rows {
+                a.append(matrix[i, j])
+            }
+        }
+        lwork = -1
+        dgeev_("V", "V", &n, &a, &lda, &wr, &wi, &vl, &ldvl, &vr, &ldvr, &work, &lwork, &info)
+        lwork = Int(work[0])
+        work = .init(repeating: 0.0, count: lwork)
+        dgeev_("V", "V", &n, &a, &lda, &wr, &wi, &vl, &ldvl, &vr, &ldvr, &work, &lwork, &info)
+        if info != 0 {
+            print("Failed to compute eigenvalues")
+            return nil
+        }
+        let eigenValues = Array(zip(wr, wi).map { Complex<Double>($0, $1) })
+        var leftEigenVectors: [[Complex<Double>]] = [[Complex<Double>]](repeating: .init(repeating: .zero, count: n), count: n)
+        var rightEigenVectors: [[Complex<Double>]] = [[Complex<Double>]](repeating: .init(repeating: .zero, count: n), count: n)
+        for i in 0..<n {
+            var j = 0
+            while j < n {
+                if wi[j] == .zero {
+                    leftEigenVectors[j][i] = Complex<Double>(vl[i * n + j])
+                    rightEigenVectors[j][i] = Complex<Double>(vr[i * n + j])
+                    j += 1
+                } else {
+                    leftEigenVectors[j][i] = Complex<Double>(vl[i * n + j], vl[i * n + j + 1])
+                    leftEigenVectors[j][i] = Complex<Double>(vl[i * n + j], -vl[i * n + j + 1])
+                    rightEigenVectors[j][i] = Complex<Double>(vr[i * n + j], vr[i * n + j + 1])
+                    rightEigenVectors[j][i] = Complex<Double>(vr[i * n + j], -vr[i * n + j + 1])
+                    j += 2
+                }
+            }
+        }
+        return (eigenValues, leftEigenVectors, rightEigenVectors)
     }
 }
