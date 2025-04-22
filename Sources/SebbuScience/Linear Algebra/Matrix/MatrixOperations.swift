@@ -1,6 +1,6 @@
 //
 //  MatrixOperations.swift
-//  swift-phd-toivonen
+//  swift-science
 //
 //  Created by Sebastian Toivonen on 11.10.2024.
 //

@@ -1,6 +1,6 @@
 //
 //  Matrix+Double.swift
-//  swift-phd-toivonen
+//  swift-science
 //
 //  Created by Sebastian Toivonen on 13.10.2024.
 //
@@ -23,8 +23,9 @@ public extension Matrix<Double> {
     /// The inverse of the matrix, if invertible.
     /// - Note: This operation is very expensive and will be calculated each time this variable is accessed.
     /// Thus you should store the inverse if you need it later again.
+    //@inlinable
     var inverse: Self? {
-        #if os(Windows) || os(Linux)
+#if os(Windows) || os(Linux)
         if let LAPACKE_dgetrf = LAPACKE.dgetrf, 
            let LAPACKE_dgetri = LAPACKE.dgetri {
             if rows != columns { return nil }
@@ -39,7 +40,7 @@ public extension Matrix<Double> {
             return .init(elements: a, rows: rows, columns: columns)
         }
         fatalError("TODO: Not yet implemented")
-        #elseif os(macOS)
+#elseif os(macOS)
         if rows != columns { return nil }
         var a: [Double] = []
         a.reserveCapacity(elements.count)
@@ -72,32 +73,28 @@ public extension Matrix<Double> {
                 }
             }
         }
-        #else
+#else
         fatalError("TODO: Not yet implemented")
-        #endif
+#endif
     }
 
     //MARK: Addition
-    @inline(__always)
     @inlinable
-    @_transparent
     static func +(lhs: Self, rhs: Self) -> Self {
         var resultMatrix: Self = Self(elements: Array(lhs.elements), rows: lhs.rows, columns: lhs.columns)
         resultMatrix.add(rhs)
         return resultMatrix
     }
     
-    @inline(__always)
+    
     @inlinable
-    @_transparent
     static func +=(lhs: inout Self, rhs: Self) {
         lhs.add(rhs)
     }
     
-    @inline(__always)
-    @inlinable
+    //@inlinable
     mutating func add(_ other: Self, scaling: T) {
-        #if os(Windows) || os(Linux)
+#if os(Windows) || os(Linux)
         if let cblas_daxpy = BLAS.daxpy {
             precondition(self.rows == other.rows)
             precondition(self.columns == other.columns)
@@ -105,55 +102,44 @@ public extension Matrix<Double> {
         } else {
             _add(other, scaling: scaling)
         }
-        #elseif os(macOS)
+#elseif os(macOS)
         precondition(self.rows == other.rows)
         precondition(self.columns == other.columns)
         cblas_daxpy(elements.count, scaling, other.elements, 1, &elements, 1)
-        #else
+#else
         _add(other, scaling: scaling)
-        #endif
+#endif
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     mutating func add(_ other: Self) {
         add(other, scaling: 1.0)
     }
     
     //MARK: Subtraction
-    @inline(__always)
     @inlinable
-    @_transparent
     static func -(lhs: Self, rhs: Self) -> Self {
         var resultMatrix: Self = Self(elements: Array(lhs.elements), rows: lhs.rows, columns: lhs.columns)
         resultMatrix.subtract(rhs)
         return resultMatrix
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     static func -=(lhs: inout Self, rhs: Self) {
         lhs.subtract(rhs)
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     mutating func subtract(_ other: Self, scaling: T) {
         add(other, scaling: -scaling)
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     mutating func subtract(_ other: Self) {
         subtract(other, scaling: 1.0)
     }
     
     //MARK: Scaling
-    @inline(__always)
     @inlinable
     static func *(lhs: T, rhs: Self) -> Self {
         var resultMatrix: Self = Matrix(elements: rhs.elements, rows: rhs.rows, columns: rhs.columns)
@@ -161,32 +147,28 @@ public extension Matrix<Double> {
         return resultMatrix
     }
     
-    @inline(__always)
+    
     @inlinable
-    @_transparent
     static func *=(lhs: inout Self, rhs: T) {
         lhs.multiply(by: rhs)
     }
     
-    @inline(__always)
-    @inlinable
-    @_transparent
+    //@inlinable
     mutating func multiply(by: T) {
-        #if os(Windows) || os(Linux)
+#if os(Windows) || os(Linux)
         if let cblas_dscal = BLAS.dscal {
             cblas_dscal(numericCast(elements.count), by, &elements, 1)
         } else {
             _multiply(by: by)
         }
-        #elseif os(macOS)
+#elseif os(macOS)
         cblas_dscal(elements.count, by, &elements, 1)
-        #else
+#else
         _multiply(by: by)
-        #endif
+#endif
     }
     
     //MARK: Division
-    @inline(__always)
     @inlinable
     static func /(lhs: Self, rhs: T) -> Self {
         var resultMatrix: Self = Matrix(elements: lhs.elements, rows: lhs.rows, columns: lhs.columns)
@@ -194,14 +176,12 @@ public extension Matrix<Double> {
         return resultMatrix
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     static func /=(lhs: inout Self, rhs: T) {
         lhs.divide(by: rhs)
     }
     
-    @inline(__always)
+    
     @inlinable
     mutating func divide(by: T) {
         if let recip = by.reciprocal {
@@ -217,8 +197,6 @@ public extension Matrix<Double> {
 //MARK: Matrix-Vector and Matrix-Matrix operations
 public extension Matrix<Double> {
     @inlinable
-    @inline(__always)
-    @_transparent
     func dot(_ other: Self) -> Self {
         var result: Self = .init(rows: rows, columns: other.columns) { _ in }
         dot(other, into: &result)
@@ -226,8 +204,6 @@ public extension Matrix<Double> {
     }
     
     @inlinable
-    @inline(__always)
-    @_transparent
     func dot(_ other: Self, multiplied: T) -> Self {
         var result: Self = Self.init(rows: rows, columns: other.columns) { _ in }
         dot(other, multiplied: multiplied, into: &result)
@@ -239,9 +215,9 @@ public extension Matrix<Double> {
         dot(other, multiplied: 1.0, into: &into)
     }
     
-    @inlinable
+    //@inlinable
     func dot(_ other: Self, multiplied: T, into: inout Self) {
-        #if os(Windows) || os(Linux)
+#if os(Windows) || os(Linux)
         if let cblas_dgemm = BLAS.dgemm {
             precondition(columns == other.rows, "The matrices are incompatible for multiplication")
             precondition(into.rows == self.rows, "The resulting matrix has incompatible rows")
@@ -261,7 +237,7 @@ public extension Matrix<Double> {
         } else {
             _dot(other, multiplied: multiplied, into: &into)
         }
-        #elseif os(macOS)
+#elseif os(macOS)
         precondition(columns == other.rows, "The matrices are incompatible for multiplication")
         precondition(into.rows == self.rows, "The resulting matrix has incompatible rows")
         precondition(into.columns == other.columns, "The resulting matrix has incompatible columns")
@@ -269,9 +245,9 @@ public extension Matrix<Double> {
         let ldb = other.columns
         let ldc = into.columns
         cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, rows, other.columns, columns, multiplied, elements, lda, other.elements, ldb, .zero, &into.elements, ldc)
-        #else
+#else
         _dot(other, multiplied: multiplied, into: &into)
-        #endif
+#endif
     }
     
     @inlinable
@@ -293,9 +269,9 @@ public extension Matrix<Double> {
         dot(vector, multiplied: 1.0, into: &into)
     }
     
-    @inlinable
+    //@inlinable
     func dot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
-        #if os(Windows) || os(Linux)
+#if os(Windows) || os(Linux)
         if let cblas_dgemv = BLAS.dgemv {
             precondition(columns == vector.count)
             precondition(rows == into.count)
@@ -312,7 +288,7 @@ public extension Matrix<Double> {
         } else {
             _dot(vector, multiplied: multiplied, into: &into)
         }
-        #elseif os(macOS)
+#elseif os(macOS)
         let lda = columns
         cblas_dgemv(CblasRowMajor,
                     CblasNoTrans,
@@ -326,9 +302,9 @@ public extension Matrix<Double> {
                     .zero,
                     &into.components,
                     1)
-        #else
+#else
         _dot(vector, multiplied: multiplied, into: &into)
-        #endif
+#endif
     }
 }
 
@@ -340,9 +316,9 @@ public extension MatrixOperations {
     /// - Throws: ```MatrixOperationError``` with the LAPACK error code if the diagonalization fails.
     /// - Returns: A tuple containing the eigenvalues and eigenvectors
     //TODO: TESTS!
-    @inlinable
+    //@inlinable
     static func diagonalizeSymmetric(_ A: Matrix<Double>) throws -> (eigenValues: [Double], eigenVectors: [Vector<Double>]) {
-        #if os(Windows) || os(Linux)
+#if os(Windows) || os(Linux)
         if let LAPACKE_dsyevd = LAPACKE.dsyevd {
             let N = A.rows
             let lda = N
@@ -361,7 +337,7 @@ public extension MatrixOperations {
             return (eigenValues, eigenVectors)
         }
         fatalError("TODO: Default implementation not yet implemented")
-        #elseif os(macOS)
+#elseif os(macOS)
         precondition(A.rows == A.columns)
         var a: [Double] = []
         a.reserveCapacity(A.elements.count)
@@ -394,9 +370,9 @@ public extension MatrixOperations {
             }
         }
         return (eigenValues, eigenVectors)
-        #else
+#else
         fatalError("TODO: Default implementation not yet implemented")
-        #endif
+#endif
     }
 
     /// Computes the eigenvalues of the given symmetric matrix.
@@ -406,7 +382,7 @@ public extension MatrixOperations {
     /// - Throws: ```MatrixOperationError``` with the LAPACK error code
     /// - Returns: An array containing the eigenvalues
     //TODO: TESTS!
-    @inlinable
+    //@inlinable
     static func eigenValuesSymmetric(_ A: Matrix<Double>) throws -> [Double] {
 #if os(Windows) || os(Linux)
         if let LAPACKE_dsyevd = LAPACKE.dsyevd {
@@ -421,7 +397,7 @@ public extension MatrixOperations {
             return eigenValues
         }
         fatalError("TODO: Default implementation not yet implemented")
-        #elseif os(macOS)
+#elseif os(macOS)
         precondition(A.rows == A.columns)
         var a: [Double] = []
         a.reserveCapacity(A.elements.count)
@@ -449,9 +425,9 @@ public extension MatrixOperations {
         dsyevd_("N", "U", &n, &a, &lda, &eigenValues, &work, &lwork, &iwork, &liwork, &info)
         
         return eigenValues
-        #else
+#else
         fatalError("TODO: Default implementation not yet implemented")
-        #endif
+#endif
     }
 
     /// Diagonalizes the given matrix, i.e., computes it's eigenvalues and eigenvectors.
@@ -461,7 +437,7 @@ public extension MatrixOperations {
     /// - Throws: ```MatrixOperationError``` with the LAPACK error code if the diagonalization fails.
     /// - Returns: A tuple containing the eigenvalues and left eigenvectors and right eigenvectors
     //TODO: TESTS!
-    @inlinable
+    //@inlinable
     static func diagonalize(_ A: Matrix<Double>) throws -> (eigenValues: [Complex<Double>], leftEigenVectors: [Vector<Complex<Double>>], rightEigenVectors: [Vector<Complex<Double>>]) {
 #if os(Windows) || os(Linux)
         if let LAPACKE_dgeev = LAPACKE.dgeev {
@@ -499,7 +475,7 @@ public extension MatrixOperations {
             return (eigenValues, leftEigenVectors, rightEigenVectors)
         }
         fatalError("TODO: Default implementation not yet implemented")
-        #elseif os(macOS)
+#elseif os(macOS)
         precondition(A.rows == A.columns)
         var a: [Double] = []
         a.reserveCapacity(A.elements.count)
@@ -544,9 +520,9 @@ public extension MatrixOperations {
             }
         }
         return (eigenValues, leftEigenVectors, rightEigenVectors)
-        #else
+#else
         fatalError("TODO: Default implementation not yet implemented")
-        #endif
+#endif
     }
     
     /// Diagonalizes the given matrix, i.e., computes it's eigenvalues and eigenvectors.
@@ -556,7 +532,7 @@ public extension MatrixOperations {
     /// - Throws: ```MatrixOperationError``` with the LAPACK error code if the diagonalization fails.
     /// - Returns: A tuple containing the eigenvalues and left eigenvectors
     //TODO: TESTS!
-    @inlinable
+    //@inlinable
     static func diagonalizeLeft(_ A: Matrix<Double>) throws -> (eigenValues: [Complex<Double>], leftEigenVectors: [Vector<Complex<Double>>]) {
 #if os(Windows) || os(Linux)
         if let LAPACKE_dgeev = LAPACKE.dgeev {
@@ -590,7 +566,7 @@ public extension MatrixOperations {
             return (eigenValues, leftEigenVectors)
         }
         fatalError("TODO: Default implementation not yet implemented")
-        #elseif os(macOS)
+#elseif os(macOS)
         precondition(A.rows == A.columns)
         var a: [Double] = []
         a.reserveCapacity(A.elements.count)
@@ -630,9 +606,9 @@ public extension MatrixOperations {
             }
         }
         return (eigenValues, leftEigenVectors)
-        #else
+#else
         fatalError("TODO: Default implementation not yet implemented")
-        #endif
+#endif
     }
     
     /// Diagonalizes the given matrix, i.e., computes it's eigenvalues and eigenvectors.
@@ -642,7 +618,7 @@ public extension MatrixOperations {
     /// - Throws: ```MatrixOperationError``` with the LAPACK error code if the diagonalization fails.
     /// - Returns: A tuple containing the eigenvalues and right eigenvectors
     //TODO: TESTS!
-    @inlinable
+    //@inlinable
     static func diagonalizeRight(_ A: Matrix<Double>) throws -> (eigenValues: [Complex<Double>], rightEigenVectors: [Vector<Complex<Double>>]) {
 #if os(Windows) || os(Linux)
         if let LAPACKE_dgeev = LAPACKE.dgeev {
@@ -676,7 +652,7 @@ public extension MatrixOperations {
             return (eigenValues, rightEigenVectors)
         }
         fatalError("TODO: Default implementation not yet implemented")
-        #elseif os(macOS)
+#elseif os(macOS)
         precondition(A.rows == A.columns)
         var a: [Double] = []
         a.reserveCapacity(A.elements.count)
@@ -716,9 +692,9 @@ public extension MatrixOperations {
             }
         }
         return (eigenValues, rightEigenVectors)
-        #else
+#else
         fatalError("TODO: Default implementation not yet implemented")
-        #endif
+#endif
     }
 
     /// Computes the eigenvalues of the given matrix.
@@ -728,7 +704,7 @@ public extension MatrixOperations {
     /// - Throws: ```MatrixOperationError``` with the LAPACK error code
     /// - Returns: An array containing the eigenvalues
     //TODO: TESTS!
-    @inlinable
+    //@inlinable
     static func eigenValues(_ A: Matrix<Double>) throws -> [Complex<Double>] {
 #if os(Windows) || os(Linux)
         if let LAPACKE_dgeev = LAPACKE.dgeev {
@@ -746,7 +722,7 @@ public extension MatrixOperations {
             return eigenValues
         }
         fatalError("TODO: Default implementation not yet implemented")
-        #elseif os(macOS)
+#elseif os(macOS)
         precondition(A.rows == A.columns)
         var a: [Double] = []
         a.reserveCapacity(A.elements.count)
@@ -771,13 +747,13 @@ public extension MatrixOperations {
         dgeev_("N", "N", &n, &a, &lda, &eigenReal, &eigenImaginary, nil, &ldvl, nil, &ldvr, &work, &lwork, &info)
         let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Double>($0, $1) })
         return eigenValues
-        #else
+#else
         fatalError("TODO: Default implementation not yet implemented")
-        #endif
+#endif
     }
     
     //TODO: Test!
-    @inlinable
+    //@inlinable
     static func solve(A: Matrix<Double>, b: Vector<Double>) throws -> Vector<Double> {
 #if os(Windows) || os(Linux)
         if let LAPACKE_dgesv = LAPACKE.dgesv {
@@ -793,7 +769,7 @@ public extension MatrixOperations {
             return Vector(_b)
         }
         fatalError("TODO: Default implementation not yet implemented")
-        #elseif os(macOS)
+#elseif os(macOS)
         precondition(A.rows == A.columns)
         var a: [Double] = []
         a.reserveCapacity(A.rows * A.columns)
@@ -812,8 +788,8 @@ public extension MatrixOperations {
         dgesv_(&n, &nrhs, &a, &lda, &ipiv, &_b, &ldb, &info)
         if info != 0 { throw MatrixOperationError.info(Int(info)) }
         return Vector(_b)
-        #else
+#else
         fatalError("TODO: Default implementation not yet implemented")
-        #endif
+#endif
     }
 }

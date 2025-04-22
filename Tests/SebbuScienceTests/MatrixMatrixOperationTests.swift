@@ -78,7 +78,7 @@ struct InverseTest {
     }
     
     @Test("Complex<Double> matrix inverse")
-    func matrixComplexDoubleInvere() async throws {
+    func matrixComplexDoubleInverse() async throws {
         let a: Matrix<Complex<Double>> = .init(elements: [Complex(1.0), Complex(2.0, 1.0), Complex(3.0), Complex(4.0)], rows: 2, columns: 2)
         if let b = a.inverse {
             print(a)
@@ -91,7 +91,7 @@ struct InverseTest {
     }
     
     @Test("Complex<Float> matrix inverse")
-    func matrixComplexFloatInvere() async throws {
+    func matrixComplexFloatInverse() async throws {
         let a: Matrix<Complex<Float>> = .init(elements: [Complex(1.0), Complex(2.0, 1.0), Complex(3.0), Complex(4.0)], rows: 2, columns: 2)
         if let b = a.inverse {
             print(a)

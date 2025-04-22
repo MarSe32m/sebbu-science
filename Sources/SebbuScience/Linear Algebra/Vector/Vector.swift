@@ -1,6 +1,6 @@
 //
 //  Vector.swift
-//  swift-phd-toivonen
+//  swift-science
 //
 //  Created by Sebastian Toivonen on 13.10.2024.
 //
@@ -11,7 +11,7 @@ import ComplexModule
 public struct Vector<T> {
     public var components: [T]
     
-    @_transparent
+    @inlinable
     public var count: Int { components.count }
     
     public init(_ components: [T]) {
@@ -26,7 +26,7 @@ public struct Vector<T> {
         })
     }
     
-    @inline(__always)
+    @inlinable
     public subscript(_ index: Int) -> T {
         _read {
             yield components[index]
@@ -49,3 +49,15 @@ extension Vector: Equatable where T: Equatable {}
 extension Vector: Hashable where T: Hashable {}
 extension Vector: Codable where T: Codable {}
 extension Vector: Sendable where T: Sendable {}
+
+extension Vector where T: AlgebraicField, T.Magnitude: FloatingPoint {
+    func isApproximatelyEqual(to: Self) -> Bool {
+        if count != to.count { return false }
+        for i in 0..<count {
+            if !self[i].isApproximatelyEqual(to: to[i]) {
+                return false
+            }
+        }
+        return true
+    }
+}

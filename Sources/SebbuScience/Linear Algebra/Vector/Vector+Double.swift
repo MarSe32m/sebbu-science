@@ -1,15 +1,12 @@
 //
 //  Vector+Double.swift
-//  swift-phd-toivonen
+//  swift-science
 //
 //  Created by Sebastian Toivonen on 11.4.2025.
 //
 
 #if canImport(COpenBLAS)
 import COpenBLAS
-#endif
-#if canImport(CLAPACK)
-import CLAPACK
 #endif
 
 #if canImport(Accelerate)
@@ -19,18 +16,17 @@ import Accelerate
 import RealModule
 
 public extension Vector<Double> {
-    @inline(__always)
+    @inlinable
     var norm: Double {
         normSquared.squareRoot()
     }
     
-    @inline(__always)
+    @inlinable
     var normSquared: Double {
         self.inner(self)
     }
 
     //MARK: Scaling
-    @inline(__always)
     @inlinable
     static func *(lhs: T, rhs: Self) -> Self {
         var result = Vector(rhs.components)
@@ -38,32 +34,28 @@ public extension Vector<Double> {
         return result
     }
     
-    @inline(__always)
     @inlinable
     static func *=(lhs: inout Self, rhs: T) {
         lhs.multiply(by: rhs)
     }
     
-    @inline(__always)
-    @_transparent
-    @inlinable
+    //@inlinable
     mutating func multiply(by: T) {
-        #if os(Windows) || os(Linux)
+#if os(Windows) || os(Linux)
         if let cblas_dscal = BLAS.dscal {
             let N: Int32 = numericCast(count)
             cblas_dscal(N, by, &components, 1)
         } else {
             _multiply(by: by)
         }
-        #elseif os(macOS)
+#elseif os(macOS)
         cblas_dscal(count, by, &components, 1)
-        #else
+#else
         _multiply(by: by)
-        #endif
+#endif
     }
     
     //MARK: Division
-    @inline(__always)
     @inlinable
     static func /(lhs: Self, rhs: T) -> Self {
         var result = Vector(lhs.components)
@@ -71,14 +63,11 @@ public extension Vector<Double> {
         return result
     }
     
-    @inline(__always)
     @inlinable
     static func /=(lhs: inout Self, rhs: T) {
         lhs.divide(by: rhs)
     }
     
-    @inline(__always)
-    @_transparent
     @inlinable
     mutating func divide(by: T) {
         if let recip = by.reciprocal {
@@ -91,7 +80,6 @@ public extension Vector<Double> {
     }
     
     //MARK: Addition
-    @inline(__always)
     @inlinable
     static func +(lhs: Self, rhs: Self) -> Self {
         var result = Vector(Array(lhs.components))
@@ -99,88 +87,73 @@ public extension Vector<Double> {
         return result
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     static func +=(lhs: inout Self, rhs: Self) {
         lhs.add(rhs)
     }
     
-    @inline(__always)
-    @inlinable
-    @_transparent
+    //@inlinable
     mutating func add(_ other: Self, scaling: T) {
-        #if os(Windows) || os(Linux)
+#if os(Windows) || os(Linux)
         if let cblas_daxpy = BLAS.daxpy {
             precondition(other.components.count == self.components.count)
             cblas_daxpy(numericCast(count), scaling, other.components, 1, &components, 1)
         } else {
             _add(other, scaling: scaling)
         }
-        #elseif os(macOS)
+#elseif os(macOS)
         precondition(other.components.count == self.components.count)
         cblas_daxpy(count, scaling, other.components, 1, &components, 1)
-        #else
+#else
         _add(other, scaling: scaling)
 #endif
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     mutating func add(_ other: Self) {
         add(other, scaling: 1.0)
     }
     
     // MARK: Subtraction
-    @inline(__always)
     @inlinable
     static func -(lhs: Self, rhs: Self) -> Self {
-        precondition(lhs.components.count == rhs.components.count)
         var result = Vector(Array(lhs.components))
         result.subtract(rhs)
         return result
     }
     
-    @inline(__always)
     @inlinable
     static func -=(lhs: inout Self, rhs: Self){
         lhs.subtract(rhs)
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     mutating func subtract(_ other: Self, scaling: T) {
         add(other, scaling: -scaling)
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     mutating func subtract(_ other: Self) {
         subtract(other, scaling: 1.0)
     }
     
     //MARK: Dot product
     /// Computes the Euclidian dot product.
-    @inlinable
-    @inline(__always)
-    @_transparent
+    //@inlinable
     func dot(_ other: Self) -> T {
-        #if os(Windows) || os(Linux)
+#if os(Windows) || os(Linux)
         if let cblas_ddot = BLAS.ddot {
             precondition(count == other.count)
             return cblas_ddot(numericCast(count), components, 1, other.components, 1)
         } else {
             return _dot(other)
         }
-        #elseif os(macOS)
+#elseif os(macOS)
         precondition(count == other.count)
         return cblas_ddot(count, components, 1, other.components, 1)
-        #else
+#else
         _dot(other)
-        #endif
+#endif
     }
     
     //MARK: Vector matrix multiply
@@ -199,16 +172,13 @@ public extension Vector<Double> {
     }
     
     @inlinable
-    @inline(__always)
-    @_transparent
     func dot(_ matrix: Matrix<T>, into: inout Self) {
         dot(matrix, multiplied: 1.0, into: &into)
     }
     
-    @inlinable
-    @inline(__always)
+    //@inlinable
     func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
-        #if os(Windows) || os(Linux)
+#if os(Windows) || os(Linux)
         if let cblas_dgemv = BLAS.dgemv {
             precondition(matrix.rows == self.count)
             precondition(matrix.columns == into.count)
@@ -221,13 +191,13 @@ public extension Vector<Double> {
         } else {
             _dot(matrix, multiplied: multiplied, into: &into)
         }
-        #elseif os(macOS)
+#elseif os(macOS)
         precondition(matrix.rows == self.count)
         precondition(matrix.columns == into.count)
         let lda = matrix.columns
         cblas_dgemv(CblasRowMajor, CblasTrans, matrix.rows, matrix.columns, multiplied, matrix.elements, lda, components, 1, .zero, &into.components, 1)
-        #else
+#else
         _dot(matrix, multiplied: multiplied, into: &into)
-        #endif
+#endif
     }
 }

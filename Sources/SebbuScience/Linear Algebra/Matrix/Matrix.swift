@@ -1,6 +1,6 @@
 //
 //  Matrix.swift
-//  swift-phd-toivonen
+//  swift-science
 //
 //  Created by Sebastian Toivonen on 13.10.2024.
 //
@@ -31,7 +31,6 @@ public struct Matrix<T> {
         })
     }
     
-    @inline(__always)
     @inlinable
     public subscript(_ i: Int, _ j: Int) -> T {
         _read {

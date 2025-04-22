@@ -1,3 +1,10 @@
+//
+//  SymbolLoading.swift
+//  swift-science
+//
+//  Created by Sebastian Toivonen on 19.4.2025.
+//
+
 #if os(Windows)
 import WinSDK
 #elseif os(Linux)
@@ -9,7 +16,7 @@ import Darwin
 
 #if os(Windows)
 @inlinable
-@inline(__always)
+
 func loadLibrary(name: String) -> HMODULE? {
     if let handle = LoadLibraryA(name) {
         return handle
@@ -18,7 +25,7 @@ func loadLibrary(name: String) -> HMODULE? {
 }
 
 @inlinable
-@inline(__always)
+
 func loadSymbol<T>(name: String, handle: HMODULE?, as type: T.Type = T.self) -> T? {
     guard let handle else { return nil }
     if let symbol = GetProcAddress(handle, name) {
@@ -28,7 +35,7 @@ func loadSymbol<T>(name: String, handle: HMODULE?, as type: T.Type = T.self) -> 
 }
 #elseif os(Linux)
 @inlinable
-@inline(__always)
+
 func loadLibrary(name: String) -> UnsafeMutableRawPointer? {
     if let handle = dlopen(name, RTLD_NOW | RTLD_LOCAL) {
         return handle
@@ -37,7 +44,7 @@ func loadLibrary(name: String) -> UnsafeMutableRawPointer? {
 }
 
 @inlinable
-@inline(__always)
+
 func loadSymbol<T>(name: String, handle: UnsafeMutableRawPointer?, as type: T.Type = T.self) -> T? {
     guard let handle else { return nil }
     if let symbol = dlsym(handle, name) {
@@ -53,7 +60,7 @@ func getDLErrorMessage() -> String {
 }
 #elseif os(macOS)
 @inlinable
-@inline(__always)
+
 func loadLibrary(name: String) -> UnsafeMutableRawPointer? {
     if let handle = dlopen(name, RTLD_NOW | RTLD_LOCAL) {
         return handle
@@ -62,7 +69,7 @@ func loadLibrary(name: String) -> UnsafeMutableRawPointer? {
 }
 
 @inlinable
-@inline(__always)
+
 func loadSymbol<T>(name: String, handle: UnsafeMutableRawPointer?, as type: T.Type = T.self) -> T? {
     guard let handle else { return nil }
     if let symbol = dlsym(handle, name) {

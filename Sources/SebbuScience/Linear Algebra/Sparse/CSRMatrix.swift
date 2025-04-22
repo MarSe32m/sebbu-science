@@ -130,7 +130,7 @@ public extension CSRMatrix where T == Complex<Double> {
 }
 
 public extension CSRMatrix {
-    @inline(__always)
+    
     @inlinable
     @_optimize(speed)
     func dot(_ vector: Vector<T>) -> Vector<T> {
@@ -139,14 +139,14 @@ public extension CSRMatrix {
         return result
     }
     
-    @inline(__always)
+    
     @inlinable
     @_optimize(speed)
     func dot(_ vector: Vector<T>, into: inout Vector<T>) {
         dot(vector, multiplied: 1, into: &into)
     }
     
-    @inline(__always)
+    
     @inlinable
     @_optimize(speed)
     func dot(_ vector: Vector<T>, multiplied: T) -> Vector<T> {
@@ -155,7 +155,7 @@ public extension CSRMatrix {
         return result
     }
     
-    @inline(__always)
+    
     @inlinable
     @_optimize(speed)
     func dot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
@@ -182,7 +182,7 @@ public extension CSRMatrix {
         }
     }
     
-    @inline(__always)
+    
     @_optimize(speed)
     @inlinable
     static func *(lhs: T, rhs: CSRMatrix<T>) -> CSRMatrix<T> {
@@ -190,24 +190,24 @@ public extension CSRMatrix {
         return CSRMatrix(rows: rhs.rows, columns: rhs.columns, values: newValues, rowIndices: rhs.rowIndices, columnIndices: rhs.columnIndices)
     }
     
-    @inline(__always)
+    
     @_optimize(speed)
     @inlinable
-    @_transparent
+    
     static func *=(lhs: inout CSRMatrix<T>, rhs: T)  {
         lhs.multiply(by: rhs)
     }
     
     @inlinable
     @_optimize(speed)
-    @inline(__always)
+    
     mutating func multiply(by: T) {
         for i in 0..<values.count {
             values[i] = Relaxed.product(values[i], by)
         }
     }
     
-    @inline(__always)
+    
     @_optimize(speed)
     @inlinable
     static func /(lhs: CSRMatrix<T>, rhs: T) -> CSRMatrix<T> {
@@ -216,14 +216,14 @@ public extension CSRMatrix {
         return result
     }
     
-    @inline(__always)
+    
     @_optimize(speed)
     @inlinable
     static func /=(lhs: inout CSRMatrix<T>, rhs: T)  {
         lhs.divide(by: rhs)
     }
     
-    @inline(__always)
+    
     @_optimize(speed)
     @inlinable
     mutating func divide(by: T) {
@@ -239,7 +239,7 @@ public extension CSRMatrix {
 
 
 public extension CSRMatrix<Complex<Double>> {
-    @inline(__always)
+    
     @_optimize(speed)
     @inlinable
     static func *(lhs: Double, rhs: CSRMatrix<T>) -> Self {
@@ -248,21 +248,21 @@ public extension CSRMatrix<Complex<Double>> {
         return result
     }
     
-    @inline(__always)
+    
     @_optimize(speed)
     @inlinable
-    @_transparent
+    
     static func *=(lhs: inout CSRMatrix<T>, rhs: Double)  {
         lhs.multiply(by: Complex(rhs))
     }
     
     @inlinable
-    @inline(__always)
+    
     mutating func multiply(by: Double) {
         multiply(by: Complex(by))
     }
     
-    @inline(__always)
+    
     @_optimize(speed)
     @inlinable
     static func /(lhs: CSRMatrix<T>, rhs: Double) -> CSRMatrix<T> {
@@ -271,14 +271,14 @@ public extension CSRMatrix<Complex<Double>> {
         return result
     }
     
-    @inline(__always)
+    
     @_optimize(speed)
     @inlinable
     static func /=(lhs: inout CSRMatrix<T>, rhs: Double)  {
         lhs.divide(by: Complex(rhs))
     }
     
-    @inline(__always)
+    
     @_optimize(speed)
     @inlinable
     mutating func divide(by: Double) {

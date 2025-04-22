@@ -1,3 +1,10 @@
+//
+//  BLAS.swift
+//  swift-science
+//
+//  Created by Sebastian Toivonen on 19.4.2025.
+//
+
 #if canImport(COpenBLAS)
 import COpenBLAS
 #endif

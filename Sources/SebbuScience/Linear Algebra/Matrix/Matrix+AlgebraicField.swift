@@ -1,6 +1,6 @@
 //
 //  Matrix+AlgebraicField.swift
-//  swift-phd-toivonen
+//  swift-science
 //
 //  Created by Sebastian Toivonen on 11.4.2025.
 //
@@ -10,30 +10,23 @@ import SebbuCollections
 
 public extension Matrix where T: AlgebraicField {
     //MARK: Addition
-    @inline(__always)
     @inlinable
-    @_transparent
     static func +(lhs: Self, rhs: Self) -> Self {
         var resultMatrix: Self = Self(elements: Array(lhs.elements), rows: lhs.rows, columns: lhs.columns)
         resultMatrix.add(rhs)
         return resultMatrix
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     static func +=(lhs: inout Self, rhs: Self) {
         lhs.add(rhs)
     }
-    
-    @inline(__always)
+
     @inlinable
-    @_transparent
     mutating func add(_ other: Self, scaling: T) {
         _add(other, scaling: scaling)
     }
 
-    @inline(__always)
     @inlinable
     internal mutating func _add(_ other: Self, scaling: T) {
         precondition(self.rows == other.rows)
@@ -43,14 +36,11 @@ public extension Matrix where T: AlgebraicField {
         }
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     mutating func add(_ other: Self) {
         _add(other)
     }
 
-    @inline(__always)
     @inlinable
     internal mutating func _add(_ other: Self) {
         precondition(self.rows == other.rows)
@@ -61,37 +51,28 @@ public extension Matrix where T: AlgebraicField {
     }
     
     //MARK: Subtraction
-    @inline(__always)
     @inlinable
-    @_transparent
     static func -(lhs: Self, rhs: Self) -> Self {
         var resultMatrix: Self = Self(elements: Array(lhs.elements), rows: lhs.rows, columns: lhs.columns)
         resultMatrix.subtract(rhs)
         return resultMatrix
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     static func -=(lhs: inout Self, rhs: Self) {
         lhs.subtract(rhs)
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     mutating func subtract(_ other: Self, scaling: T) {
         add(other, scaling: -scaling)
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     mutating func subtract(_ other: Self) {
         _subtract(other)
     }
 
-    @inline(__always)
     @inlinable
     internal mutating func _subtract(_ other: Self) {
         precondition(self.rows == other.rows)
@@ -112,7 +93,6 @@ public extension Matrix where T: AlgebraicField {
     }
     
     //MARK: Scaling
-    @inline(__always)
     @inlinable
     static func *(lhs: T, rhs: Self) -> Self {
         var resultMatrix: Self = Matrix(elements: rhs.elements, rows: rhs.rows, columns: rhs.columns)
@@ -120,21 +100,16 @@ public extension Matrix where T: AlgebraicField {
         return resultMatrix
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     static func *=(lhs: inout Self, rhs: T) {
         lhs.multiply(by: rhs)
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     mutating func multiply(by: T) {
         _multiply(by: by)
     }
-
-    @inline(__always)
+    
     @inlinable
     internal mutating func _multiply(by: T) {
         for i in 0..<elements.count {
@@ -142,14 +117,11 @@ public extension Matrix where T: AlgebraicField {
         }
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     func multiply(by: T, into: inout Self) {
         _multiply(by: by, into: &into)
     }
-
-    @inline(__always)
+    
     @inlinable
     internal func _multiply(by: T, into: inout Self) {
         for i in 0..<into.elements.count {
@@ -158,7 +130,6 @@ public extension Matrix where T: AlgebraicField {
     }
     
     //MARK: Division
-    @inline(__always)
     @inlinable
     static func /(lhs: Self, rhs: T) -> Self {
         var resultMatrix: Self = Matrix(elements: lhs.elements, rows: lhs.rows, columns: lhs.columns)
@@ -166,23 +137,17 @@ public extension Matrix where T: AlgebraicField {
         return resultMatrix
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     static func /=(lhs: inout Self, rhs: T) {
         lhs.divide(by: rhs)
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     mutating func divide(by: T) {
         _divide(by: by)
     }
 
-    @inline(__always)
     @inlinable
-    @_transparent
     internal mutating func _divide(by: T) {
         if let reciprocal = by.reciprocal {
             multiply(by: reciprocal)
@@ -193,16 +158,12 @@ public extension Matrix where T: AlgebraicField {
         }
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     func divide(by: T, into: inout Self) {
         _divide(by: by, into: &into)
     }
 
-    @inline(__always)
     @inlinable
-    @_transparent
     internal func _divide(by: T, into: inout Self) {
         if let reciprocal = by.reciprocal {
             multiply(by: reciprocal, into: &into)
@@ -217,8 +178,6 @@ public extension Matrix where T: AlgebraicField {
 //MARK: Matrix-Vector and Matrix-Matrix operations
 public extension Matrix where T: AlgebraicField {
     @inlinable
-    @inline(__always)
-    @_transparent
     func dot(_ other: Self) -> Self {
         //FIXME: Is this safe? Anything conforming to AlgebraicField ought to be quite trivial... So we can leave the memory uninitialized
         var result: Self = .init(rows: rows, columns: other.columns) { _ in }
@@ -227,8 +186,6 @@ public extension Matrix where T: AlgebraicField {
     }
     
     @inlinable
-    @inline(__always)
-    @_transparent
     func dot(_ other: Self, multiplied: T) -> Self {
         //FIXME: Is this safe? Anything conforming to AlgebraicField ought to be quite trivial... So we can leave the memory uninitialized
         var result: Self = Self.init(rows: rows, columns: other.columns) { _ in }
@@ -236,9 +193,7 @@ public extension Matrix where T: AlgebraicField {
         return result
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     func dot(_ other: Self, into: inout Self) {
         _dot(other, into: &into)
     }
@@ -259,9 +214,7 @@ public extension Matrix where T: AlgebraicField {
         }
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     func dot(_ other: Self, multiplied: T, into: inout Self) {
         _dot(other, multiplied: multiplied, into: &into)
     }
@@ -296,9 +249,7 @@ public extension Matrix where T: AlgebraicField {
         return result
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     func dot(_ vector: Vector<T>, into: inout Vector<T>) {
         _dot(vector, into: &into)
     }
@@ -314,9 +265,7 @@ public extension Matrix where T: AlgebraicField {
         }
     }
     
-    @inline(__always)
     @inlinable
-    @_transparent
     func dot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
         _dot(vector, multiplied: multiplied, into: &into)
     }
@@ -350,7 +299,6 @@ public extension Matrix where T: AlgebraicField {
     /// Thus you should store the inverse if you need it later again.
     var inverse: Self? { fatalError("TODO: Not yet implemented") }
     
-    @inline(__always)
     @inlinable
     var trace: T {
         var result: T = .zero
