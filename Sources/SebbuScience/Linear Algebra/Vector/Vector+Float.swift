@@ -205,3 +205,20 @@ public extension Vector<Float> {
 #endif
     }
 }
+
+//MARK: Copying components
+public extension Vector<Float> {
+    @inlinable
+    mutating func copyComponents(from other: Self) {
+        precondition(count == other.count)
+        #if os(Windows) || os(Linux)
+        fatalError("TODO: Implement on Windows/Linux")
+        #elseif os(macOS)
+        cblas_scopy(components.count, other.components, 1, &components, 1)
+        #else
+        for i in 0..<count {
+            components[i] = other.components[i]
+        }
+        #endif
+    }
+}

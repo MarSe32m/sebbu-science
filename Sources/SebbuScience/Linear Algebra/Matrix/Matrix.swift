@@ -45,6 +45,14 @@ public struct Matrix<T> {
             yield &elements[index]
         }
     }
+    
+    @inlinable
+    public mutating func copyElements(from other: Self) {
+        precondition(elements.count == other.elements.count)
+        for i in 0..<elements.count {
+            elements[i] = other.elements[i]
+        }
+    }
 }
 
 extension Matrix {

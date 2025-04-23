@@ -327,6 +327,23 @@ public extension Matrix<Float> {
     }
 }
 
+//MARK: Copying elements
+public extension Matrix<Float> {
+    //@inlinable
+    mutating func copyElements(from other: Self) {
+        precondition(elements.count == other.elements.count)
+        #if os(Windows) || os(Linux)
+        fatalError("TODO: Implement on Windows / Linux")
+        #elseif os(macOS)
+        cblas_scopy(elements.count, other.elements, 1, &elements, 1)
+        #else
+        for i in 0..<elements.count {
+            elements[i] = other.elements[i]
+        }
+        #endif
+    }
+}
+
 public extension MatrixOperations {
     /// Diagonalizes the given symmetric matrix, i.e., computes it's eigenvalues and eigenvectors.
     /// - Parameters:

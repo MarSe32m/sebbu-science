@@ -35,6 +35,14 @@ public struct Vector<T> {
             yield &components[index]
         }
     }
+    
+    @inlinable
+    public mutating func copyComponents(from other: Self) {
+        precondition(count == other.count)
+        for i in 0..<count {
+            components[i] = other.components[i]
+        }
+    }
 }
 
 extension Vector: ExpressibleByArrayLiteral {

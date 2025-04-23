@@ -441,6 +441,27 @@ public extension Matrix<Complex<Float>> {
     }
 }
 
+//MARK: Copying elements
+public extension Matrix<Complex<Float>> {
+    //@inlinable
+    mutating func copyElements(from other: Self) {
+        precondition(elements.count == other.elements.count)
+        #if os(Windows) || os(Linux)
+        fatalError("TODO: Implement on Windows / Linux")
+        #elseif os(macOS)
+        elements.withUnsafeMutableBufferPointer { Y in
+            other.elements.withUnsafeBufferPointer { X in
+                cblas_ccopy(X.count, OpaquePointer(X.baseAddress), 1, OpaquePointer(Y.baseAddress), 1)
+            }
+        }
+        #else
+        for i in 0..<elements.count {
+            elements[i] = other.elements[i]
+        }
+        #endif
+    }
+}
+
 public extension MatrixOperations {
     /// Diagonalizes the given hermitian matrix, i.e., computes it's eigenvalues and eigenvectors.
     /// - Parameters:

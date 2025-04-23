@@ -194,6 +194,23 @@ public extension Matrix<Double> {
     }
 }
 
+//MARK: Copying elements
+public extension Matrix<Double> {
+    //@inlinable
+    mutating func copyElements(from other: Self) {
+        precondition(elements.count == other.elements.count)
+        #if os(Windows) || os(Linux)
+        fatalError("TODO: Implement on Windows / Linux")
+        #elseif os(macOS)
+        cblas_dcopy(elements.count, other.elements, 1, &elements, 1)
+        #else
+        for i in 0..<elements.count {
+            elements[i] = other.elements[i]
+        }
+        #endif
+    }
+}
+
 //MARK: Matrix-Vector and Matrix-Matrix operations
 public extension Matrix<Double> {
     @inlinable

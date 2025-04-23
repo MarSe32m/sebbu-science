@@ -389,3 +389,24 @@ public extension Vector<Complex<Float>> {
         }
     }
 }
+
+//MARK: Copying components
+public extension Vector<Complex<Float>> {
+    @inlinable
+    mutating func copyComponents(from other: Self) {
+        precondition(count == other.count)
+        #if os(Windows) || os(Linux)
+        fatalError("TODO: Implement on Windows/Linux")
+        #elseif os(macOS)
+        components.withUnsafeMutableBufferPointer { Y in
+            other.components.withUnsafeBufferPointer { X in
+                cblas_ccopy(Y.count, OpaquePointer(X.baseAddress), 1, OpaquePointer(Y.baseAddress), 1)
+            }
+        }
+        #else
+        for i in 0..<count {
+            components[i] = other.components[i]
+        }
+        #endif
+    }
+}
