@@ -302,3 +302,14 @@ public extension Vector where T: AlgebraicField {
         }
     }
 }
+
+public extension Vector where T: AlgebraicField, T.Magnitude: FloatingPoint {
+    @inlinable @inline(__always)
+    func isApproximatelyEqual( to other: Self, absoluteTolerance: T.Magnitude, relativeTolerance: T.Magnitude = 0) -> Bool {
+        if count != other.count { return false }
+        for i in 0..<count {
+            if !components[i].isApproximatelyEqual(to: other[i], absoluteTolerance: absoluteTolerance, relativeTolerance: relativeTolerance, norm: \.magnitude) { return false }
+        }
+        return true
+    }
+}

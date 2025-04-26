@@ -5,12 +5,11 @@
 //  Created by Sebastian Toivonen on 13.10.2024.
 //
 
-#if canImport(COpenBLAS)
-import COpenBLAS
-#endif
 #if canImport(CLAPACK)
 import CLAPACK
 #endif
+
+import BLAS
 
 #if canImport(Accelerate)
 import Accelerate
@@ -92,23 +91,16 @@ public extension Matrix<Double> {
         lhs.add(rhs)
     }
     
-    //@inlinable
+    @inlinable
     mutating func add(_ other: Self, scaling: T) {
-#if os(Windows) || os(Linux)
-        if let cblas_daxpy = BLAS.daxpy {
-            precondition(self.rows == other.rows)
-            precondition(self.columns == other.columns)
-            cblas_daxpy(numericCast(elements.count), scaling, other.elements, 1, &elements, 1)
+        if let daxpy = BLAS.daxpy {
+            precondition(rows == other.rows)
+            precondition(columns == other.columns)
+            let N = cblas_int(elements.count)
+            daxpy(N, scaling, other.elements, 1, &elements, 1)
         } else {
             _add(other, scaling: scaling)
         }
-#elseif os(macOS)
-        precondition(self.rows == other.rows)
-        precondition(self.columns == other.columns)
-        cblas_daxpy(elements.count, scaling, other.elements, 1, &elements, 1)
-#else
-        _add(other, scaling: scaling)
-#endif
     }
     
     @inlinable
@@ -155,17 +147,12 @@ public extension Matrix<Double> {
     
     //@inlinable
     mutating func multiply(by: T) {
-#if os(Windows) || os(Linux)
-        if let cblas_dscal = BLAS.dscal {
-            cblas_dscal(numericCast(elements.count), by, &elements, 1)
+        if let dscal = BLAS.dscal {
+            let N = cblas_int(elements.count)
+            dscal(N, by, &elements, 1)
         } else {
             _multiply(by: by)
         }
-#elseif os(macOS)
-        cblas_dscal(elements.count, by, &elements, 1)
-#else
-        _multiply(by: by)
-#endif
     }
     
     //MARK: Division
@@ -194,25 +181,9 @@ public extension Matrix<Double> {
     }
 }
 
-//MARK: Copying elements
-public extension Matrix<Double> {
-    //@inlinable
-    mutating func copyElements(from other: Self) {
-        precondition(elements.count == other.elements.count)
-        #if os(Windows) || os(Linux)
-        fatalError("TODO: Implement on Windows / Linux")
-        #elseif os(macOS)
-        cblas_dcopy(elements.count, other.elements, 1, &elements, 1)
-        #else
-        for i in 0..<elements.count {
-            elements[i] = other.elements[i]
-        }
-        #endif
-    }
-}
-
 //MARK: Matrix-Vector and Matrix-Matrix operations
 public extension Matrix<Double> {
+    //MARK: General matrix-matrix multiply
     @inlinable
     func dot(_ other: Self) -> Self {
         var result: Self = .init(rows: rows, columns: other.columns) { _ in }
@@ -232,41 +203,94 @@ public extension Matrix<Double> {
         dot(other, multiplied: 1.0, into: &into)
     }
     
-    //@inlinable
+    @inlinable
     func dot(_ other: Self, multiplied: T, into: inout Self) {
-#if os(Windows) || os(Linux)
-        if let cblas_dgemm = BLAS.dgemm {
-            precondition(columns == other.rows, "The matrices are incompatible for multiplication")
-            precondition(into.rows == self.rows, "The resulting matrix has incompatible rows")
-            precondition(into.columns == other.columns, "The resulting matrix has incompatible columns")
-            let layout: CBLAS_ORDER = CblasRowMajor
-            let transa: CBLAS_TRANSPOSE = CblasNoTrans
-            let transb: CBLAS_TRANSPOSE = CblasNoTrans
-            let m: Int32 = numericCast(rows)
-            let n: Int32 = numericCast(other.columns)
-            let k: Int32 = numericCast(columns)
-            let alpha: T = multiplied
-            let lda: Int32 = k
-            let beta: T = .zero
-            let ldb: Int32 = n
-            let ldc: Int32 = n
-            cblas_dgemm(layout, transa, transb, m, n, k, alpha, elements, lda, other.elements, ldb, beta, &into.elements, ldc)
+        if let dgemm = BLAS.dgemm {
+            precondition(columns == other.rows)
+            precondition(into.rows == rows)
+            precondition(into.columns == other.columns)
+            let layout = BLAS.Layout.rowMajor.rawValue
+            let transA = BLAS.Transpose.noTranspose.rawValue
+            let transB = BLAS.Transpose.noTranspose.rawValue
+            let m = cblas_int(rows), n = cblas_int(other.columns), k = cblas_int(columns)
+            let lda = k, ldb = n, ldc = n
+            dgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 0.0, &into.elements, ldc)
         } else {
             _dot(other, multiplied: multiplied, into: &into)
         }
-#elseif os(macOS)
-        precondition(columns == other.rows, "The matrices are incompatible for multiplication")
-        precondition(into.rows == self.rows, "The resulting matrix has incompatible rows")
-        precondition(into.columns == other.columns, "The resulting matrix has incompatible columns")
-        let lda = columns
-        let ldb = other.columns
-        let ldc = into.columns
-        cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, rows, other.columns, columns, multiplied, elements, lda, other.elements, ldb, .zero, &into.elements, ldc)
-#else
-        _dot(other, multiplied: multiplied, into: &into)
-#endif
     }
     
+    //MARK: Symmetric matrix-matrix multiply
+    @inlinable
+    func dot(symmetricSide: SymmetricSide, _ other: Self) -> Self {
+        var result: Self = .init(rows: rows, columns: other.columns) { _ in }
+        dot(symmetricSide: symmetricSide, other, multiplied: 1.0, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func symmetricDot(_ other: Self) -> Self {
+        dot(symmetricSide: .left, other)
+    }
+    
+    @inlinable
+    func dotSymmetric(_ other: Self) -> Self {
+        dot(symmetricSide: .right, other)
+    }
+    
+    @inlinable
+    func dot(symmetricSide: SymmetricSide, _ other: Self, multiplied: T) -> Self {
+        var result: Self = Self.init(rows: rows, columns: other.columns) { _ in }
+        dot(symmetricSide: symmetricSide, other, multiplied: multiplied, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func symmetricDot(_ other: Self, multiplied: T) -> Self {
+        dot(symmetricSide: .left, other, multiplied: multiplied)
+    }
+    
+    @inlinable
+    func dotSymmetric(_ other: Self, multiplied: T) -> Self {
+        dot(symmetricSide: .right, other, multiplied: multiplied)
+    }
+    
+    @inlinable
+    func dot(symmetricSide: SymmetricSide, _ other: Self, into: inout Self) {
+        dot(symmetricSide: symmetricSide, other, multiplied: 1.0, into: &into)
+    }
+    
+    @inlinable
+    func symmetricDot(_ other: Self, multiplied: T, into: inout Self) {
+        dot(symmetricSide: .left, other, multiplied: multiplied, into: &into)
+    }
+    
+    @inlinable
+    func dotSymmetric(_ other: Self, multiplied: T, into: inout Self) {
+        dot(symmetricSide: .right, other, multiplied: multiplied, into: &into)
+    }
+    
+    @inlinable
+    func dot(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, into: inout Self) {
+        if let dsymm = BLAS.dsymm {
+            precondition(columns == other.rows)
+            precondition(into.rows == rows)
+            precondition(into.columns == other.columns)
+            let order = BLAS.Order.rowMajor.rawValue
+            let _side = symmetricSide == .left ? BLAS.Side.left.rawValue : BLAS.Side.right.rawValue
+            let uplo = BLAS.UpperLower.upper.rawValue
+            let A = symmetricSide == .left ? self : other
+            let B = symmetricSide == .right ? self : other
+            let m = cblas_int(A.rows), n = cblas_int(B.columns)
+            let lda = cblas_int(columns), ldb = n, ldc = n
+            dsymm(order, _side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, .zero, &into.elements, ldc)
+        } else {
+            //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
+            _dot(other, multiplied: multiplied, into: &into)
+        }
+    }
+    
+    //MARK: General matrix-vector multiply
     @inlinable
     func dot(_ vector: Vector<T>) -> Vector<T> {
         var result = Vector<T>.init(count: rows) { _ in }
@@ -286,45 +310,73 @@ public extension Matrix<Double> {
         dot(vector, multiplied: 1.0, into: &into)
     }
     
-    //@inlinable
+    @inlinable
     func dot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
-#if os(Windows) || os(Linux)
-        if let cblas_dgemv = BLAS.dgemv {
+        if let dgemv = BLAS.dgemv {
             precondition(columns == vector.count)
             precondition(rows == into.count)
-            let layout = CblasRowMajor
-            let trans = CblasNoTrans
-            let m: Int32 = numericCast(self.rows)
-            let n: Int32 = numericCast(self.columns)
-            let alpha: T = multiplied
-            let lda: Int32 = n
-            let incx: Int32 = 1
-            let incy: Int32 = 1
-            let beta: T = 0.0
-            cblas_dgemv(layout, trans, m, n, alpha, elements, lda, vector.components, incx, beta, &into.components, incy)
+            let layout = BLAS.Layout.rowMajor.rawValue
+            let trans = BLAS.Transpose.noTranspose.rawValue
+            let m = cblas_int(rows), n = cblas_int(columns)
+            let lda = n
+            dgemv(layout, trans, m, n, multiplied, elements, lda, vector.components, 1, .zero, &into.components, 1)
         } else {
             _dot(vector, multiplied: multiplied, into: &into)
         }
-#elseif os(macOS)
-        let lda = columns
-        cblas_dgemv(CblasRowMajor,
-                    CblasNoTrans,
-                    rows,
-                    columns,
-                    multiplied,
-                    elements,
-                    lda,
-                    vector.components,
-                    1,
-                    .zero,
-                    &into.components,
-                    1)
-#else
-        _dot(vector, multiplied: multiplied, into: &into)
-#endif
     }
     
-    //TODO: Symmetric dot! dsymv
+    //MARK: Symmetric matrix-vector multiply
+    @inlinable
+    func symmetricDot(_ vector: Vector<T>) -> Vector<T> {
+        var result = Vector<T>.init(count: rows) { _ in }
+        symmetricDot(vector, multiplied: 1.0, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func symmetricDot(_ vector: Vector<T>, into: inout Vector<T>) {
+        symmetricDot(vector, multiplied: 1.0, into: &into)
+    }
+    
+    @inlinable
+    func symmetricDot(_ vector: Vector<T>, multiplied: T) -> Vector<T> {
+        var result = Vector<T>.init(count: rows) { _ in }
+        symmetricDot(vector, multiplied: multiplied, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func symmetricDot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
+        if let dsymv = BLAS.dsymv {
+            precondition(rows == columns)
+            precondition(vector.count == columns)
+            precondition(rows == into.count)
+            let order = BLAS.Order.rowMajor.rawValue
+            let uplo = BLAS.UpperLower.upper.rawValue
+            let N = cblas_int(rows)
+            let lda = N
+            dsymv(order, uplo, N, multiplied, elements, lda, vector.components, 1, .zero, &into.components, 1)
+        } else {
+            //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+            _dot(vector, multiplied: multiplied, into: &into)
+        }
+    }
+}
+
+//MARK: Copying elements
+public extension Matrix<Double> {
+    @inlinable
+    mutating func copyElements(from other: Self) {
+        precondition(elements.count == other.elements.count)
+        if let dcopy = BLAS.dcopy {
+            let N = cblas_int(elements.count)
+            dcopy(N, other.elements, 1, &elements, 1)
+        } else {
+            for i in 0..<elements.count {
+                elements[i] = other.elements[i]
+            }
+        }
+    }
 }
 
 public extension MatrixOperations {

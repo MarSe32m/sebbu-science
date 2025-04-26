@@ -239,27 +239,28 @@ public extension CSRMatrix {
 
 
 public extension CSRMatrix<Complex<Double>> {
-    
     @_optimize(speed)
     @inlinable
     static func *(lhs: Double, rhs: CSRMatrix<T>) -> Self {
         var result = CSRMatrix(rows: rhs.rows, columns: rhs.columns, values: rhs.values, rowIndices: rhs.rowIndices, columnIndices: rhs.columnIndices)
-        result.multiply(by: Complex(lhs))
+        result.multiply(by: lhs)
         return result
     }
     
     
     @_optimize(speed)
     @inlinable
-    
     static func *=(lhs: inout CSRMatrix<T>, rhs: Double)  {
-        lhs.multiply(by: Complex(rhs))
+        lhs.multiply(by: rhs)
     }
     
+    @_optimize(speed)
     @inlinable
-    
     mutating func multiply(by: Double) {
-        multiply(by: Complex(by))
+        for i in 0..<values.count {
+            values[i].real = Relaxed.product(values[i].real, by)
+            values[i].imaginary = Relaxed.product(values[i].imaginary, by)
+        }
     }
     
     

@@ -16,7 +16,7 @@ import Accelerate
 #endif
 
 #if os(Windows) || os(Linux)
-        //public typealias cblas_int = blasint
+        public typealias cblas_int = blasint
 #elseif os(macOS)
         public typealias cblas_int = __LAPACK_int
 #else
@@ -29,7 +29,7 @@ public enum BLAS {
         case rowMajor
         case columnMajor
         
-        var rawValue: RawValue {
+        public var rawValue: RawValue {
             switch self {
             case .rowMajor: CblasRowMajor.rawValue
             case .columnMajor: CblasColMajor.rawValue
@@ -44,7 +44,7 @@ public enum BLAS {
         case conjugateTranspose
         case conjugateNoTranspose
         
-        var rawValue: RawValue {
+        public var rawValue: RawValue {
             switch self {
             case .noTranspose: CblasNoTrans.rawValue
             case .transpose: CblasTrans.rawValue

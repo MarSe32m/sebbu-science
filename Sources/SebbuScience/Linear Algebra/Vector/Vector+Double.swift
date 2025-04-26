@@ -5,13 +5,7 @@
 //  Created by Sebastian Toivonen on 11.4.2025.
 //
 
-#if canImport(COpenBLAS)
-import COpenBLAS
-#endif
-
-#if canImport(Accelerate)
-import Accelerate
-#endif
+import BLAS
 
 import RealModule
 
@@ -39,20 +33,14 @@ public extension Vector<Double> {
         lhs.multiply(by: rhs)
     }
     
-    //@inlinable
+    @inlinable
     mutating func multiply(by: T) {
-#if os(Windows) || os(Linux)
-        if let cblas_dscal = BLAS.dscal {
-            let N: Int32 = numericCast(count)
-            cblas_dscal(N, by, &components, 1)
+        if let dscal = BLAS.dscal {
+            let N = cblas_int(count)
+            dscal(N, by, &components, 1)
         } else {
             _multiply(by: by)
         }
-#elseif os(macOS)
-        cblas_dscal(count, by, &components, 1)
-#else
-        _multiply(by: by)
-#endif
     }
     
     //MARK: Division
@@ -94,19 +82,13 @@ public extension Vector<Double> {
     
     //@inlinable
     mutating func add(_ other: Self, scaling: T) {
-#if os(Windows) || os(Linux)
-        if let cblas_daxpy = BLAS.daxpy {
-            precondition(other.components.count == self.components.count)
-            cblas_daxpy(numericCast(count), scaling, other.components, 1, &components, 1)
+        if let daxpy = BLAS.daxpy {
+            precondition(count == other.count)
+            let N = cblas_int(count)
+            daxpy(N, scaling, other.components, 1, &components, 1)
         } else {
             _add(other, scaling: scaling)
         }
-#elseif os(macOS)
-        precondition(other.components.count == self.components.count)
-        cblas_daxpy(count, scaling, other.components, 1, &components, 1)
-#else
-        _add(other, scaling: scaling)
-#endif
     }
     
     @inlinable
@@ -141,19 +123,13 @@ public extension Vector<Double> {
     /// Computes the Euclidian dot product.
     //@inlinable
     func dot(_ other: Self) -> T {
-#if os(Windows) || os(Linux)
-        if let cblas_ddot = BLAS.ddot {
+        if let ddot = BLAS.ddot {
             precondition(count == other.count)
-            return cblas_ddot(numericCast(count), components, 1, other.components, 1)
+            let N = cblas_int(count)
+            return ddot(N, components, 1, other.components, 1)
         } else {
             return _dot(other)
         }
-#elseif os(macOS)
-        precondition(count == other.count)
-        return cblas_ddot(count, components, 1, other.components, 1)
-#else
-        _dot(other)
-#endif
     }
     
     //MARK: Vector matrix multiply
@@ -176,29 +152,59 @@ public extension Vector<Double> {
         dot(matrix, multiplied: 1.0, into: &into)
     }
     
-    //@inlinable
+    @inlinable
     func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
-#if os(Windows) || os(Linux)
-        if let cblas_dgemv = BLAS.dgemv {
-            precondition(matrix.rows == self.count)
+        if let dgemv = BLAS.dgemv {
+            precondition(matrix.rows == count)
             precondition(matrix.columns == into.count)
-            let layout = CblasRowMajor
-            let trans = CblasTrans
-            let m: Int32 = numericCast(matrix.rows)
-            let n: Int32 = numericCast(matrix.columns)
-            let lda: Int32 = n
-            cblas_dgemv(layout, trans, m, n, multiplied, matrix.elements, lda, components, 1, .zero, &into.components, 1)
+            let layout = BLAS.Layout.rowMajor.rawValue
+            let trans = BLAS.Transpose.transpose.rawValue
+            let m = cblas_int(matrix.rows)
+            let n = cblas_int(matrix.columns)
+            let lda = n
+            let beta: T = .zero
+            dgemv(layout, trans, m, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
         } else {
             _dot(matrix, multiplied: multiplied, into: &into)
         }
-#elseif os(macOS)
-        precondition(matrix.rows == self.count)
-        precondition(matrix.columns == into.count)
-        let lda = matrix.columns
-        cblas_dgemv(CblasRowMajor, CblasTrans, matrix.rows, matrix.columns, multiplied, matrix.elements, lda, components, 1, .zero, &into.components, 1)
-#else
-        _dot(matrix, multiplied: multiplied, into: &into)
-#endif
+    }
+    
+    //MARK: Vector - symmetrix matrix multiply
+    @inlinable
+    func dotSymmetric(_ matrix: Matrix<T>) -> Self {
+        var result: Self = .zero(matrix.columns)
+        dotSymmetric(matrix, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func dotSymmetric(_ matrix: Matrix<T>, multiplied: T) -> Self {
+        var result: Self = .zero(matrix.columns)
+        dotSymmetric(matrix, multiplied: multiplied, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func dotSymmetric(_ matrix: Matrix<T>, into: inout Self) {
+        dotSymmetric(matrix, multiplied: 1.0, into: &into)
+    }
+    
+    @inlinable
+    func dotSymmetric(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+        if let dsymv = BLAS.dsymv {
+            precondition(matrix.rows == count)
+            precondition(matrix.columns == into.count)
+            let layout = BLAS.Layout.rowMajor.rawValue
+            // Use lower since we want X*A
+            let uplo = BLAS.UpperLower.lower.rawValue
+            let n = cblas_int(matrix.rows)
+            let lda = n
+            let beta: T = .zero
+            dsymv(layout, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        } else {
+            //TODO: Implement vector - hermitian matrix multiply (default implementation)
+            _dot(matrix, multiplied: multiplied, into: &into)
+        }
     }
 }
 
@@ -207,14 +213,13 @@ public extension Vector<Double> {
     @inlinable
     mutating func copyComponents(from other: Self) {
         precondition(count == other.count)
-        #if os(Windows) || os(Linux)
-        fatalError("TODO: Implement on Windows/Linux")
-        #elseif os(macOS)
-        cblas_dcopy(components.count, other.components, 1, &components, 1)
-        #else
-        for i in 0..<count {
-            components[i] = other.components[i]
+        if let dcopy = BLAS.dcopy {
+            let N = cblas_int(count)
+            dcopy(N, other.components, 1, &components, 1)
+        } else {
+            for i in 0..<count {
+                components[i] = other.components[i]
+            }
         }
-        #endif
     }
 }

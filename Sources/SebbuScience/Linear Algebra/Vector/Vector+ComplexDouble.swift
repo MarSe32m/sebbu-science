@@ -5,13 +5,7 @@
 //  Created by Sebastian Toivonen on 11.4.2025.
 //
 
-#if canImport(COpenBLAS)
-import COpenBLAS
-#endif
-
-#if canImport(Accelerate)
-import Accelerate
-#endif
+import BLAS
 
 import RealModule
 import ComplexModule
@@ -45,24 +39,16 @@ public extension Vector<Complex<Double>> {
         lhs.multiply(by: rhs)
     }
     
-    //@inlinable
+    @inlinable
     mutating func multiply(by: T) {
-#if os(Windows) || os(Linux)
-        if let cblas_zscal = BLAS.zscal {
-            var alpha: T = by
-            cblas_zscal(numericCast(count), &alpha, &components, 1)
+        if let zscal = BLAS.zscal {
+            let N = cblas_int(count)
+            withUnsafePointer(to: by) { alpha in
+                zscal(N, alpha, &components, 1)
+            }
         } else {
             _multiply(by: by)
         }
-#elseif os(macOS)
-        withUnsafePointer(to: by) { alpha in
-            components.withUnsafeMutableBufferPointer { X in
-                cblas_zscal(X.count, OpaquePointer(alpha), OpaquePointer(X.baseAddress), 1)
-            }
-        }
-#else
-        _multiply(by: by)
-#endif
     }
     
     //MARK: Division
@@ -103,35 +89,16 @@ public extension Vector<Complex<Double>> {
     }
     
     
-    //@inlinable
+    @inlinable
     mutating func add(_ other: Self, scaling: T) {
-#if os(Windows) || os(Linux)
-        if let cblas_zaxpy = BLAS.zaxpy {
-            precondition(other.count == self.count)
-            let N: Int32 = numericCast(count)
-            var alpha: T = scaling
-            cblas_zaxpy(N, &alpha, other.components, 1, &components, 1)
+        if let zaxpy = BLAS.zaxpy {
+            let N = cblas_int(count)
+            withUnsafePointer(to: scaling) { alpha in
+                zaxpy(N, alpha, other.components, 1, &components, 1)
+            }
         } else {
             _add(other, scaling: scaling)
         }
-#elseif os(macOS)
-        precondition(other.count == self.count)
-        let N = count
-        withUnsafePointer(to: scaling) { alpha in
-            other.components.withUnsafeBufferPointer { X in
-                components.withUnsafeMutableBufferPointer { Y in
-                    cblas_zaxpy(N,
-                                OpaquePointer(alpha),
-                                OpaquePointer(X.baseAddress),
-                                1,
-                                OpaquePointer(Y.baseAddress),
-                                1)
-                }
-            }
-        }
-#else
-        _add(other, scaling: scaling)
-#endif
     }
     
     @inlinable
@@ -168,69 +135,29 @@ public extension Vector<Complex<Double>> {
     /// Instead for ```Vector<Complex<Float>>``` and ```Vector<Complex<Double>>``` use ```inner(_:)``` for a proper inner product
     //@inlinable
     func dot(_ other: Self) -> T {
-#if os(Windows) || os(Linux)
-        if let cblas_zdotu_sub = BLAS.zdotu_sub {
-            precondition(other.count == count)
-            let N: Int32 = numericCast(count)
+        if let zdotu_sub = BLAS.zdotu_sub {
+            precondition(count == other.count)
+            let N = cblas_int(count)
             var result: T = .zero
-            cblas_zdotu_sub(N, components, 1, other.components, 1, &result)
+            zdotu_sub(N, components, 1, other.components, 1, &result)
             return result
         } else {
             return _dot(other)
         }
-#elseif os(macOS)
-        precondition(other.count == count)
-        var result: T = .zero
-        withUnsafeMutablePointer(to: &result) { result in
-            components.withUnsafeBufferPointer { X in
-                other.components.withUnsafeBufferPointer { Y in
-                    cblas_zdotu_sub(count,
-                                    OpaquePointer(X.baseAddress),
-                                    1,
-                                    OpaquePointer(Y.baseAddress),
-                                    1,
-                                    OpaquePointer(result))
-                }
-            }
-        }
-        return result
-#else
-        _dot(other)
-#endif
     }
     
     //MARK: Inner product
     //@inlinable
     func inner(_ other: Self) -> T {
-#if os(Windows) || os(Linux)
-        if let cblas_zdotc_sub = BLAS.zdotc_sub {
-            precondition(other.count == count)
-            let N: Int32 = numericCast(count)
+        if let zdotc_sub = BLAS.zdotc_sub {
+            precondition(count == other.count)
+            let N = cblas_int(count)
             var result: T = .zero
-            cblas_zdotc_sub(N, components, 1, other.components, 1, &result)
+            zdotc_sub(N, components, 1, other.components, 1, &result)
             return result
         } else {
             return _inner(other)
         }
-#elseif os(macOS)
-        precondition(other.count == count)
-        var result: T = .zero
-        withUnsafeMutablePointer(to: &result) { result in
-            components.withUnsafeBufferPointer { X in
-                other.components.withUnsafeBufferPointer { Y in
-                    cblas_zdotc_sub(count,
-                                    OpaquePointer(X.baseAddress),
-                                    1,
-                                    OpaquePointer(Y.baseAddress),
-                                    1,
-                                    OpaquePointer(result))
-                }
-            }
-        }
-        return result
-#else
-        _inner(other)
-#endif
     }
 
     @inlinable
@@ -276,51 +203,67 @@ public extension Vector<Complex<Double>> {
         dot(matrix, multiplied: .one, into: &into)
     }
     
-    //@inlinable
+    @inlinable
     func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
-#if os(Windows) || os(Linux)
-        if let cblas_zgemv = BLAS.zgemv {
-            precondition(matrix.rows == self.count)
+        if let zgemv = BLAS.zgemv {
+            precondition(matrix.rows == count)
             precondition(matrix.columns == into.count)
-            let layout = CblasRowMajor
-            let trans = CblasTrans
-            let m: Int32 = numericCast(matrix.rows)
-            let n: Int32 = numericCast(matrix.columns)
-            let lda: Int32 = n
-            var alpha: T = multiplied
-            var beta: T = .zero
-            cblas_zgemv(layout, trans, m, n, &alpha, matrix.elements, lda, components, 1, &beta, &into.components, 1)
+            let layout = BLAS.Layout.rowMajor.rawValue
+            let trans = BLAS.Transpose.transpose.rawValue
+            let m = cblas_int(matrix.rows)
+            let n = cblas_int(matrix.columns)
+            let lda = n
+            let beta: T = .zero
+            withUnsafePointer(to: multiplied) { alpha in
+                withUnsafePointer(to: beta) { beta in
+                    zgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+                }
+            }
         } else {
             _dot(matrix, multiplied: multiplied, into: &into)
         }
-#elseif os(macOS)
-        let beta: T = .zero
-        let lda = matrix.columns
-        withUnsafePointer(to: multiplied) { alpha in
-            withUnsafePointer(to: beta) { beta in
-                matrix.elements.withUnsafeBufferPointer { A in
-                    components.withUnsafeBufferPointer { X in
-                        into.components.withUnsafeMutableBufferPointer { Y in
-                            cblas_zgemv(CblasRowMajor,
-                                        CblasTrans,
-                                        matrix.rows,
-                                        matrix.columns,
-                                        OpaquePointer(alpha),
-                                        OpaquePointer(A.baseAddress),
-                                        lda,
-                                        OpaquePointer(X.baseAddress),
-                                        1,
-                                        OpaquePointer(beta),
-                                        OpaquePointer(Y.baseAddress),
-                                        1)
-                        }
-                    }
+    }
+    
+    //MARK: Vector - hermitian matrix multiply
+    @inlinable
+    func dotHermitian(_ matrix: Matrix<T>) -> Self {
+        var result: Self = .zero(matrix.columns)
+        dotHermitian(matrix, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func dotHermitian(_ matrix: Matrix<T>, multiplied: T) -> Self {
+        var result: Self = .zero(matrix.columns)
+        dotHermitian(matrix, multiplied: multiplied, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func dotHermitian(_ matrix: Matrix<T>, into: inout Self) {
+        dotHermitian(matrix, multiplied: .one, into: &into)
+    }
+    
+    @inlinable
+    func dotHermitian(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+        if let zhemv = BLAS.zhemv {
+            precondition(matrix.rows == count)
+            precondition(matrix.columns == into.count)
+            // We use column major since we want to use the transpose of the matrix here
+            let order = BLAS.Layout.columnMajor.rawValue
+            let uplo = BLAS.UpperLower.upper.rawValue
+            let n = cblas_int(matrix.rows)
+            let lda = n
+            let beta: T = .zero
+            withUnsafePointer(to: multiplied) { alpha in
+                withUnsafePointer(to: beta) { beta in
+                    zhemv(order, uplo, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
                 }
             }
+        } else {
+            //TODO: Implement vector - hermitian matrix multiply (default implementation)
+            _dot(matrix, multiplied: multiplied, into: &into)
         }
-#else
-        _dot(matrix, multiplied: multiplied, into: &into)
-#endif
     }
 }
 
@@ -350,21 +293,17 @@ public extension Vector<Complex<Double>> {
         lhs.multiply(by: rhs)
     }
     
-    //@inlinable
+    @inlinable
     mutating func multiply(by: Double) {
-#if os(Windows) || os(Linux)
-        if let cblas_zdscal = BLAS.zdscal {
-            cblas_zdscal(numericCast(components.count), by, &components, 1)
+        if let zdscal = BLAS.zdscal {
+            let N = cblas_int(count)
+            zdscal(N, by, &components, 1)
         } else {
-            multiply(by: Complex(by))
+            for i in 0..<components.count {
+                components[i].real = Relaxed.product(components[i].real, by)
+                components[i].imaginary = Relaxed.product(components[i].imaginary, by)
+            }
         }
-#elseif os(macOS)
-        components.withUnsafeMutableBufferPointer { X in
-            cblas_zdscal(X.count, by, OpaquePointer(X.baseAddress), 1)
-        }
-#else
-        multiply(by: Complex(by))
-#endif
     }
     
     //MARK: Division
@@ -397,18 +336,13 @@ public extension Vector<Complex<Double>> {
     @inlinable
     mutating func copyComponents(from other: Self) {
         precondition(count == other.count)
-        #if os(Windows) || os(Linux)
-        fatalError("TODO: Implement on Windows/Linux")
-        #elseif os(macOS)
-        components.withUnsafeMutableBufferPointer { Y in
-            other.components.withUnsafeBufferPointer { X in
-                cblas_zcopy(Y.count, OpaquePointer(X.baseAddress), 1, OpaquePointer(Y.baseAddress), 1)
+        if let zcopy = BLAS.zcopy {
+            let N = cblas_int(count)
+            zcopy(N, other.components, 1, &components, 1)
+        } else {
+            for i in 0..<count {
+                components[i] = other.components[i]
             }
         }
-        #else
-        for i in 0..<count {
-            components[i] = other.components[i]
-        }
-        #endif
     }
 }

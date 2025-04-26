@@ -42,7 +42,7 @@ public extension Matrix where T: AlgebraicField {
     }
 
     @inlinable
-    internal mutating func _add(_ other: Self) {
+    mutating func _add(_ other: Self) {
         precondition(self.rows == other.rows)
         precondition(self.columns == other.columns)
         for i in 0..<elements.count {
@@ -74,21 +74,11 @@ public extension Matrix where T: AlgebraicField {
     }
 
     @inlinable
-    internal mutating func _subtract(_ other: Self) {
+    mutating func _subtract(_ other: Self) {
         precondition(self.rows == other.rows)
         precondition(self.columns == other.columns)
-        var index = 0
-        let count = elements.count
-        while index + 4 <= count {
-            defer { index += 4 }
-            elements[index] = Relaxed.sum(elements[index], -other.elements[index])
-            elements[index + 1] = Relaxed.sum(elements[index + 1], -other.elements[index + 1])
-            elements[index + 2] = Relaxed.sum(elements[index + 2], -other.elements[index + 2])
-            elements[index + 3] = Relaxed.sum(elements[index + 3], -other.elements[index + 3])
-        }
-        while index < count {
-            defer { index += 1 }
-            elements[index] = Relaxed.sum(elements[index], -other.elements[index])
+        for i in 0..<elements.count {
+            elements[i] = Relaxed.sum(elements[i], -other.elements[i])
         }
     }
     
@@ -111,7 +101,7 @@ public extension Matrix where T: AlgebraicField {
     }
     
     @inlinable
-    internal mutating func _multiply(by: T) {
+    mutating func _multiply(by: T) {
         for i in 0..<elements.count {
             elements[i] = Relaxed.product(by, elements[i])
         }
@@ -123,7 +113,7 @@ public extension Matrix where T: AlgebraicField {
     }
     
     @inlinable
-    internal func _multiply(by: T, into: inout Self) {
+    func _multiply(by: T, into: inout Self) {
         for i in 0..<into.elements.count {
             into.elements[i] = Relaxed.product(elements[i], by)
         }
@@ -148,7 +138,7 @@ public extension Matrix where T: AlgebraicField {
     }
 
     @inlinable
-    internal mutating func _divide(by: T) {
+    mutating func _divide(by: T) {
         if let reciprocal = by.reciprocal {
             multiply(by: reciprocal)
         } else {
@@ -164,7 +154,7 @@ public extension Matrix where T: AlgebraicField {
     }
 
     @inlinable
-    internal func _divide(by: T, into: inout Self) {
+    func _divide(by: T, into: inout Self) {
         if let reciprocal = by.reciprocal {
             multiply(by: reciprocal, into: &into)
         } else {
@@ -199,7 +189,7 @@ public extension Matrix where T: AlgebraicField {
     }
 
     @inlinable
-    internal func _dot(_ other: Self, into: inout Self) {
+    func _dot(_ other: Self, into: inout Self) {
         precondition(columns == other.rows)
         precondition(rows == into.rows)
         precondition(other.columns == into.columns)
@@ -220,7 +210,7 @@ public extension Matrix where T: AlgebraicField {
     }
 
     @inlinable
-    internal func _dot(_ other: Self, multiplied: T, into: inout Self) {
+    func _dot(_ other: Self, multiplied: T, into: inout Self) {
         precondition(columns == other.rows)
         precondition(rows == into.rows)
         precondition(other.columns == into.columns)
@@ -255,7 +245,7 @@ public extension Matrix where T: AlgebraicField {
     }
 
     @inlinable
-    internal func _dot(_ vector: Vector<T>, into: inout Vector<T>) {
+    func _dot(_ vector: Vector<T>, into: inout Vector<T>) {
         for i in 0..<rows {
             var result: T = .zero
             for j in 0..<columns {
@@ -271,7 +261,7 @@ public extension Matrix where T: AlgebraicField {
     }
 
     @inlinable
-    internal func _dot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
+    func _dot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
         for i in 0..<rows {
             var result: T = .zero
             for j in 0..<columns {
@@ -392,5 +382,16 @@ public extension Matrix<Complex<Float>> {
             norm += element.lengthSquared
         }
         return norm.squareRoot()
+    }
+}
+
+public extension Matrix where T: AlgebraicField, T.Magnitude: FloatingPoint {
+    @inlinable @inline(__always)
+    func isApproximatelyEqual( to other: Self, absoluteTolerance: T.Magnitude, relativeTolerance: T.Magnitude = 0) -> Bool {
+        if rows != other.rows || columns != other.columns { return false }
+        for i in 0..<elements.count {
+            if !elements[i].isApproximatelyEqual(to: other.elements[i], absoluteTolerance: absoluteTolerance, relativeTolerance: relativeTolerance, norm: \.magnitude) { return false }
+        }
+        return true
     }
 }

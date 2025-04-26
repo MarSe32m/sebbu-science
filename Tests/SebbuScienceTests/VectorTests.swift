@@ -12,7 +12,7 @@ struct VectorArithmeticOperationsTests {
     @Test("Vector<Float> arithmetic tests", arguments:
             [-1.0, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1.0],
             [-1.0, -0.75, -0.5, -0.25, 0.25, 0.5, 0.75, 1.0])
-    func vectorDoubleArithmeticTests(scaling: Float, divisor: Float) throws {
+    func vectorFloatArithmeticTests(scaling: Float, divisor: Float) throws {
         let a: Vector<Float> = [1.95439285, 2.289542]
         let b: Vector<Float> = [3.23984293, 4.171278]
         

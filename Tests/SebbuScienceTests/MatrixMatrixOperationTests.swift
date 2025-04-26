@@ -48,58 +48,50 @@ struct ZGEEVTest {
         print(A)
         print(eigenValues[1] * eigenVectors[1].conjugate.outer(eigenVectors[1]))
     }
+    
+    @Test("Herimitan dot")
+    func testHermitianDot() {
+        let A = Matrix<Complex<Double>>(elements: [Complex(1), Complex(1, 2), Complex(1, -2), Complex(4)], rows: 2, columns: 2)
+        let vec = Vector<Complex<Double>>([Complex(4), Complex(2, 3)])
+        #expect(A.dot(vec).isApproximatelyEqual(to: A.hermitianDot(vec)))
+        #expect(vec.dot(A).isApproximatelyEqual(to: vec.dotHermitian(A)))
+    }
 }
 
 struct InverseTest {
     @Test("Double matrix inverse")
     func matrixDoubleInverse() async throws {
         let a: Matrix<Double> = .init(elements: [1.0, 2.0, 3.0, 4.0], rows: 2, columns: 2)
-        if let b = a.inverse {
-            print(a)
-            print(b)
-            print(a.dot(b))
-            print(b.dot(a))
-        } else {
-            print("No inverse found")
-        }
+        let identity: Matrix<Double> = .identity(rows: 2)
+        let b = a.inverse
+        #expect(b != nil)
+        #expect(identity.isApproximatelyEqual(to: a.dot(b!), absoluteTolerance: 1e-10))
     }
     
     @Test("Float matrix inverse")
     func matrixFloatInverse() async throws {
         let a: Matrix<Float> = .init(elements: [1.0, 2.0, 3.0, 4.0], rows: 2, columns: 2)
-        if let b = a.inverse {
-            print(a)
-            print(b)
-            print(a.dot(b))
-            print(b.dot(a))
-        } else {
-            print("No inverse found")
-        }
+        let identity: Matrix<Float> = .identity(rows: 2)
+        let b = a.inverse
+        #expect(b != nil)
+        #expect(identity.isApproximatelyEqual(to: a.dot(b!), absoluteTolerance: 1e-06))
     }
     
     @Test("Complex<Double> matrix inverse")
     func matrixComplexDoubleInverse() async throws {
         let a: Matrix<Complex<Double>> = .init(elements: [Complex(1.0), Complex(2.0, 1.0), Complex(3.0), Complex(4.0)], rows: 2, columns: 2)
-        if let b = a.inverse {
-            print(a)
-            print(b)
-            print(a.dot(b))
-            print(b.dot(a))
-        } else {
-            print("No inverse found")
-        }
+        let identity: Matrix<Complex<Double>> = .identity(rows: 2)
+        let b = a.inverse
+        #expect(b != nil)
+        #expect(identity.isApproximatelyEqual(to: a.dot(b!), absoluteTolerance: 1e-10))
     }
     
     @Test("Complex<Float> matrix inverse")
     func matrixComplexFloatInverse() async throws {
         let a: Matrix<Complex<Float>> = .init(elements: [Complex(1.0), Complex(2.0, 1.0), Complex(3.0), Complex(4.0)], rows: 2, columns: 2)
-        if let b = a.inverse {
-            print(a)
-            print(b)
-            print(a.dot(b))
-            print(b.dot(a))
-        } else {
-            print("No inverse found")
-        }
+        let identity: Matrix<Complex<Float>> = .identity(rows: 2)
+        let b = a.inverse
+        #expect(b != nil)
+        #expect(identity.isApproximatelyEqual(to: a.dot(b!), absoluteTolerance: 1e-06))
     }
 }

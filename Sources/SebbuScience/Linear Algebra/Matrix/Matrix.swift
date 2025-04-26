@@ -131,3 +131,17 @@ extension Matrix: Equatable where T: Equatable {}
 extension Matrix: Hashable where T: Hashable {}
 extension Matrix: Codable where T: Codable {}
 extension Matrix: Sendable where T: Sendable {}
+
+public extension Matrix {
+    /// Determines which side of the multiplication is hermitian
+    enum HermitianSide {
+        case left
+        case right
+    }
+    
+    /// Determines which side of the multiplication is symmetric
+    enum SymmetricSide {
+        case left
+        case right
+    }
+}
