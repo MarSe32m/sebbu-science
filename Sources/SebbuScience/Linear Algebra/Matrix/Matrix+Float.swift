@@ -325,6 +325,8 @@ public extension Matrix<Float> {
         _dot(vector, multiplied: multiplied, into: &into)
 #endif
     }
+    
+    //TODO: Symmetric dot! ssymv
 }
 
 //MARK: Copying elements

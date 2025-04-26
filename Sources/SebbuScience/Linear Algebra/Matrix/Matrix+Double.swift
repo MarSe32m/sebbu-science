@@ -323,6 +323,8 @@ public extension Matrix<Double> {
         _dot(vector, multiplied: multiplied, into: &into)
 #endif
     }
+    
+    //TODO: Symmetric dot! dsymv
 }
 
 public extension MatrixOperations {

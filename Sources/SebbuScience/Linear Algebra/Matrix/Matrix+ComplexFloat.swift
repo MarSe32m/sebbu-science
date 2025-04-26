@@ -371,6 +371,7 @@ public extension Matrix<Complex<Float>> {
         _dot(vector, multiplied: multiplied, into: &into)
 #endif
     }
+    //TODO: Hermitean dot! chemv
 }
 
 public extension Matrix<Complex<Float>> {

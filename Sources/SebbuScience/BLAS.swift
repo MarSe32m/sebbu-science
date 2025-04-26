@@ -5,6 +5,8 @@
 //  Created by Sebastian Toivonen on 19.4.2025.
 //
 
+import _SebbuScienceCommon
+
 #if canImport(COpenBLAS)
 import COpenBLAS
 #endif
@@ -16,7 +18,7 @@ import Glibc
 #endif
 
 @usableFromInline
-internal enum BLAS {
+internal enum _BLAS {
     #if os(Windows)
     @usableFromInline
     internal nonisolated(unsafe) static let handle: HMODULE? = {
@@ -105,9 +107,9 @@ internal enum BLAS {
 }
 
 ///MARK: Typealiases
-extension BLAS {
+extension _BLAS {
     #if os(Windows) || os(Linux)
-    // Flot functions
+    // Float functions
     @usableFromInline
     typealias CBLAS_SAXPY = @convention(c) (_ n: Int32, _ alpha: Float, _ x: UnsafePointer<Float>?, _ incx: Int32, _ y: UnsafeMutablePointer<Float>?, _ incy: Int32) -> Void
     @usableFromInline

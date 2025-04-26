@@ -9,6 +9,8 @@ let package = Package(
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(name: "SebbuScience", targets: ["SebbuScience"]),
+        .library(name: "BLAS", targets: ["BLAS"]),
+        .library(name: "LAPACKE", targets: ["LAPACKE"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-numerics", branch: "main"),
@@ -26,15 +28,45 @@ let package = Package(
         .package(url: "https://github.com/pvieito/PythonKit", branch: "master")
     ],
     targets: [
+        .target(name: "CFFTW"),
+        .target(name: "COpenBLAS"),
+        .target(name: "CLAPACK"),
+        .target(name: "_SebbuScienceCommon"),
         .target(
-            name: "COpenBLAS"
+            name: "BLAS",
+            dependencies: [
+                .target(name: "_SebbuScienceCommon"),
+                .target(name: "COpenBLAS", condition: .when(platforms: [.linux, .windows])),
+                .product(name: "Numerics", package: "swift-numerics"),
+            ],
+            cSettings: [
+                .define("ACCELERATE_NEW_LAPACK", .when(platforms: [.macOS])),
+                .define("ACCELERATE_LAPACK_ILP64", .when(platforms: [.macOS]))
+            ],
+            linkerSettings: [
+                .linkedFramework("Accelerate", .when(platforms: [.macOS]))
+            ]
         ),
         .target(
-            name: "CLAPACK"
+            name: "LAPACKE",
+            dependencies: [
+                .target(name: "_SebbuScienceCommon"),
+                .target(name: "CLAPACK", condition: .when(platforms: [.linux, .windows])),
+            ],
+            cSettings: [
+                .define("ACCELERATE_NEW_LAPACK", .when(platforms: [.macOS])),
+                .define("ACCELERATE_LAPACK_ILP64", .when(platforms: [.macOS]))
+            ],
+            linkerSettings: [
+                .linkedFramework("Accelerate", .when(platforms: [.macOS]))
+            ]
         ),
         .target(
             name: "SebbuScience",
             dependencies: [
+                .target(name: "_SebbuScienceCommon"),
+                .target(name: "BLAS"),
+                .target(name: "LAPACKE"),
                 .target(name: "COpenBLAS", condition: .when(platforms: [.linux, .windows])),
                 .target(name: "CLAPACK", condition: .when(platforms: [.linux, .windows])),
                 .product(name: "Numerics", package: "swift-numerics"),

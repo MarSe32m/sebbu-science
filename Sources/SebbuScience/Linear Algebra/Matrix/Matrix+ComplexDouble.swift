@@ -12,6 +12,8 @@ import COpenBLAS
 import CLAPACK
 #endif
 
+import BLAS
+
 #if canImport(Accelerate)
 import Accelerate
 #endif
@@ -103,6 +105,15 @@ public extension Matrix<Complex<Double>> {
     
     //@inlinable
     mutating func add(_ other: Self, scaling: T) {
+        if let cblas_zaxpy = BLAS.zaxpy {
+            precondition(self.rows == other.rows)
+            precondition(self.columns == other.columns)
+            var alpha: T = scaling
+            let N: cblas_int = numericCast(elements.count)
+            cblas_zaxpy(N, &alpha, other.elements, 1, &elements, 1)
+        } else {
+            _add(other, scaling: scaling)
+        }
 #if os(Windows) || os(Linux)
         if let cblas_zaxpy = BLAS.zaxpy {
             precondition(self.rows == other.rows)
@@ -372,6 +383,8 @@ public extension Matrix<Complex<Double>> {
         _dot(vector, multiplied: multiplied, into: &into)
 #endif
     }
+    
+    //TODO: Hermitean dot! zhemv
 }
 
 public extension Matrix<Complex<Double>> {
