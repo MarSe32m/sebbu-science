@@ -15,6 +15,8 @@ import WinSDK
 import Glibc
 #endif
 
+import _SebbuScienceCommon
+
 @usableFromInline
 internal enum LAPACKE {
     #if os(Linux)
@@ -24,7 +26,7 @@ internal enum LAPACKE {
             return handle
         }
         let firstErrorMessage = getDLErrorMessage()
-        if let handle = BLAS.handle {
+        if let handle = _BLAS.handle {
             return handle
         }
         let secondErrorMessage = getDLErrorMessage()
@@ -37,7 +39,7 @@ internal enum LAPACKE {
     #if os(Windows)
     @inlinable
     internal static func load<T>(name: String, as type: T.Type = T.self) -> T? {
-        BLAS.load(name: name)
+        _BLAS.load(name: name)
     }
     #elseif os(Linux)
     @inlinable
