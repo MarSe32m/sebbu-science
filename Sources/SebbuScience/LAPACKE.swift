@@ -47,7 +47,7 @@ internal enum LAPACKE {
         if let lapackeSymbol = loadSymbol(name: name, handle: handle, as: type) {
             return lapackeSymbol
         }
-        if let openBlasSymbol = BLAS.load(name: name, as: type) {
+        if let openBlasSymbol = _BLAS.load(name: name, as: type) {
             return openBlasSymbol
         }
         return nil

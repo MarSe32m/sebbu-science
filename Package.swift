@@ -52,6 +52,7 @@ let package = Package(
             dependencies: [
                 .target(name: "_SebbuScienceCommon"),
                 .target(name: "CLAPACK", condition: .when(platforms: [.linux, .windows])),
+                .product(name: "Numerics", package: "swift-numerics"),
             ],
             cSettings: [
                 .define("ACCELERATE_NEW_LAPACK", .when(platforms: [.macOS])),
