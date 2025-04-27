@@ -33,7 +33,7 @@ public extension Vector where T: AlgebraicField {
     }
 
     @inlinable
-    internal mutating func _multiply(by: T) {
+    mutating func _multiply(by: T) {
         for i in 0..<components.count {
             components[i] = Relaxed.product(components[i], by)
         }
@@ -217,8 +217,8 @@ public extension Vector where T: AlgebraicField {
     }
 
     @inlinable
-    internal func _inner(_ other: Self) -> T {
-        dot(other)
+    func _inner(_ other: Self) -> T {
+        _dot(other)
     }
     
     @inlinable
