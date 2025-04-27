@@ -205,6 +205,9 @@ public extension Vector<Complex<Double>> {
     
     @inlinable
     func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+        if matrix.rows * matrix.columns <= 100 {
+            _dot(matrix, multiplied: multiplied, into: &into)
+        }
         if let zgemv = BLAS.zgemv {
             precondition(matrix.rows == count)
             precondition(matrix.columns == into.count)
@@ -246,6 +249,9 @@ public extension Vector<Complex<Double>> {
     
     @inlinable
     func dotHermitian(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+        if matrix.rows * matrix.columns <= 100 {
+            _dot(matrix, multiplied: multiplied, into: &into)
+        }
         if let zhemv = BLAS.zhemv {
             precondition(matrix.rows == count)
             precondition(matrix.columns == into.count)

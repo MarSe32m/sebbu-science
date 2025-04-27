@@ -312,6 +312,10 @@ public extension Matrix<Double> {
     
     @inlinable
     func dot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
+        if rows * columns <= 100 {
+            _dot(vector, multiplied: multiplied, into: &into)
+            return
+        }
         if let dgemv = BLAS.dgemv {
             precondition(columns == vector.count)
             precondition(rows == into.count)
@@ -347,6 +351,10 @@ public extension Matrix<Double> {
     
     @inlinable
     func symmetricDot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
+        if rows * columns <= 100 {
+            _dot(vector, multiplied: multiplied, into: &into)
+            return
+        }
         if let dsymv = BLAS.dsymv {
             precondition(rows == columns)
             precondition(vector.count == columns)

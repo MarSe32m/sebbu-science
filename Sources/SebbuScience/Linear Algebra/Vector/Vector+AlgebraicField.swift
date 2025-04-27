@@ -277,6 +277,11 @@ public extension Vector where T: AlgebraicField {
     @inlinable
     func _dot(_ matrix: Matrix<T>, into: inout Self) {
         precondition(count == matrix.rows)
+        if matrix.rows == 2 && matrix.columns == 2 {
+            into[0] = Relaxed.sum(Relaxed.product(components[0], matrix.elements[0]), Relaxed.product(components[1], matrix.elements[2]))
+            into[1] = Relaxed.sum(Relaxed.product(components[0], matrix.elements[1]), Relaxed.product(components[1], matrix.elements[3]))
+            return
+        }
         for i in 0..<into.count { into[i] = .zero }
         for j in 0..<matrix.rows {
             for i in 0..<matrix.columns {
@@ -293,6 +298,11 @@ public extension Vector where T: AlgebraicField {
     @inlinable
     func _dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
         precondition(count == matrix.rows)
+        if matrix.rows == 2 && matrix.columns == 2 {
+            into[0] = Relaxed.product(multiplied, Relaxed.sum(Relaxed.product(components[0], matrix.elements[0]), Relaxed.product(components[1], matrix.elements[2])))
+            into[1] = Relaxed.product(multiplied, Relaxed.sum(Relaxed.product(components[0], matrix.elements[1]), Relaxed.product(components[1], matrix.elements[3])))
+            return
+        }
         for i in 0..<into.count { into[i] = .zero }
         for j in 0..<matrix.rows {
             let C = Relaxed.product(self[j], multiplied)

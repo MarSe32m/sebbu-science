@@ -334,6 +334,10 @@ public extension Matrix<Complex<Float>> {
     
     @inlinable
     func dot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
+        if rows * columns <= 100 {
+            _dot(vector, multiplied: multiplied, into: &into)
+            return
+        }
         if let cgemv = BLAS.cgemv {
             precondition(columns == vector.count)
             precondition(rows == into.count)
@@ -375,6 +379,10 @@ public extension Matrix<Complex<Float>> {
     
     @inlinable
     func hermitianDot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
+        if rows * columns <= 100 {
+            _dot(vector, multiplied: multiplied, into: &into)
+            return
+        }
         if let chemv = BLAS.chemv {
             precondition(rows == columns)
             precondition(vector.count == columns)

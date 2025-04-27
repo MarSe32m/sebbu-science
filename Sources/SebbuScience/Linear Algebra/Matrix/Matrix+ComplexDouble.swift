@@ -333,6 +333,10 @@ public extension Matrix<Complex<Double>> {
     
     @inlinable
     func dot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
+        if rows * columns <= 100 {
+            _dot(vector, multiplied: multiplied, into: &into)
+            return
+        }
         if let zgemv = BLAS.zgemv {
             precondition(columns == vector.count)
             precondition(rows == into.count)
@@ -374,6 +378,10 @@ public extension Matrix<Complex<Double>> {
     
     @inlinable
     func hermitianDot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
+        if rows * columns <= 100 {
+            _dot(vector, multiplied: multiplied, into: &into)
+            return
+        }
         //TODO: Benchmark when it is worth calling blas functions for this
         if let zhemv = BLAS.zhemv {
             precondition(rows == columns)
