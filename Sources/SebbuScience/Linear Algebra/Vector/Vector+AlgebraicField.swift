@@ -45,7 +45,7 @@ public extension Vector where T: AlgebraicField {
     }
 
     @inlinable
-    internal func _multiply(by: T, into: inout Self) {
+    func _multiply(by: T, into: inout Self) {
         for i in 0..<components.count {
             into[i] = Relaxed.product(components[i], by)
         }
@@ -70,7 +70,7 @@ public extension Vector where T: AlgebraicField {
     }
     
     @inlinable
-    internal mutating func _divide(by: T) {
+    mutating func _divide(by: T) {
         if let reciprocal = by.reciprocal {
             multiply(by: reciprocal)
         } else {
@@ -86,7 +86,7 @@ public extension Vector where T: AlgebraicField {
     }
     
     @inlinable
-    internal func _divide(by: T, into: inout Self) {
+    func _divide(by: T, into: inout Self) {
         if let reciprocal = by.reciprocal {
             multiply(by: reciprocal, into: &into)
         } else {
@@ -115,7 +115,7 @@ public extension Vector where T: AlgebraicField {
     }
     
     @inlinable
-    internal mutating func _add(_ other: Self, scaling: T) {
+    mutating func _add(_ other: Self, scaling: T) {
         precondition(other.components.count == self.components.count)
         for i in 0..<components.count {
             components[i] = Relaxed.multiplyAdd(scaling, other.components[i], components[i])
@@ -128,7 +128,7 @@ public extension Vector where T: AlgebraicField {
     }
 
     @inlinable
-    internal mutating func _add(_ other: Self) {
+    mutating func _add(_ other: Self) {
         precondition(other.components.count == self.components.count)
         for i in 0..<components.count {
             components[i] = Relaxed.sum(components[i], other.components[i])
@@ -155,8 +155,8 @@ public extension Vector where T: AlgebraicField {
     }
     
     @inlinable
-    internal mutating func _subtract(_ other: Self, scaling: T) {
-        add(other, scaling: -scaling)
+    mutating func _subtract(_ other: Self, scaling: T) {
+        _add(other, scaling: -scaling)
     }
     
     @inlinable
@@ -165,7 +165,7 @@ public extension Vector where T: AlgebraicField {
     }
     
     @inlinable
-    internal mutating func _subtract(_ other: Self) {
+    mutating func _subtract(_ other: Self) {
         precondition(other.components.count == self.components.count)
         for i in 0..<components.count {
             components[i] = Relaxed.sum(components[i], -other.components[i])
@@ -181,7 +181,7 @@ public extension Vector where T: AlgebraicField {
     }
 
     @inlinable
-    internal func _dot(_ other: Self) -> T {
+    func _dot(_ other: Self) -> T {
         precondition(other.count == count)
         var result: T = .zero
         for i in 0..<components.count {
@@ -198,7 +198,7 @@ public extension Vector where T: AlgebraicField {
     }
 
     @inlinable
-    internal func _dot(_ other: Self, metric: Matrix<T>) -> T {
+    func _dot(_ other: Self, metric: Matrix<T>) -> T {
         precondition(other.count == metric.columns)
         precondition(count == metric.rows)
         var result: T = .zero
@@ -227,7 +227,7 @@ public extension Vector where T: AlgebraicField {
     }
 
     @inlinable
-    internal func _inner(_ other: Self, metric: Matrix<T>) -> T {
+    func _inner(_ other: Self, metric: Matrix<T>) -> T {
         dot(other, metric: metric)
     }
     
@@ -245,7 +245,7 @@ public extension Vector where T: AlgebraicField {
     }
 
     @inlinable
-    internal func _outer(_ other: Self, into: inout Matrix<T>) {
+    func _outer(_ other: Self, into: inout Matrix<T>) {
         precondition(into.rows == count && into.columns == other.count)
         for i in 0..<count {
             for j in 0..<other.count {
@@ -275,7 +275,7 @@ public extension Vector where T: AlgebraicField {
     }
 
     @inlinable
-    internal func _dot(_ matrix: Matrix<T>, into: inout Self) {
+    func _dot(_ matrix: Matrix<T>, into: inout Self) {
         precondition(count == matrix.rows)
         for i in 0..<into.count { into[i] = .zero }
         for j in 0..<matrix.rows {
@@ -291,7 +291,7 @@ public extension Vector where T: AlgebraicField {
     }
 
     @inlinable
-    internal func _dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+    func _dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
         precondition(count == matrix.rows)
         for i in 0..<into.count { into[i] = .zero }
         for j in 0..<matrix.rows {
