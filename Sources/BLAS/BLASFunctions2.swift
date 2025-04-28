@@ -1,3 +1,10 @@
+//
+//  BLASFunctions2.swift
+//  sebbu-science
+//
+//  Created by Sebastian Toivonen on 28.4.2025.
+//
+
 public extension BLAS {
     #if os(Windows) || os(Linux)
     static let snrm2: FunctionTypes.cblas_snrm2? = load(name: "cblas_snrm2")

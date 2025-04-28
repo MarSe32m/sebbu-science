@@ -4,7 +4,7 @@
 //
 //  Created by Sebastian Toivonen on 19.4.2025.
 //
-
+/*
 import _SebbuScienceCommon
 
 #if canImport(COpenBLAS)
@@ -216,3 +216,4 @@ extension _BLAS {
                                                 _ y: UnsafeRawPointer?, _ incy: Int32, _ ret: UnsafeMutableRawPointer?) -> Void
     #endif
 }
+*/

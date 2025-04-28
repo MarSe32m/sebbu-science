@@ -1,4 +1,9 @@
-import CLAPACK
+//
+//  LAPACKEFunctionTypes.swift
+//  sebbu-science
+//
+//  Created by Sebastian Toivonen on 28.4.2025.
+//
 
 public extension LAPACKE {
     enum FunctionTypes {

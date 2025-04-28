@@ -1,3 +1,10 @@
+//
+//  BLASFunctions1.swift
+//  sebbu-science
+//
+//  Created by Sebastian Toivonen on 28.4.2025.
+//
+
 public extension BLAS {
     #if os(Windows) || os(Linux)
     static let sdsdot: FunctionTypes.cblas_sdsdot? = load(name: "cblas_sdsdot")

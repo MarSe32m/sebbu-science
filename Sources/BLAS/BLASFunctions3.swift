@@ -1,3 +1,10 @@
+//
+//  BLASFunctions3.swift
+//  sebbu-science
+//
+//  Created by Sebastian Toivonen on 28.4.2025.
+//
+
 public extension BLAS {
     #if os(Windows) || os(Linux)
     static let saxpy: FunctionTypes.cblas_saxpy? = load(name: "cblas_saxpy")

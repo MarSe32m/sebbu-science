@@ -1,3 +1,10 @@
+//
+//  BLASFunctions6.swift
+//  sebbu-science
+//
+//  Created by Sebastian Toivonen on 28.4.2025.
+//
+
 public extension BLAS {
     #if os(Windows) || os(Linux)
     static let ssyrk: FunctionTypes.cblas_ssyrk? = load(name: "cblas_ssyrk")

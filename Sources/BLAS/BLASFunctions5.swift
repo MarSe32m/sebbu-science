@@ -1,3 +1,10 @@
+//
+//  BLASFunctions5.swift
+//  sebbu-science
+//
+//  Created by Sebastian Toivonen on 28.4.2025.
+//
+
 public extension BLAS {
 #if os(Windows) || os(Linux)
     static let stbsv: FunctionTypes.cblas_stbsv? = load(name: "cblas_stbsv")

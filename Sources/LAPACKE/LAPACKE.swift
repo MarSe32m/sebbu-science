@@ -5,7 +5,12 @@
 //  Created by Sebastian Toivonen on 24.4.2025.
 //
 
+#if canImport(CLAPACK)
 import CLAPACK
+#elseif canImport(Accelerate)
+import Accelerate
+#endif
+
 import _SebbuScienceCommon
 
 #if canImport(WinSDK)
