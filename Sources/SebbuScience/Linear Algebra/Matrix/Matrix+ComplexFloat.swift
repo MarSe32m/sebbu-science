@@ -25,8 +25,8 @@ public extension Matrix<Complex<Float>> {
     //@inlinable
     var inverse: Self? {
 #if os(Windows) || os(Linux)
-        if let LAPACKE_cgetrf = LAPACKE.cgetrf, 
-           let LAPACKE_cgetri = LAPACKE.cgetri {
+        if let LAPACKE_cgetrf = _LAPACKE.cgetrf, 
+           let LAPACKE_cgetri = _LAPACKE.cgetri {
             if rows != columns { return nil }
             var a = elements
             var m = rows
@@ -495,7 +495,7 @@ public extension MatrixOperations {
     //@inlinable
     static func diagonalizeHermitian(_ A: Matrix<Complex<Float>>) throws -> (eigenValues: [Float], eigenVectors: [Vector<Complex<Float>>]) {
 #if os(Windows) || os(Linux)
-        if  let LAPACKE_cheevd = LAPACKE.cheevd {
+        if  let LAPACKE_cheevd = _LAPACKE.cheevd {
             let N = A.rows
             let lda = N
             var eigenValues: [Float] = .init(repeating: .zero, count: N)
@@ -581,7 +581,7 @@ public extension MatrixOperations {
     //@inlinable
     static func eigenValuesHermitian(_ A: Matrix<Complex<Float>>) throws -> [Float] {
 #if os(Windows) || os(Linux)
-        if  let LAPACKE_cheevd = LAPACKE.cheevd {
+        if  let LAPACKE_cheevd = _LAPACKE.cheevd {
             let N = A.rows
             let lda = N
             var eigenValues: [Float] = .init(repeating: .zero, count: N)
@@ -655,7 +655,7 @@ public extension MatrixOperations {
     //@inlinable
     static func diagonalize(_ A: Matrix<Complex<Float>>) throws -> (eigenValues: [Complex<Float>], leftEigenVectors: [Vector<Complex<Float>>], rightEigenVectors: [Vector<Complex<Float>>]) {
 #if os(Windows) || os(Linux)
-        if  let LAPACKE_cgeev = LAPACKE.cgeev {
+        if  let LAPACKE_cgeev = _LAPACKE.cgeev {
             let N = A.rows
             let lda = N
             let ldvl = N
@@ -752,7 +752,7 @@ public extension MatrixOperations {
     //@inlinable
     static func diagonalizeLeft(_ A: Matrix<Complex<Float>>) throws -> (eigenValues: [Complex<Float>], leftEigenVectors: [Vector<Complex<Float>>]) {
 #if os(Windows) || os(Linux)
-        if  let LAPACKE_cgeev = LAPACKE.cgeev {
+        if  let LAPACKE_cgeev = _LAPACKE.cgeev {
             let N = A.rows
             let lda = N
             let ldvl = N
@@ -840,7 +840,7 @@ public extension MatrixOperations {
     //@inlinable
     static func diagonalizeRight(_ A: Matrix<Complex<Float>>) throws -> (eigenValues: [Complex<Float>], rightEigenVectors: [Vector<Complex<Float>>]) {
 #if os(Windows) || os(Linux)
-        if  let LAPACKE_cgeev = LAPACKE.cgeev {
+        if  let LAPACKE_cgeev = _LAPACKE.cgeev {
             let N = A.rows
             let lda = N
             let ldvl = N
@@ -928,7 +928,7 @@ public extension MatrixOperations {
     //@inlinable
     static func eigenValues(_ A: Matrix<Complex<Float>>) throws -> [Complex<Float>] {
 #if os(Windows) || os(Linux)
-        if  let LAPACKE_cgeev = LAPACKE.cgeev {
+        if  let LAPACKE_cgeev = _LAPACKE.cgeev {
             let N = A.rows
             let lda = N
             let ldvl = N
@@ -991,7 +991,7 @@ public extension MatrixOperations {
     //@inlinable
     static func solve(A: Matrix<Complex<Float>>, b: Vector<Complex<Float>>) throws -> Vector<Complex<Float>> {
 #if os(Windows) || os(Linux)
-        if  let LAPACKE_cgesv = LAPACKE.cgesv {
+        if  let LAPACKE_cgesv = _LAPACKE.cgesv {
             let N = A.rows
             let nrhs: Int32 = 1
             let lda: Int32 = numericCast(N)

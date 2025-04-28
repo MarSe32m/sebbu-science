@@ -18,7 +18,7 @@ import Glibc
 import _SebbuScienceCommon
 
 @usableFromInline
-internal enum LAPACKE {
+internal enum _LAPACKE {
     #if os(Linux)
     @usableFromInline
     internal nonisolated(unsafe) static let handle: UnsafeMutableRawPointer? = {
@@ -105,7 +105,7 @@ internal enum LAPACKE {
     #endif
 }
 ///MARK: Typealiases
-extension LAPACKE {
+extension _LAPACKE {
     #if os(Windows) || os(Linux)
     // Float functions
     @usableFromInline

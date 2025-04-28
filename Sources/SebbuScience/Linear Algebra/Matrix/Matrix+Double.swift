@@ -25,8 +25,8 @@ public extension Matrix<Double> {
     //@inlinable
     var inverse: Self? {
 #if os(Windows) || os(Linux)
-        if let LAPACKE_dgetrf = LAPACKE.dgetrf, 
-           let LAPACKE_dgetri = LAPACKE.dgetri {
+        if let LAPACKE_dgetrf = _LAPACKE.dgetrf, 
+           let LAPACKE_dgetri = _LAPACKE.dgetri {
             if rows != columns { return nil }
             var a = elements
             var m = rows
@@ -398,7 +398,7 @@ public extension MatrixOperations {
     //@inlinable
     static func diagonalizeSymmetric(_ A: Matrix<Double>) throws -> (eigenValues: [Double], eigenVectors: [Vector<Double>]) {
 #if os(Windows) || os(Linux)
-        if let LAPACKE_dsyevd = LAPACKE.dsyevd {
+        if let LAPACKE_dsyevd = _LAPACKE.dsyevd {
             let N = A.rows
             let lda = N
             var eigenValues: [Double] = .init(repeating: .zero, count: N)
@@ -464,7 +464,7 @@ public extension MatrixOperations {
     //@inlinable
     static func eigenValuesSymmetric(_ A: Matrix<Double>) throws -> [Double] {
 #if os(Windows) || os(Linux)
-        if let LAPACKE_dsyevd = LAPACKE.dsyevd {
+        if let LAPACKE_dsyevd = _LAPACKE.dsyevd {
             let N = A.rows
             let lda = N
             var eigenValues: [Double] = .init(repeating: .zero, count: N)
@@ -519,7 +519,7 @@ public extension MatrixOperations {
     //@inlinable
     static func diagonalize(_ A: Matrix<Double>) throws -> (eigenValues: [Complex<Double>], leftEigenVectors: [Vector<Complex<Double>>], rightEigenVectors: [Vector<Complex<Double>>]) {
 #if os(Windows) || os(Linux)
-        if let LAPACKE_dgeev = LAPACKE.dgeev {
+        if let LAPACKE_dgeev = _LAPACKE.dgeev {
             let N = A.rows
             let lda = N
             let ldvl = N
@@ -614,7 +614,7 @@ public extension MatrixOperations {
     //@inlinable
     static func diagonalizeLeft(_ A: Matrix<Double>) throws -> (eigenValues: [Complex<Double>], leftEigenVectors: [Vector<Complex<Double>>]) {
 #if os(Windows) || os(Linux)
-        if let LAPACKE_dgeev = LAPACKE.dgeev {
+        if let LAPACKE_dgeev = _LAPACKE.dgeev {
             let N = A.rows
             let lda = N
             let ldvl = N
@@ -700,7 +700,7 @@ public extension MatrixOperations {
     //@inlinable
     static func diagonalizeRight(_ A: Matrix<Double>) throws -> (eigenValues: [Complex<Double>], rightEigenVectors: [Vector<Complex<Double>>]) {
 #if os(Windows) || os(Linux)
-        if let LAPACKE_dgeev = LAPACKE.dgeev {
+        if let LAPACKE_dgeev = _LAPACKE.dgeev {
             let N = A.rows
             let lda = N
             let ldvl = N
@@ -786,7 +786,7 @@ public extension MatrixOperations {
     //@inlinable
     static func eigenValues(_ A: Matrix<Double>) throws -> [Complex<Double>] {
 #if os(Windows) || os(Linux)
-        if let LAPACKE_dgeev = LAPACKE.dgeev {
+        if let LAPACKE_dgeev = _LAPACKE.dgeev {
             let N = A.rows
             let lda = N
             let ldvl = N
@@ -835,7 +835,7 @@ public extension MatrixOperations {
     //@inlinable
     static func solve(A: Matrix<Double>, b: Vector<Double>) throws -> Vector<Double> {
 #if os(Windows) || os(Linux)
-        if let LAPACKE_dgesv = LAPACKE.dgesv {
+        if let LAPACKE_dgesv = _LAPACKE.dgesv {
             let N = A.rows
             let nrhs: Int32 = 1
             let lda: Int32 = numericCast(N)
