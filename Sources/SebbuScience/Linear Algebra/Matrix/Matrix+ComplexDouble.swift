@@ -333,7 +333,7 @@ public extension Matrix<Complex<Double>> {
     
     @inlinable
     func dot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
-        if rows * columns <= 100 {
+        if rows * columns <= 1000 {
             _dot(vector, multiplied: multiplied, into: &into)
             return
         }
@@ -378,7 +378,7 @@ public extension Matrix<Complex<Double>> {
     
     @inlinable
     func hermitianDot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
-        if rows * columns <= 100 {
+        if rows * columns <= 1000 {
             _dot(vector, multiplied: multiplied, into: &into)
             return
         }
