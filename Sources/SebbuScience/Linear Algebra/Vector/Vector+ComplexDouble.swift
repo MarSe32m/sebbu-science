@@ -10,6 +10,7 @@ import BLAS
 import RealModule
 import ComplexModule
 import SebbuCollections
+import NumericsExtensions
 
 public extension Vector<Complex<Double>> {
     @inlinable

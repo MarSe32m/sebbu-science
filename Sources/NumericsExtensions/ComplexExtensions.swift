@@ -1,9 +1,10 @@
 //
-//  NumericsUtilities.swift
-//  swift-science
+//  ComplexExtensions.swift
+//  sebbu-science
 //
-//  Created by Sebastian Toivonen on 13.10.2024.
+//  Created by Sebastian Toivonen on 29.4.2025.
 //
+
 import Numerics
 
 public extension Complex {
@@ -64,9 +65,3 @@ public extension Complex {
     }
 }
 
-extension Complex: @retroactive ExpressibleByFloatLiteral where RealType: ExpressibleByFloatLiteral {
-    public typealias FloatLiteralType = RealType.FloatLiteralType
-    public init(floatLiteral value: RealType.FloatLiteralType) {
-        self = Complex(RealType(floatLiteral: value))
-    }
-}

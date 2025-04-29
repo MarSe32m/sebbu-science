@@ -7,6 +7,7 @@
 
 import RealModule
 import ComplexModule
+import NumericsExtensions
 import SebbuCollections
 
 public struct CSRMatrix<T: Sendable>: SparseMatrix, Sendable where T: AlgebraicField {

@@ -41,6 +41,30 @@ public typealias LAPACK_Z_SELECT1 = (UnsafeRawPointer?) -> lapack_int
 public typealias LAPACK_Z_SELECT2 = (UnsafeRawPointer?, UnsafeRawPointer?) -> lapack_int
 #endif
 
+public extension LAPACKE {
+    enum MatrixLayout {
+        case rowMajor
+        case columnMajor
+        
+        public var rawValue: CInt {
+            switch self {
+                #if os(Windows) || os(Linux)
+            case .rowMajor: return LAPACK_ROW_MAJOR
+            case .columnMajor: return LAPACK_COL_MAJOR
+                #elseif os(macOS)
+            case .rowMajor: return 101
+            case .columnMajor: return 102
+                #else
+            default:
+                fatalError("Unsupported platform")
+                #endif
+            }
+            
+            
+        }
+    }
+}
+
 public enum LAPACKE {
 #if os(Windows)
     @usableFromInline

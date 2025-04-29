@@ -5,10 +5,7 @@
 //  Created by Sebastian Toivonen on 13.10.2024.
 //
 
-#if canImport(CLAPACK)
-import CLAPACK
-#endif
-
+import LAPACKE
 import BLAS
 
 #if canImport(Accelerate)
@@ -17,6 +14,7 @@ import Accelerate
 
 import RealModule
 import ComplexModule
+import NumericsExtensions
 
 public extension Matrix<Complex<Double>> {
     /// The inverse of the matrix, if invertible.
@@ -24,24 +22,8 @@ public extension Matrix<Complex<Double>> {
     /// Thus you should store the inverse if you need it later again.
     //@inlinable
     var inverse: Self? {
-#if os(Windows) || os(Linux)
-        if let LAPACKE_zgetrf = _LAPACKE.zgetrf, 
-           let LAPACKE_zgetri = _LAPACKE.zgetri {
-            if rows != columns { return nil }
-            var a = elements
-            var m = rows
-            var lda = columns
-            var ipiv: [Int32] = .init(repeating: .zero, count: m)
-            var info = LAPACKE_zgetrf(LAPACK_ROW_MAJOR, numericCast(m), numericCast(m), &a, numericCast(lda), &ipiv)
-            if info != 0 { return nil }
-            info = LAPACKE_zgetri(LAPACK_ROW_MAJOR, numericCast(m), &a, numericCast(lda), ipiv)
-            if info != 0 { return nil }
-            return .init(elements: a, rows: rows, columns: columns)
-        } else {
-            fatalError("TODO: Not yet implemented")
-        }
-#elseif os(macOS)
         if rows != columns { return nil }
+        #if os(macOS)
         var a: [Complex<Double>] = []
         a.reserveCapacity(elements.count)
         for j in 0..<columns {
@@ -58,7 +40,7 @@ public extension Matrix<Complex<Double>> {
             zgetrf_(&m, &n, OpaquePointer(a.baseAddress), &lda, &ipiv, &info)
         }
         if info != 0 { return nil }
-        
+
         var work: [Complex<Double>] = [.zero]
         var lwork = -1
         a.withUnsafeMutableBufferPointer { a in
@@ -83,7 +65,19 @@ public extension Matrix<Complex<Double>> {
             }
         }
         #else
-        fatalError("TODO: Not yet implemented")
+        if let LAPACKE_zgetrf = LAPACKE.zgetrf,
+           let LAPACKE_zgetri = LAPACKE.zgetri {
+            var a = elements
+            var m = rows
+            var lda = columns
+            var ipiv: [lapack_int] = .init(repeating: .zero, count: m)
+            var info = LAPACKE_zgetrf(LAPACKE.MatrixLayout.rowMajor.rawValue, numericCast(m), numericCast(m), &a, numericCast(lda), &ipiv)
+            if info != 0 { return nil }
+            info = LAPACKE_zgetri(LAPACKE.MatrixLayout.rowMajor.rawValue, numericCast(m), &a, numericCast(lda), ipiv)
+            if info != 0 { return nil }
+            return .init(elements: a, rows: rows, columns: columns)
+        }
+        fatalError("Default implementation not yet implemented")
         #endif
     }
     
@@ -494,28 +488,8 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func diagonalizeHermitian(_ A: Matrix<Complex<Double>>) throws -> (eigenValues: [Double], eigenVectors: [Vector<Complex<Double>>]) {
-#if os(Windows) || os(Linux)
-        if let LAPACKE_zheevd = _LAPACKE.zheevd {
-            precondition(A.rows == A.columns)
-            let N = A.rows
-            let lda = N
-            var eigenValues: [Double] = .init(repeating: .zero, count: N)
-            var _A: [Complex<Double>] = Array(A.elements)
-            let V = Int8(bitPattern: UInt8(ascii: "V"))
-            let U = Int8(bitPattern: UInt8(ascii: "U"))
-            let info = LAPACKE_zheevd(LAPACK_ROW_MAJOR, V, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            var eigenVectors = [Vector<Complex<Double>>](repeating: .zero(N), count: N)
-            for i in 0..<N {
-                for j in 0..<N {
-                    eigenVectors[i][j] = _A[N * i + j]
-                }
-            }
-            return (eigenValues, eigenVectors)
-        }
-        fatalError("TODO: Default implementation not yet implemented")
-#elseif os(macOS)
         precondition(A.rows == A.columns)
+#if os(macOS)
         var a: [Complex<Double>] = []
         
         for j in 0..<A.columns {
@@ -568,6 +542,23 @@ public extension MatrixOperations {
         }
         return (eigenValues, eigenVectors)
 #else
+        if let LAPACKE_zheevd = LAPACKE.zheevd {
+            let N = A.rows
+            let lda = N
+            var eigenValues: [Double] = .init(repeating: .zero, count: N)
+            var _A: [Complex<Double>] = Array(A.elements)
+            let V = Int8(bitPattern: UInt8(ascii: "V"))
+            let U = Int8(bitPattern: UInt8(ascii: "U"))
+            let info = LAPACKE_zheevd(LAPACKE.MatrixLayout.rowMajor.rawValue, V, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
+            if info != 0 { throw MatrixOperationError.info(Int(info)) }
+            var eigenVectors = [Vector<Complex<Double>>](repeating: .zero(N), count: N)
+            for i in 0..<N {
+                for j in 0..<N {
+                    eigenVectors[i][j] = _A[N * i + j]
+                }
+            }
+            return (eigenValues, eigenVectors)
+        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -581,21 +572,8 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func eigenValuesHermitian(_ A: Matrix<Complex<Double>>) throws -> [Double] {
-#if os(Windows) || os(Linux)
-        if let LAPACKE_zheevd = _LAPACKE.zheevd {
-            let N = A.rows
-            let lda = N
-            var eigenValues: [Double] = .init(repeating: .zero, count: N)
-            var _A: [Complex<Double>] = Array(A.elements)
-            let _N = Int8(bitPattern: UInt8(ascii: "N"))
-            let U = Int8(bitPattern: UInt8(ascii: "U"))
-            let info = LAPACKE_zheevd(LAPACK_COL_MAJOR, _N, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            return eigenValues
-        }
-        fatalError("TODO: Default implementation not yet implemented")
-#elseif os(macOS)
         precondition(A.rows == A.columns)
+#if os(macOS)
         var a: [Complex<Double>] = []
         
         for j in 0..<A.columns {
@@ -642,6 +620,17 @@ public extension MatrixOperations {
         }
         return eigenValues
 #else
+        if let LAPACKE_zheevd = LAPACKE.zheevd {
+            let N = A.rows
+            let lda = N
+            var eigenValues: [Double] = .init(repeating: .zero, count: N)
+            var _A: [Complex<Double>] = Array(A.elements)
+            let _N = Int8(bitPattern: UInt8(ascii: "N"))
+            let U = Int8(bitPattern: UInt8(ascii: "U"))
+            let info = LAPACKE_zheevd(LAPACKE.MatrixLayout.rowMajor.rawValue, _N, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
+            if info != 0 { throw MatrixOperationError.info(Int(info)) }
+            return eigenValues
+        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -655,33 +644,8 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func diagonalize(_ A: Matrix<Complex<Double>>) throws -> (eigenValues: [Complex<Double>], leftEigenVectors: [Vector<Complex<Double>>], rightEigenVectors: [Vector<Complex<Double>>]) {
-#if os(Windows) || os(Linux)
-        if let LAPACKE_zgeev = _LAPACKE.zgeev {
-            precondition(A.rows == A.columns)
-            let N = A.rows
-            let lda = N
-            let ldvl = N
-            let ldvr = N
-            var _A = Array(A.elements)
-            var eigenValues: [Complex<Double>] = .init(repeating: .zero, count: N)
-            var vl: [Complex<Double>] = .init(repeating: .zero, count: N*N)
-            var vr: [Complex<Double>] = .init(repeating: .zero, count: N*N)
-            let V = Int8(bitPattern: UInt8(ascii: "V"))
-            let info = LAPACKE_zgeev(LAPACK_ROW_MAJOR, V, V, numericCast(N), &_A, numericCast(lda), &eigenValues, &vl, numericCast(ldvl), &vr, numericCast(ldvr))
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            var leftEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
-            var rightEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
-            for i in 0..<N {
-                for j in 0..<N {
-                    leftEigenVectors[j][i] = vl[N * i + j]
-                    rightEigenVectors[j][i] = vr[N * i + j]
-                }
-            }
-            return (eigenValues, leftEigenVectors, rightEigenVectors)
-        }
-        fatalError("TODO: Default implementation not yet implemented")
-        #elseif os(macOS)
         precondition(A.rows == A.columns)
+#if os(macOS)
         var n = A.rows
         var a: [Complex<Double>] = []
         a.reserveCapacity(n * n)
@@ -740,6 +704,28 @@ public extension MatrixOperations {
         }
         return (eigenValues, leftEigenVectors, rightEigenVectors)
 #else
+        if let LAPACKE_zgeev = LAPACKE.zgeev {
+            let N = A.rows
+            let lda = N
+            let ldvl = N
+            let ldvr = N
+            var _A = Array(A.elements)
+            var eigenValues: [Complex<Double>] = .init(repeating: .zero, count: N)
+            var vl: [Complex<Double>] = .init(repeating: .zero, count: N*N)
+            var vr: [Complex<Double>] = .init(repeating: .zero, count: N*N)
+            let V = Int8(bitPattern: UInt8(ascii: "V"))
+            let info = LAPACKE_zgeev(LAPACKE.MatrixLayout.rowMajor.rawValue, V, V, numericCast(N), &_A, numericCast(lda), &eigenValues, &vl, numericCast(ldvl), &vr, numericCast(ldvr))
+            if info != 0 { throw MatrixOperationError.info(Int(info)) }
+            var leftEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
+            var rightEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
+            for i in 0..<N {
+                for j in 0..<N {
+                    leftEigenVectors[j][i] = vl[N * i + j]
+                    rightEigenVectors[j][i] = vr[N * i + j]
+                }
+            }
+            return (eigenValues, leftEigenVectors, rightEigenVectors)
+        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -753,29 +739,7 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func diagonalizeLeft(_ A: Matrix<Complex<Double>>) throws -> (eigenValues: [Complex<Double>], leftEigenVectors: [Vector<Complex<Double>>]) {
-#if os(Windows) || os(Linux)
-        if let LAPACKE_zgeev = _LAPACKE.zgeev {
-            let N = A.rows
-            let lda = N
-            let ldvl = N
-            let ldvr = N
-            var _A = Array(A.elements)
-            var eigenValues: [Complex<Double>] = .init(repeating: .zero, count: N)
-            var vl: [Complex<Double>] = .init(repeating: .zero, count: N*N)
-            let V = Int8(bitPattern: UInt8(ascii: "V"))
-            let _N = Int8(bitPattern: UInt8(ascii: "N"))
-            let info = LAPACKE_zgeev(LAPACK_ROW_MAJOR, V, _N, numericCast(N), &_A, numericCast(lda), &eigenValues, &vl, numericCast(ldvl), nil, numericCast(ldvr))
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            var leftEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
-            for i in 0..<N {
-                for j in 0..<N {
-                    leftEigenVectors[j][i] = vl[N * i + j]
-                }
-            }
-            return (eigenValues, leftEigenVectors)
-        }
-        fatalError("TODO: Default implementation not yet implemented")
-#elseif os(macOS)
+#if os(macOS)
         precondition(A.rows == A.columns)
         var n = A.rows
         var a: [Complex<Double>] = []
@@ -828,6 +792,26 @@ public extension MatrixOperations {
         }
         return (eigenValues, leftEigenVectors)
 #else
+        if let LAPACKE_zgeev = LAPACKE.zgeev {
+            let N = A.rows
+            let lda = N
+            let ldvl = N
+            let ldvr = N
+            var _A = Array(A.elements)
+            var eigenValues: [Complex<Double>] = .init(repeating: .zero, count: N)
+            var vl: [Complex<Double>] = .init(repeating: .zero, count: N*N)
+            let V = Int8(bitPattern: UInt8(ascii: "V"))
+            let _N = Int8(bitPattern: UInt8(ascii: "N"))
+            let info = LAPACKE_zgeev(LAPACKE.MatrixLayout.rowMajor.rawValue, V, _N, numericCast(N), &_A, numericCast(lda), &eigenValues, &vl, numericCast(ldvl), nil, numericCast(ldvr))
+            if info != 0 { throw MatrixOperationError.info(Int(info)) }
+            var leftEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
+            for i in 0..<N {
+                for j in 0..<N {
+                    leftEigenVectors[j][i] = vl[N * i + j]
+                }
+            }
+            return (eigenValues, leftEigenVectors)
+        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -841,30 +825,8 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func diagonalizeRight(_ A: Matrix<Complex<Double>>) throws -> (eigenValues: [Complex<Double>], rightEigenVectors: [Vector<Complex<Double>>]) {
-#if os(Windows) || os(Linux)
-        if let LAPACKE_zgeev = _LAPACKE.zgeev {
-            let N = A.rows
-            let lda = N
-            let ldvl = N
-            let ldvr = N
-            var _A = Array(A.elements)
-            var eigenValues: [Complex<Double>] = .init(repeating: .zero, count: N)
-            var vr: [Complex<Double>] = .init(repeating: .zero, count: N*N)
-            let V = Int8(bitPattern: UInt8(ascii: "V"))
-            let _N = Int8(bitPattern: UInt8(ascii: "N"))
-            let info = LAPACKE_zgeev(LAPACK_ROW_MAJOR, _N, V, numericCast(N), &_A, numericCast(lda), &eigenValues, nil, numericCast(ldvl), &vr, numericCast(ldvr))
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            var rightEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
-            for i in 0..<N {
-                for j in 0..<N {
-                    rightEigenVectors[j][i] = vr[N * i + j]
-                }
-            }
-            return (eigenValues, rightEigenVectors)
-        }
-        fatalError("TODO: Default implementation not yet implemented")
-#elseif os(macOS)
         precondition(A.rows == A.columns)
+#if os(macOS)
         var n = A.rows
         var a: [Complex<Double>] = []
         a.reserveCapacity(n * n)
@@ -916,6 +878,26 @@ public extension MatrixOperations {
         }
         return (eigenValues, rightEigenVectors)
 #else
+        if let LAPACKE_zgeev = LAPACKE.zgeev {
+            let N = A.rows
+            let lda = N
+            let ldvl = N
+            let ldvr = N
+            var _A = Array(A.elements)
+            var eigenValues: [Complex<Double>] = .init(repeating: .zero, count: N)
+            var vr: [Complex<Double>] = .init(repeating: .zero, count: N*N)
+            let V = Int8(bitPattern: UInt8(ascii: "V"))
+            let _N = Int8(bitPattern: UInt8(ascii: "N"))
+            let info = LAPACKE_zgeev(LAPACKE.MatrixLayout.rowMajor.rawValue, _N, V, numericCast(N), &_A, numericCast(lda), &eigenValues, nil, numericCast(ldvl), &vr, numericCast(ldvr))
+            if info != 0 { throw MatrixOperationError.info(Int(info)) }
+            var rightEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
+            for i in 0..<N {
+                for j in 0..<N {
+                    rightEigenVectors[j][i] = vr[N * i + j]
+                }
+            }
+            return (eigenValues, rightEigenVectors)
+        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -929,22 +911,8 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func eigenValues(_ A: Matrix<Complex<Double>>) throws -> [Complex<Double>] {
-#if os(Windows) || os(Linux)
-        if let LAPACKE_zgeev = _LAPACKE.zgeev {
-            let N = A.rows
-            let lda = N
-            let ldvl = N
-            let ldvr = N
-            var _A = Array(A.elements)
-            var eigenValues: [Complex<Double>] = .init(repeating: .zero, count: N)
-            let _N = Int8(bitPattern: UInt8(ascii: "N"))
-            let info = LAPACKE_zgeev(LAPACK_ROW_MAJOR, _N, _N, numericCast(N), &_A, numericCast(lda), &eigenValues, nil, numericCast(ldvl), nil, numericCast(ldvr))
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            return eigenValues
-        }
-        fatalError("TODO: Default implementation not yet implemented")
-#elseif os(macOS)
         precondition(A.rows == A.columns)
+#if os(macOS)
         var n = A.rows
         var a: [Complex<Double>] = []
         a.reserveCapacity(n * n)
@@ -985,6 +953,18 @@ public extension MatrixOperations {
         if info != 0 { throw MatrixOperationError.info(Int(info)) }
         return eigenValues
 #else
+        if let LAPACKE_zgeev = LAPACKE.zgeev {
+            let N = lapack_int(A.rows)
+            let lda = N
+            let ldvl = N
+            let ldvr = N
+            var _A = Array(A.elements)
+            var eigenValues: [Complex<Double>] = .init(repeating: .zero, count: Int(N))
+            let _N = Int8(bitPattern: UInt8(ascii: "N"))
+            let info = LAPACKE_zgeev(LAPACKE.MatrixLayout.rowMajor.rawValue, _N, _N, N, &_A, numericCast(lda), &eigenValues, nil, numericCast(ldvl), nil, numericCast(ldvr))
+            if info != 0 { throw MatrixOperationError.info(Int(info)) }
+            return eigenValues
+        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -992,21 +972,7 @@ public extension MatrixOperations {
     //TODO: TEST
     //@inlinable
     static func solve(A: Matrix<Complex<Double>>, b: Vector<Complex<Double>>) throws -> Vector<Complex<Double>> {
-#if os(Windows) || os(Linux)
-        if let LAPACKE_zgesv = _LAPACKE.zgesv {
-            let N = A.rows
-            let nrhs: Int32 = 1
-            let lda: Int32 = numericCast(N)
-            let ldb: Int32 = 1
-            var ipiv = [Int32](repeating: .zero, count: N)
-            var _A = Array(A.elements)
-            var _b = Array(b.components)
-            let info = LAPACKE_zgesv(LAPACK_ROW_MAJOR, numericCast(N), nrhs, &_A, lda, &ipiv, &_b, ldb)
-            if info != 0 { throw MatrixOperationError.info(Int(info))}
-            return Vector(_b)
-        }
-        fatalError("TODO: Default implementation not yet implemented")
-#elseif os(macOS)
+#if os(macOS)
         var a: [Complex<Double>] = []
         a.reserveCapacity(A.elements.count)
         // Convert to columns major order
@@ -1030,6 +996,18 @@ public extension MatrixOperations {
         if info != 0 { throw MatrixOperationError.info(info) }
         return Vector(_b)
 #else
+        if let LAPACKE_zgesv = LAPACKE.zgesv {
+            let N = A.rows
+            let nrhs: lapack_int = 1
+            let lda: lapack_int = numericCast(N)
+            let ldb: lapack_int = 1
+            var ipiv = [lapack_int](repeating: .zero, count: N)
+            var _A = Array(A.elements)
+            var _b = Array(b.components)
+            let info = LAPACKE_zgesv(LAPACKE.MatrixLayout.rowMajor.rawValue, numericCast(N), nrhs, &_A, lda, &ipiv, &_b, ldb)
+            if info != 0 { throw MatrixOperationError.info(Int(info))}
+            return Vector(_b)
+        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }

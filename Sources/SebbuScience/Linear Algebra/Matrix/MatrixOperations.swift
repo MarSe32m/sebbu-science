@@ -14,7 +14,7 @@ public enum MatrixOperations {
         case info(Int)
     }
     
-    /// Routine for tPFD-fitting
+    /// Takagi factorization for a real symmetric matrix
     @inlinable
     public static func takagiSymmetric(_ A: Matrix<Double>) throws -> (absoluteValues: [Double], QP: [[Complex<Double>]]) {
         // Find the singularvalues (eigenvalues) of A and the corresponding eigenvectors

@@ -5,10 +5,7 @@
 //  Created by Sebastian Toivonen on 13.10.2024.
 //
 
-#if canImport(CLAPACK)
-import CLAPACK
-#endif
-
+import LAPACKE
 import BLAS
 
 #if canImport(Accelerate)
@@ -17,6 +14,7 @@ import Accelerate
 
 import RealModule
 import ComplexModule
+import NumericsExtensions
 
 public extension Matrix<Complex<Float>> {
     /// The inverse of the matrix, if invertible.
@@ -24,23 +22,8 @@ public extension Matrix<Complex<Float>> {
     /// Thus you should store the inverse if you need it later again.
     //@inlinable
     var inverse: Self? {
-#if os(Windows) || os(Linux)
-        if let LAPACKE_cgetrf = _LAPACKE.cgetrf, 
-           let LAPACKE_cgetri = _LAPACKE.cgetri {
-            if rows != columns { return nil }
-            var a = elements
-            var m = rows
-            var lda = columns
-            var ipiv: [Int32] = .init(repeating: .zero, count: m)
-            var info = LAPACKE_cgetrf(LAPACK_ROW_MAJOR, numericCast(m), numericCast(m), &a, numericCast(lda), &ipiv)
-            if info != 0 { return nil }
-            info = LAPACKE_cgetri(LAPACK_ROW_MAJOR, numericCast(m), &a, numericCast(lda), ipiv)
-            if info != 0 { return nil }
-            return .init(elements: a, rows: rows, columns: columns)
-        }
-        fatalError("TODO: Not yet implemented")
-#elseif os(macOS)
         if rows != columns { return nil }
+        #if os(macOS)
         var a: [Complex<Float>] = []
         a.reserveCapacity(elements.count)
         for j in 0..<columns {
@@ -81,9 +64,21 @@ public extension Matrix<Complex<Float>> {
                 }
             }
         }
-#else
+        #else
+        if let LAPACKE_cgetrf = LAPACKE.cgetrf,
+           let LAPACKE_cgetri = LAPACKE.cgetri {
+            var a = elements
+            var m = rows
+            var lda = columns
+            var ipiv: [lapack_int] = .init(repeating: .zero, count: m)
+            var info = LAPACKE_cgetrf(LAPACKE.MatrixLayout.rowMajor.rawValue, numericCast(m), numericCast(m), &a, numericCast(lda), &ipiv)
+            if info != 0 { return nil }
+            info = LAPACKE_cgetri(LAPACKE.MatrixLayout.rowMajor.rawValue, numericCast(m), &a, numericCast(lda), ipiv)
+            if info != 0 { return nil }
+            return .init(elements: a, rows: rows, columns: columns)
+        }
         fatalError("TODO: Not yet implemented")
-#endif
+        #endif
     }
     
     //MARK: Addition
@@ -494,26 +489,7 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func diagonalizeHermitian(_ A: Matrix<Complex<Float>>) throws -> (eigenValues: [Float], eigenVectors: [Vector<Complex<Float>>]) {
-#if os(Windows) || os(Linux)
-        if  let LAPACKE_cheevd = _LAPACKE.cheevd {
-            let N = A.rows
-            let lda = N
-            var eigenValues: [Float] = .init(repeating: .zero, count: N)
-            var _A: [Complex<Float>] = Array(A.elements)
-            let V = Int8(bitPattern: UInt8(ascii: "V"))
-            let U = Int8(bitPattern: UInt8(ascii: "U"))
-            let info = LAPACKE_cheevd(LAPACK_COL_MAJOR, V, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            var eigenVectors = [Vector<Complex<Float>>](repeating: .zero(N), count: N)
-            for i in 0..<N {
-                for j in 0..<N {
-                    eigenVectors[i][j] = _A[N * i + j]
-                }
-            }
-            return (eigenValues, eigenVectors)
-        }
-        fatalError("TODO: Default implementation not yet implemented")
-#elseif os(macOS)
+#if os(macOS)
         precondition(A.rows == A.columns)
         var a: [Complex<Float>] = []
         
@@ -567,6 +543,23 @@ public extension MatrixOperations {
         }
         return (eigenValues, eigenVectors)
 #else
+        if  let LAPACKE_cheevd = LAPACKE.cheevd {
+            let N = A.rows
+            let lda = N
+            var eigenValues: [Float] = .init(repeating: .zero, count: N)
+            var _A: [Complex<Float>] = Array(A.elements)
+            let V = Int8(bitPattern: UInt8(ascii: "V"))
+            let U = Int8(bitPattern: UInt8(ascii: "U"))
+            let info = LAPACKE_cheevd(LAPACKE.MatrixLayout.rowMajor.rawValue, V, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
+            if info != 0 { throw MatrixOperationError.info(Int(info)) }
+            var eigenVectors = [Vector<Complex<Float>>](repeating: .zero(N), count: N)
+            for i in 0..<N {
+                for j in 0..<N {
+                    eigenVectors[i][j] = _A[N * i + j]
+                }
+            }
+            return (eigenValues, eigenVectors)
+        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -580,20 +573,7 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func eigenValuesHermitian(_ A: Matrix<Complex<Float>>) throws -> [Float] {
-#if os(Windows) || os(Linux)
-        if  let LAPACKE_cheevd = _LAPACKE.cheevd {
-            let N = A.rows
-            let lda = N
-            var eigenValues: [Float] = .init(repeating: .zero, count: N)
-            var _A: [Complex<Float>] = Array(A.elements)
-            let _N = Int8(bitPattern: UInt8(ascii: "N"))
-            let U = Int8(bitPattern: UInt8(ascii: "U"))
-            let info = LAPACKE_cheevd(LAPACK_COL_MAJOR, _N, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            return eigenValues
-        }
-        fatalError("TODO: Default implementation not yet implemented")
-#elseif os(macOS)
+#if os(macOS)
         precondition(A.rows == A.columns)
         var a: [Complex<Float>] = []
         
@@ -641,6 +621,17 @@ public extension MatrixOperations {
         }
         return eigenValues
 #else
+        if  let LAPACKE_cheevd = LAPACKE.cheevd {
+            let N = A.rows
+            let lda = N
+            var eigenValues: [Float] = .init(repeating: .zero, count: N)
+            var _A: [Complex<Float>] = Array(A.elements)
+            let _N = Int8(bitPattern: UInt8(ascii: "N"))
+            let U = Int8(bitPattern: UInt8(ascii: "U"))
+            let info = LAPACKE_cheevd(LAPACKE.MatrixLayout.rowMajor.rawValue, _N, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
+            if info != 0 { throw MatrixOperationError.info(Int(info)) }
+            return eigenValues
+        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -654,31 +645,7 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func diagonalize(_ A: Matrix<Complex<Float>>) throws -> (eigenValues: [Complex<Float>], leftEigenVectors: [Vector<Complex<Float>>], rightEigenVectors: [Vector<Complex<Float>>]) {
-#if os(Windows) || os(Linux)
-        if  let LAPACKE_cgeev = _LAPACKE.cgeev {
-            let N = A.rows
-            let lda = N
-            let ldvl = N
-            let ldvr = N
-            var _A = Array(A.elements)
-            var eigenValues: [Complex<Float>] = .init(repeating: .zero, count: N)
-            var vl: [Complex<Float>] = .init(repeating: .zero, count: N*N)
-            var vr: [Complex<Float>] = .init(repeating: .zero, count: N*N)
-            let V = Int8(bitPattern: UInt8(ascii: "V"))
-            let info = LAPACKE_cgeev(LAPACK_ROW_MAJOR, V, V, numericCast(N), &_A, numericCast(lda), &eigenValues, &vl, numericCast(ldvl), &vr, numericCast(ldvr))
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            var leftEigenVectors: [Vector<Complex<Float>>] = [Vector<Complex<Float>>](repeating: .zero(N), count: N)
-            var rightEigenVectors: [Vector<Complex<Float>>] = [Vector<Complex<Float>>](repeating: .zero(N), count: N)
-            for i in 0..<N {
-                for j in 0..<N {
-                    leftEigenVectors[j][i] = vl[N * i + j]
-                    rightEigenVectors[j][i] = vr[N * i + j]
-                }
-            }
-            return (eigenValues, leftEigenVectors, rightEigenVectors)
-        }
-        fatalError("TODO: Default implementation not yet implemented")
-#elseif os(macOS)
+#if os(macOS)
         precondition(A.rows == A.columns)
         var n = A.rows
         var a: [Complex<Float>] = []
@@ -738,6 +705,28 @@ public extension MatrixOperations {
         }
         return (eigenValues, leftEigenVectors, rightEigenVectors)
 #else
+        if  let LAPACKE_cgeev = LAPACKE.cgeev {
+            let N = A.rows
+            let lda = N
+            let ldvl = N
+            let ldvr = N
+            var _A = Array(A.elements)
+            var eigenValues: [Complex<Float>] = .init(repeating: .zero, count: N)
+            var vl: [Complex<Float>] = .init(repeating: .zero, count: N*N)
+            var vr: [Complex<Float>] = .init(repeating: .zero, count: N*N)
+            let V = Int8(bitPattern: UInt8(ascii: "V"))
+            let info = LAPACKE_cgeev(LAPACKE.MatrixLayout.rowMajor.rawValue, V, V, numericCast(N), &_A, numericCast(lda), &eigenValues, &vl, numericCast(ldvl), &vr, numericCast(ldvr))
+            if info != 0 { throw MatrixOperationError.info(Int(info)) }
+            var leftEigenVectors: [Vector<Complex<Float>>] = [Vector<Complex<Float>>](repeating: .zero(N), count: N)
+            var rightEigenVectors: [Vector<Complex<Float>>] = [Vector<Complex<Float>>](repeating: .zero(N), count: N)
+            for i in 0..<N {
+                for j in 0..<N {
+                    leftEigenVectors[j][i] = vl[N * i + j]
+                    rightEigenVectors[j][i] = vr[N * i + j]
+                }
+            }
+            return (eigenValues, leftEigenVectors, rightEigenVectors)
+        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -751,29 +740,7 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func diagonalizeLeft(_ A: Matrix<Complex<Float>>) throws -> (eigenValues: [Complex<Float>], leftEigenVectors: [Vector<Complex<Float>>]) {
-#if os(Windows) || os(Linux)
-        if  let LAPACKE_cgeev = _LAPACKE.cgeev {
-            let N = A.rows
-            let lda = N
-            let ldvl = N
-            let ldvr = N
-            var _A = Array(A.elements)
-            var eigenValues: [Complex<Float>] = .init(repeating: .zero, count: N)
-            var vl: [Complex<Float>] = .init(repeating: .zero, count: N*N)
-            let V = Int8(bitPattern: UInt8(ascii: "V"))
-            let _N = Int8(bitPattern: UInt8(ascii: "N"))
-            let info = LAPACKE_cgeev(LAPACK_ROW_MAJOR, V, _N, numericCast(N), &_A, numericCast(lda), &eigenValues, &vl, numericCast(ldvl), nil, numericCast(ldvr))
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            var leftEigenVectors: [Vector<Complex<Float>>] = [Vector<Complex<Float>>](repeating: .zero(N), count: N)
-            for i in 0..<N {
-                for j in 0..<N {
-                    leftEigenVectors[j][i] = vl[N * i + j]
-                }
-            }
-            return (eigenValues, leftEigenVectors)
-        }
-        fatalError("TODO: Default implementation not yet implemented")
-#elseif os(macOS)
+#if os(macOS)
         precondition(A.rows == A.columns)
         var n = A.rows
         var a: [Complex<Float>] = []
@@ -826,6 +793,26 @@ public extension MatrixOperations {
         }
         return (eigenValues, leftEigenVectors)
 #else
+        if let LAPACKE_cgeev = LAPACKE.cgeev {
+            let N = A.rows
+            let lda = N
+            let ldvl = N
+            let ldvr = N
+            var _A = Array(A.elements)
+            var eigenValues: [Complex<Float>] = .init(repeating: .zero, count: N)
+            var vl: [Complex<Float>] = .init(repeating: .zero, count: N*N)
+            let V = Int8(bitPattern: UInt8(ascii: "V"))
+            let _N = Int8(bitPattern: UInt8(ascii: "N"))
+            let info = LAPACKE_cgeev(LAPACKE.MatrixLayout.rowMajor.rawValue, V, _N, numericCast(N), &_A, numericCast(lda), &eigenValues, &vl, numericCast(ldvl), nil, numericCast(ldvr))
+            if info != 0 { throw MatrixOperationError.info(Int(info)) }
+            var leftEigenVectors: [Vector<Complex<Float>>] = [Vector<Complex<Float>>](repeating: .zero(N), count: N)
+            for i in 0..<N {
+                for j in 0..<N {
+                    leftEigenVectors[j][i] = vl[N * i + j]
+                }
+            }
+            return (eigenValues, leftEigenVectors)
+        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -839,29 +826,7 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func diagonalizeRight(_ A: Matrix<Complex<Float>>) throws -> (eigenValues: [Complex<Float>], rightEigenVectors: [Vector<Complex<Float>>]) {
-#if os(Windows) || os(Linux)
-        if  let LAPACKE_cgeev = _LAPACKE.cgeev {
-            let N = A.rows
-            let lda = N
-            let ldvl = N
-            let ldvr = N
-            var _A = Array(A.elements)
-            var eigenValues: [Complex<Float>] = .init(repeating: .zero, count: N)
-            var vr: [Complex<Float>] = .init(repeating: .zero, count: N*N)
-            let V = Int8(bitPattern: UInt8(ascii: "V"))
-            let _N = Int8(bitPattern: UInt8(ascii: "N"))
-            let info = LAPACKE_cgeev(LAPACK_ROW_MAJOR, _N, V, numericCast(N), &_A, numericCast(lda), &eigenValues, nil, numericCast(ldvl), &vr, numericCast(ldvr))
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            var rightEigenVectors: [Vector<Complex<Float>>] = [Vector<Complex<Float>>](repeating: .zero(N), count: N)
-            for i in 0..<N {
-                for j in 0..<N {
-                    rightEigenVectors[j][i] = vr[N * i + j]
-                }
-            }
-            return (eigenValues, rightEigenVectors)
-        }
-        fatalError("TODO: Default implementation not yet implemented")
-#elseif os(macOS)
+#if os(macOS)
         precondition(A.rows == A.columns)
         var n = A.rows
         var a: [Complex<Float>] = []
@@ -914,6 +879,26 @@ public extension MatrixOperations {
         }
         return (eigenValues, rightEigenVectors)
 #else
+        if  let LAPACKE_cgeev = LAPACKE.cgeev {
+            let N = A.rows
+            let lda = N
+            let ldvl = N
+            let ldvr = N
+            var _A = Array(A.elements)
+            var eigenValues: [Complex<Float>] = .init(repeating: .zero, count: N)
+            var vr: [Complex<Float>] = .init(repeating: .zero, count: N*N)
+            let V = Int8(bitPattern: UInt8(ascii: "V"))
+            let _N = Int8(bitPattern: UInt8(ascii: "N"))
+            let info = LAPACKE_cgeev(LAPACKE.MatrixLayout.rowMajor.rawValue, _N, V, numericCast(N), &_A, numericCast(lda), &eigenValues, nil, numericCast(ldvl), &vr, numericCast(ldvr))
+            if info != 0 { throw MatrixOperationError.info(Int(info)) }
+            var rightEigenVectors: [Vector<Complex<Float>>] = [Vector<Complex<Float>>](repeating: .zero(N), count: N)
+            for i in 0..<N {
+                for j in 0..<N {
+                    rightEigenVectors[j][i] = vr[N * i + j]
+                }
+            }
+            return (eigenValues, rightEigenVectors)
+        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -927,21 +912,7 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func eigenValues(_ A: Matrix<Complex<Float>>) throws -> [Complex<Float>] {
-#if os(Windows) || os(Linux)
-        if  let LAPACKE_cgeev = _LAPACKE.cgeev {
-            let N = A.rows
-            let lda = N
-            let ldvl = N
-            let ldvr = N
-            var _A = Array(A.elements)
-            var eigenValues: [Complex<Float>] = .init(repeating: .zero, count: N)
-            let _N = Int8(bitPattern: UInt8(ascii: "N"))
-            let info = LAPACKE_cgeev(LAPACK_ROW_MAJOR, _N, _N, numericCast(N), &_A, numericCast(lda), &eigenValues, nil, numericCast(ldvl), nil, numericCast(ldvr))
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            return eigenValues
-        }
-        fatalError("TODO: Default implementation not yet implemented")
-#elseif os(macOS)
+#if os(macOS)
         precondition(A.rows == A.columns)
         var n = A.rows
         var a: [Complex<Float>] = []
@@ -983,6 +954,18 @@ public extension MatrixOperations {
         if info != 0 { throw MatrixOperationError.info(Int(info)) }
         return eigenValues
 #else
+        if  let LAPACKE_cgeev = LAPACKE.cgeev {
+            let N = A.rows
+            let lda = N
+            let ldvl = N
+            let ldvr = N
+            var _A = Array(A.elements)
+            var eigenValues: [Complex<Float>] = .init(repeating: .zero, count: N)
+            let _N = Int8(bitPattern: UInt8(ascii: "N"))
+            let info = LAPACKE_cgeev(LAPACKE.MatrixLayout.rowMajor.rawValue, _N, _N, numericCast(N), &_A, numericCast(lda), &eigenValues, nil, numericCast(ldvl), nil, numericCast(ldvr))
+            if info != 0 { throw MatrixOperationError.info(Int(info)) }
+            return eigenValues
+        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -990,21 +973,7 @@ public extension MatrixOperations {
     //TODO: TEST!
     //@inlinable
     static func solve(A: Matrix<Complex<Float>>, b: Vector<Complex<Float>>) throws -> Vector<Complex<Float>> {
-#if os(Windows) || os(Linux)
-        if  let LAPACKE_cgesv = _LAPACKE.cgesv {
-            let N = A.rows
-            let nrhs: Int32 = 1
-            let lda: Int32 = numericCast(N)
-            let ldb: Int32 = 1
-            var ipiv = [Int32](repeating: .zero, count: N)
-            var _A = Array(A.elements)
-            var _b = Array(b.components)
-            let info = LAPACKE_cgesv(LAPACK_ROW_MAJOR, numericCast(N), nrhs, &_A, lda, &ipiv, &_b, ldb)
-            if info != 0 { throw MatrixOperationError.info(Int(info))}
-            return Vector(_b)
-        }
-        fatalError("TODO: Default implementation not yet implemented")
-#elseif os(macOS)
+#if os(macOS)
         var a: [Complex<Float>] = []
         a.reserveCapacity(A.elements.count)
         // Convert to columns major order
@@ -1028,6 +997,18 @@ public extension MatrixOperations {
         if info != 0 { throw MatrixOperationError.info(info) }
         return Vector(_b)
 #else
+        if  let LAPACKE_cgesv = LAPACKE.cgesv {
+            let N = A.rows
+            let nrhs: lapack_int = 1
+            let lda: lapack_int = lapack_int(N)
+            let ldb: lapack_int = 1
+            var ipiv = [lapack_int](repeating: .zero, count: N)
+            var _A = Array(A.elements)
+            var _b = Array(b.components)
+            let info = LAPACKE_cgesv(LAPACKE.MatrixLayout.rowMajor.rawValue, numericCast(N), nrhs, &_A, lda, &ipiv, &_b, ldb)
+            if info != 0 { throw MatrixOperationError.info(Int(info))}
+            return Vector(_b)
+        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }

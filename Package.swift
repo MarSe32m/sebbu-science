@@ -63,6 +63,18 @@ let package = Package(
             ]
         ),
         .target(
+            name: "FFT",
+            dependencies: [
+                .target(name: "CFFTW", condition: .when(platforms: [.linux, .windows, .macOS])),
+                .product(name: "Numerics", package: "swift-numerics")
+            ]),
+        .target(
+            name: "NumericsExtensions",
+            dependencies: [
+                .product(name: "Numerics", package: "swift-numerics")
+            ]
+        ),
+        .target(
             name: "SebbuScience",
             dependencies: [
                 .target(name: "_SebbuScienceCommon"),
@@ -70,6 +82,7 @@ let package = Package(
                 .target(name: "LAPACKE"),
                 .target(name: "COpenBLAS", condition: .when(platforms: [.linux, .windows])),
                 .target(name: "CLAPACK", condition: .when(platforms: [.linux, .windows])),
+                .target(name: "NumericsExtensions"),
                 .product(name: "Numerics", package: "swift-numerics"),
                 .product(name: "SebbuCollections", package: "sebbu-collections")
             ],
