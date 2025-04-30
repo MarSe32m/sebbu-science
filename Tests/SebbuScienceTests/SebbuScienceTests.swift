@@ -2,8 +2,16 @@ import Testing
 @testable import SebbuScience
 import BLAS
 import LAPACKE
+@testable import FFT
 
 struct SebbuScienceTests {
+    @Test("FFT availability")
+    func testFFTAvailability() {
+        #if os(Windows) || os(Linux)
+        #expect(FFTW.isAvailable == true)
+        #endif
+    }
+
     @Test("BLAS symbol loading")
     func testBLASSymbolLoading() {
         #expect(BLAS.sdsdot != nil)

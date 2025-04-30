@@ -71,7 +71,8 @@ let package = Package(
             name: "FFT",
             dependencies: [
                 .target(name: "CFFTW", condition: .when(platforms: [.linux, .windows])),
-                .product(name: "Numerics", package: "swift-numerics")
+                .product(name: "Numerics", package: "swift-numerics"),
+                .target(name: "NumericsExtensions")
             ]),
         .target(
             name: "NumericsExtensions",
@@ -85,6 +86,7 @@ let package = Package(
                 .target(name: "_SebbuScienceCommon"),
                 .target(name: "BLAS"),
                 .target(name: "LAPACKE"),
+                .target(name: "FFT"),
                 .target(name: "COpenBLAS", condition: .when(platforms: [.linux, .windows])),
                 .target(name: "CLAPACK", condition: .when(platforms: [.linux, .windows])),
                 .target(name: "NumericsExtensions"),
