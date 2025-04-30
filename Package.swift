@@ -31,7 +31,12 @@ let package = Package(
         .target(name: "CFFTW"),
         .target(name: "COpenBLAS"),
         .target(name: "CLAPACK"),
-        .target(name: "_SebbuScienceCommon"),
+        .target(
+            name: "_SebbuScienceCommon",
+            linkerSettings: [
+                .linkedLibrary("dl", .when(platforms: [.linux]))
+            ]
+        ),
         .target(
             name: "BLAS",
             dependencies: [
@@ -65,7 +70,7 @@ let package = Package(
         .target(
             name: "FFT",
             dependencies: [
-                .target(name: "CFFTW", condition: .when(platforms: [.linux, .windows, .macOS])),
+                .target(name: "CFFTW", condition: .when(platforms: [.linux, .windows])),
                 .product(name: "Numerics", package: "swift-numerics")
             ]),
         .target(
