@@ -5,9 +5,10 @@
 //  Created by Sebastian Toivonen on 30.4.2025.
 //
 
-import Numerics
+
 
 #if canImport(Accelerate)
+import Numerics
 import Accelerate
 
 public extension FFT {
@@ -75,7 +76,7 @@ public extension FFT {
                 var realPartsOutput = [Double](repeating: 0, count: x.count)
                 var imaginaryPartsOutput = [Double](repeating: 0, count: x.count)
                 vDSP_DFT_ExecuteD(setup, realParts, imaginaryParts, &realPartsOutput, &imaginaryPartsOutput)
-                let signal = zip(realPartsOutput, imaginaryPartsOutput).map { Complex($0, $1) }
+                let signal = zip(realPartsOutput, imaginaryPartsOutput).map { Complex($0 / Double(N), $1 / Double(N)) }
                 return (t, signal)
             }
             return super.execute(x, spacing: spacing)

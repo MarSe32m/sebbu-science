@@ -6,7 +6,7 @@
 //
 
 public extension LAPACKE {
-    enum FunctionTypes {
+    enum FunctionType {
         public typealias LAPACKE_sbdsdc = @convention(c) (_ matrix_layout: CInt, _ uplo: CChar, _ compq: CChar, _ n: lapack_int, _ d: UnsafeMutablePointer<Float>?, _ e: UnsafeMutablePointer<Float>?, _ u: UnsafeMutablePointer<Float>?, _ ldu: lapack_int, _ vt: UnsafeMutablePointer<Float>?, _ ldvt: lapack_int, _ q: UnsafeMutablePointer<Float>?, _ iq: UnsafeMutablePointer<lapack_int>) -> lapack_int 
         public typealias LAPACKE_dbdsdc = @convention(c) (_ matrix_layout: CInt, _ uplo: CChar, _ compq: CChar, _ n: lapack_int, _ d: UnsafeMutablePointer<Double>?, _ e: UnsafeMutablePointer<Double>?, _ u: UnsafeMutablePointer<Double>?, _ ldu: lapack_int, _ vt: UnsafeMutablePointer<Double>?, _ ldvt: lapack_int, _ q: UnsafeMutablePointer<Double>?, _ iq: UnsafeMutablePointer<lapack_int>) -> lapack_int 
         public typealias LAPACKE_sbdsqr = @convention(c) (_ matrix_layout: CInt, _ uplo: CChar, _ n: lapack_int, _ ncvt: lapack_int, _ nru: lapack_int, _ ncc: lapack_int, _ d: UnsafeMutablePointer<Float>?, _ e: UnsafeMutablePointer<Float>?, _ vt: UnsafeMutablePointer<Float>?, _ ldvt: lapack_int, _ u: UnsafeMutablePointer<Float>?, _ ldu: lapack_int, _ c: UnsafeMutablePointer<Float>?, _ ldc: lapack_int) -> lapack_int 
