@@ -18,7 +18,7 @@ public struct RK23FixedStep<T> {
     internal var borrowedState: T
     
     @usableFromInline
-    internal let f: (Double, T) -> T
+    internal let f: (_ t: Double, _ state: T) -> T
     
     // Scratch vectors
     @usableFromInline

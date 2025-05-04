@@ -24,15 +24,15 @@ public struct SRK2FixedStep<T, NoiseType> {
     
     // Drift term
     @usableFromInline
-    internal let f: (Double, T) -> T
+    internal let f: (_ t: Double, _ state: T) -> T
     
     // Diffusion term
     @usableFromInline
-    internal let g: (Double, T) -> T
+    internal let g: (_ t: Double, _ state: T) -> T
     
     // White noise
     @usableFromInline
-    internal let w: (Double) -> NoiseType
+    internal let w: (_ t: Double) -> NoiseType
     
     @usableFromInline
     internal var auxiliaryState: T

@@ -10,7 +10,8 @@ let package = Package(
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(name: "SebbuScience", targets: ["SebbuScience"]),
         .library(name: "BLAS", targets: ["BLAS"]),
-        .library(name: "LAPACKE", targets: ["LAPACKE"])
+        .library(name: "LAPACKE", targets: ["LAPACKE"]),
+        .library(name: "FFT", targets: ["FFT"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-numerics", branch: "main"),

@@ -18,7 +18,7 @@ public struct RK45FixedStep<T> {
     internal var borrowedState: T
     
     @usableFromInline
-    internal let f: (Double, T) -> T
+    internal let f: (_ t: Double, _ state: T) -> T
     
     // Scratch vectors
     @usableFromInline
@@ -286,7 +286,7 @@ extension RK45FixedStep<Vector<Complex<Double>>> {
         k3Argument.add(k2, scaling: dtPer2)
         let k3 = f(t0 + dtPer2, k3Argument) // Do not modify, this is cached in the calling code
         
-        // k4Argument = y0 + dy * k3
+        // k4Argument = y0 + dt * k3
         k4Argument.add(k3, scaling: dt)
         let k4 = f(t0 + dt, k4Argument) // Do not modify, this is cached in the calling code
         
