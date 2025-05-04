@@ -6,3 +6,4 @@
 //
 
 //TODO: Implement special functions, erf etc...
+import CMath

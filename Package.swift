@@ -15,22 +15,14 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-numerics", branch: "main"),
         .package(url: "https://github.com/apple/swift-algorithms", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-collections", from: "1.1.4"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
-
-        .package(url: "https://github.com/MarSe32m/sebbu-bitstream", branch: "main"),
-        .package(url: "https://github.com/MarSe32m/sebbu-bitstream-macros", branch: "main"),
         .package(url: "https://github.com/MarSe32m/sebbu-collections", branch: "main"),
-        .package(url: "https://github.com/MarSe32m/sebbu-concurrency", branch: "main"),
-        .package(url: "https://github.com/MarSe32m/sebbu-ts-ds", branch: "main"),
-
-        .package(url: "https://github.com/tayloraswift/swift-png", from: "4.4.0"),
-        .package(url: "https://github.com/pvieito/PythonKit", branch: "master")
     ],
     targets: [
         .target(name: "CFFTW"),
         .target(name: "COpenBLAS"),
         .target(name: "CLAPACK"),
+        .target(name: "CMath"),
         .target(
             name: "_SebbuScienceCommon",
             linkerSettings: [
@@ -77,7 +69,8 @@ let package = Package(
         .target(
             name: "NumericsExtensions",
             dependencies: [
-                .product(name: "Numerics", package: "swift-numerics")
+                .product(name: "Numerics", package: "swift-numerics"),
+                .target(name: "CMath")
             ]
         ),
         .target(
@@ -90,6 +83,7 @@ let package = Package(
                 .target(name: "COpenBLAS", condition: .when(platforms: [.linux, .windows])),
                 .target(name: "CLAPACK", condition: .when(platforms: [.linux, .windows])),
                 .target(name: "NumericsExtensions"),
+                .product(name: "Algorithms", package: "swift-algorithms"),
                 .product(name: "Numerics", package: "swift-numerics"),
                 .product(name: "SebbuCollections", package: "sebbu-collections")
             ],
