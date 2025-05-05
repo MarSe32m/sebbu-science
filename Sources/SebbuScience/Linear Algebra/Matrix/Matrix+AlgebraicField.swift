@@ -329,6 +329,14 @@ public extension Matrix where T: AlgebraicField {
     static func zeros(rows: Int, columns: Int) -> Self {
         Matrix(elements: .init(repeating: .zero, count: rows * columns), rows: rows, columns: columns)
     }
+    
+    @inlinable
+    @_transparent
+    mutating func zeroElements() {
+        for i in 0..<elements.count {
+            elements[i] = .zero
+        }
+    }
 }
 
 public extension Matrix where T: Real {

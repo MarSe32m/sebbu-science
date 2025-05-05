@@ -14,6 +14,14 @@ public extension Vector where T: AlgebraicField {
         Vector(.init(repeating: .zero, count: count))
     }
     
+    @inlinable
+    @_transparent
+    mutating func zeroComponents() {
+        for i in 0..<components.count {
+            components[i] = .zero
+        }
+    }
+    
     //MARK: Scaling
     @inlinable
     static func *(lhs: T, rhs: Self) -> Self {
