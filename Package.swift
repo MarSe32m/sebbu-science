@@ -11,13 +11,15 @@ let package = Package(
         .library(name: "SebbuScience", targets: ["SebbuScience"]),
         .library(name: "BLAS", targets: ["BLAS"]),
         .library(name: "LAPACKE", targets: ["LAPACKE"]),
-        .library(name: "FFT", targets: ["FFT"])
+        .library(name: "FFT", targets: ["FFT"]),
+        .library(name: "PythonKitUtilities", targets: ["PythonKitUtilities"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-numerics", branch: "main"),
         .package(url: "https://github.com/apple/swift-algorithms", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
         .package(url: "https://github.com/MarSe32m/sebbu-collections", branch: "main"),
+        .package(url: "https://github.com/pvieito/PythonKit", branch: "master")
     ],
     targets: [
         .target(name: "CFFTW"),
@@ -72,6 +74,13 @@ let package = Package(
             dependencies: [
                 .product(name: "Numerics", package: "swift-numerics"),
                 .target(name: "CMath")
+            ]
+        ),
+        .target(
+            name: "PythonKitUtilities",
+            dependencies: [
+                .product(name: "Numerics", package: "swift-numerics"),
+                .product(name: "PythonKit", package: "PythonKit")
             ]
         ),
         .target(
