@@ -55,7 +55,7 @@ public struct Matrix<T> {
     }
 }
 
-extension Matrix {
+public extension Matrix {
     @inlinable
     func extractColumns() -> [[T]] {
         var result = [[T]](repeating: [], count: columns)
