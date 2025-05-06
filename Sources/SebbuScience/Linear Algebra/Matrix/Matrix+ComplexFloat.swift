@@ -1001,7 +1001,7 @@ public extension MatrixOperations {
             let N = A.rows
             let nrhs: lapack_int = 1
             let lda: lapack_int = lapack_int(N)
-            let ldb: lapack_int = lapack_int(b.count)
+            let ldb: lapack_int = 1
             var ipiv = [lapack_int](repeating: .zero, count: N)
             var _A = Array(A.elements)
             var _b = Array(b.components)
