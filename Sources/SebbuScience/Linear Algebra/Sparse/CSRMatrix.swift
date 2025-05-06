@@ -147,6 +147,11 @@ public extension CSRMatrix {
         dot(vector, multiplied: 1, into: &into)
     }
     
+    @inlinable
+    @_optimize(speed)
+    func dot(_ vector: Vector<T>, addingInto: inout Vector<T>) {
+        dot(vector, multiplied: 1, addingInto: &addingInto)
+    }
     
     @inlinable
     @_optimize(speed)
