@@ -183,6 +183,31 @@ public extension CSRMatrix {
         }
     }
     
+    @inlinable
+    @_optimize(speed)
+    func dot(_ vector: Vector<T>, multiplied: T, addingInto: inout Vector<T>) {
+        addingInto.components.withUnsafeMutableBufferPointer { into in
+            rowIndices.withUnsafeBufferPointer { rowIndices in
+                columnIndices.withUnsafeBufferPointer { columnIndices in
+                    values.withUnsafeBufferPointer { values in
+                        var tempValue: T = .zero
+                        for i in 0..<rows {
+                            tempValue = .zero
+                            let elementCount = rowIndices[i + 1] - rowIndices[i]
+                            if elementCount == 0 {
+                                continue
+                            }
+                            for j in rowIndices[i]..<rowIndices[i + 1] {
+                                tempValue = Relaxed.multiplyAdd(values[j], vector[columnIndices[j]], tempValue)
+                            }
+                            into[i] = Relaxed.multiplyAdd(tempValue, multiplied, into[i])
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     
     @_optimize(speed)
     @inlinable
