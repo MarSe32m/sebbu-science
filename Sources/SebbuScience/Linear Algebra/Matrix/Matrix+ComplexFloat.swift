@@ -986,7 +986,7 @@ public extension MatrixOperations {
         var N = A.rows
         var nrhs = 1
         var lda = A.columns
-        var ldb = 1
+        var ldb = b.count
         var ipiv: [Int] = .init(repeating: .zero, count: N)
         var info = 0
         a.withUnsafeMutableBufferPointer { A in
@@ -1001,7 +1001,7 @@ public extension MatrixOperations {
             let N = A.rows
             let nrhs: lapack_int = 1
             let lda: lapack_int = lapack_int(N)
-            let ldb: lapack_int = 1
+            let ldb: lapack_int = lapack_int(b.count)
             var ipiv = [lapack_int](repeating: .zero, count: N)
             var _A = Array(A.elements)
             var _b = Array(b.components)
