@@ -12,7 +12,7 @@ import ComplexModule
 
 //MARK: Matrix-matrix multiplication
 @inlinable
-public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Double, _ leftMatrix: UnsafePointer<Double>, _ rightMatrix: UnsafePointer<Double>, _ resultMultiplier: Double = 0.0, _ resultMatrix: UnsafeMutablePointer<Double>) {
+public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Double, _ leftMatrix: UnsafePointer<Double>, _ rightMatrix: UnsafePointer<Double>, _ resultMultiplier: Double, _ resultMatrix: UnsafeMutablePointer<Double>) {
     assert(leftColumns == rightRows)
     if let dgemm = BLAS.dgemm {
         let order = BLAS.Order.rowMajor.rawValue
@@ -23,7 +23,7 @@ public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ righ
 }
 
 @inlinable
-public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Float, _ leftMatrix: UnsafePointer<Float>, _ rightMatrix: UnsafePointer<Float>, _ resultMultiplier: Float = 0.0, _ resultMatrix: UnsafeMutablePointer<Float>) {
+public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Float, _ leftMatrix: UnsafePointer<Float>, _ rightMatrix: UnsafePointer<Float>, _ resultMultiplier: Float, _ resultMatrix: UnsafeMutablePointer<Float>) {
     assert(leftColumns == rightRows)
     if let sgemm = BLAS.sgemm {
         let order = BLAS.Order.rowMajor.rawValue
@@ -34,7 +34,7 @@ public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ righ
 }
 
 @inlinable
-public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Complex<Double>, _ leftMatrix: UnsafePointer<Complex<Double>>, _ rightMatrix: UnsafePointer<Complex<Double>>, _ resultMultiplier: Complex<Double> = .zero, _ resultMatrix: UnsafeMutablePointer<Double>) {
+public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Complex<Double>, _ leftMatrix: UnsafePointer<Complex<Double>>, _ rightMatrix: UnsafePointer<Complex<Double>>, _ resultMultiplier: Complex<Double>, _ resultMatrix: UnsafeMutablePointer<Double>) {
     assert(leftColumns == rightRows)
     if let zgemm = BLAS.zgemm {
         let order = BLAS.Order.rowMajor.rawValue
@@ -49,7 +49,7 @@ public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ righ
 }
 
 @inlinable
-public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Complex<Float>, _ leftMatrix: UnsafePointer<Complex<Float>>, _ rightMatrix: UnsafePointer<Complex<Float>>, _ resultMultiplier: Complex<Float> = .zero, _ resultMatrix: UnsafeMutablePointer<Double>) {
+public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Complex<Float>, _ leftMatrix: UnsafePointer<Complex<Float>>, _ rightMatrix: UnsafePointer<Complex<Float>>, _ resultMultiplier: Complex<Float>, _ resultMatrix: UnsafeMutablePointer<Double>) {
     assert(leftColumns == rightRows)
     if let cgemm = BLAS.cgemm {
         let order = BLAS.Order.rowMajor.rawValue
@@ -65,12 +65,12 @@ public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ righ
 
 //MARK: General Matrix-Vector multiplication
 @inlinable
-public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Double, _ matrix: UnsafePointer<Double>, _ vector: UnsafePointer<Double>, resultMultiplier: Double = .zero, _ resultVector: UnsafeMutablePointer<Double>) {
+public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Double, _ matrix: UnsafePointer<Double>, _ vector: UnsafePointer<Double>, resultMultiplier: Double, _ resultVector: UnsafeMutablePointer<Double>) {
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-    } else if let dgemv = BLAS.dgemv, matrixRows * matrixColumns > 1000 {
+    } else if let dgemv = BLAS.dgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.noTranspose.rawValue
         let m = cblas_int(matrixRows)
@@ -81,7 +81,7 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }
@@ -89,12 +89,12 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
 }
 
 @inlinable
-public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Float, _ matrix: UnsafePointer<Float>, _ vector: UnsafePointer<Float>,  resultMultiplier: Float = .zero, _ resultVector: UnsafeMutablePointer<Float>) {
+public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Float, _ matrix: UnsafePointer<Float>, _ vector: UnsafePointer<Float>,  resultMultiplier: Float, _ resultVector: UnsafeMutablePointer<Float>) {
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-    } else if let sgemv = BLAS.sgemv, matrixRows * matrixColumns > 1000 {
+    } else if let sgemv = BLAS.sgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.noTranspose.rawValue
         let m = cblas_int(matrixRows)
@@ -105,7 +105,7 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }
@@ -113,12 +113,12 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
 }
 
 @inlinable
-public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Double>, _ matrix: UnsafePointer<Complex<Double>>, _ vector: UnsafePointer<Complex<Double>>, _ resultMultiplier: Complex<Double> = .zero, _ resultVector: UnsafeMutablePointer<Complex<Double>>) {
+public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Double>, _ matrix: UnsafePointer<Complex<Double>>, _ vector: UnsafePointer<Complex<Double>>, _ resultMultiplier: Complex<Double>, _ resultVector: UnsafeMutablePointer<Complex<Double>>) {
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-    } else if let zgemv = BLAS.zgemv, matrixRows * matrixColumns > 1000 {
+    } else if let zgemv = BLAS.zgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.noTranspose.rawValue
         let m = cblas_int(matrixRows)
@@ -133,7 +133,7 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }
@@ -141,12 +141,12 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
 }
 
 @inlinable
-public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Float>, _ matrix: UnsafePointer<Complex<Float>>, _ vector: UnsafePointer<Complex<Float>>, _ resultMultiplier: Complex<Float> = .zero, _ resultVector: UnsafeMutablePointer<Complex<Float>>) {
+public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Float>, _ matrix: UnsafePointer<Complex<Float>>, _ vector: UnsafePointer<Complex<Float>>, _ resultMultiplier: Complex<Float>, _ resultVector: UnsafeMutablePointer<Complex<Float>>) {
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-    } else if let cgemv = BLAS.cgemv, matrixRows * matrixColumns > 1000 {
+    } else if let cgemv = BLAS.cgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.noTranspose.rawValue
         let m = cblas_int(matrixRows)
@@ -161,7 +161,7 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }
@@ -170,12 +170,12 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
 
 //MARK: General Vector-Matrix multiplication
 @inlinable
-public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Double, _ matrix: UnsafePointer<Double>, _ vector: UnsafePointer<Double>, _ resultMultiplier: Double = .zero, _ resultVector: UnsafeMutablePointer<Double>) {
+public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Double, _ matrix: UnsafePointer<Double>, _ vector: UnsafePointer<Double>, _ resultMultiplier: Double, _ resultVector: UnsafeMutablePointer<Double>) {
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-    } else if let dgemv = BLAS.dgemv, matrixRows * matrixColumns > 1000 {
+    } else if let dgemv = BLAS.dgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.transpose.rawValue
         let m = cblas_int(matrixRows)
@@ -186,7 +186,7 @@ public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }
@@ -194,12 +194,12 @@ public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
 }
 
 @inlinable
-public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Float, _ matrix: UnsafePointer<Float>, _ vector: UnsafePointer<Float>, _ resultMultiplier: Float = .zero, _ resultVector: UnsafeMutablePointer<Float>) {
+public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Float, _ matrix: UnsafePointer<Float>, _ vector: UnsafePointer<Float>, _ resultMultiplier: Float, _ resultVector: UnsafeMutablePointer<Float>) {
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-    } else if let sgemv = BLAS.sgemv, matrixRows * matrixColumns > 1000 {
+    } else if let sgemv = BLAS.sgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.transpose.rawValue
         let m = cblas_int(matrixRows)
@@ -210,7 +210,7 @@ public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }
@@ -218,12 +218,12 @@ public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
 }
 
 @inlinable
-public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Double>, _ matrix: UnsafePointer<Complex<Double>>, _ vector: UnsafePointer<Complex<Double>>, _ resultMultiplier: Complex<Double> = .zero, _ resultVector: UnsafeMutablePointer<Complex<Double>>) {
+public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Double>, _ matrix: UnsafePointer<Complex<Double>>, _ vector: UnsafePointer<Complex<Double>>, _ resultMultiplier: Complex<Double>, _ resultVector: UnsafeMutablePointer<Complex<Double>>) {
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-    } else if let zgemv = BLAS.zgemv, matrixRows * matrixColumns > 1000 {
+    } else if let zgemv = BLAS.zgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.transpose.rawValue
         let m = cblas_int(matrixRows)
@@ -238,7 +238,7 @@ public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }
@@ -246,12 +246,12 @@ public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
 }
 
 @inlinable
-public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Float>, _ matrix: UnsafePointer<Complex<Float>>, _ vector: UnsafePointer<Complex<Float>>, _ resultMultiplier: Complex<Float> = .zero, _ resultVector: UnsafeMutablePointer<Complex<Float>>) {
+public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Float>, _ matrix: UnsafePointer<Complex<Float>>, _ vector: UnsafePointer<Complex<Float>>, _ resultMultiplier: Complex<Float>, _ resultVector: UnsafeMutablePointer<Complex<Float>>) {
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-    } else if let cgemv = BLAS.cgemv, matrixRows * matrixColumns > 1000 {
+    } else if let cgemv = BLAS.cgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.transpose.rawValue
         let m = cblas_int(matrixRows)
@@ -266,7 +266,7 @@ public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }
@@ -275,12 +275,12 @@ public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
 
 //MARK: Symmetric matrix-vector multiply
 @inlinable
-public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Double, _ matrix: UnsafePointer<Double>, _ vector: UnsafePointer<Double>, _ resultMultiplier: Double = .zero, _ resultVector: UnsafeMutablePointer<Double>) {
+public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Double, _ matrix: UnsafePointer<Double>, _ vector: UnsafePointer<Double>, _ resultMultiplier: Double, _ resultVector: UnsafeMutablePointer<Double>) {
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-    } else if let dsymv = BLAS.dsymv, matrixRows * matrixColumns > 1000 {
+    } else if let dsymv = BLAS.dsymv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let uplo = BLAS.UpperLower.upper.rawValue
         let n = cblas_int(matrixRows)
@@ -290,7 +290,7 @@ public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }
@@ -298,9 +298,9 @@ public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
 }
 
 @inlinable
-public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Float, _ matrix: UnsafePointer<Float>, _ vector: UnsafePointer<Float>, _ resultMultiplier: Float = .zero, _ resultVector: UnsafeMutablePointer<Float>) {
+public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Float, _ matrix: UnsafePointer<Float>, _ vector: UnsafePointer<Float>, _ resultMultiplier: Float, _ resultVector: UnsafeMutablePointer<Float>) {
     precondition(matrixColumns == vectorComponents)
-    if matrixRows == 2 && matrixColumns == 2, matrixRows * matrixColumns > 1000 {
+    if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let ssymv = BLAS.ssymv {
@@ -313,7 +313,7 @@ public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }
@@ -321,9 +321,9 @@ public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
 }
 
 @inlinable
-public func hermitianMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Double>, _ matrix: UnsafePointer<Complex<Double>>, _ vector: UnsafePointer<Complex<Double>>, _ resultMultiplier: Complex<Double> = .zero, _ resultVector: UnsafeMutablePointer<Complex<Double>>) {
+public func hermitianMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Double>, _ matrix: UnsafePointer<Complex<Double>>, _ vector: UnsafePointer<Complex<Double>>, _ resultMultiplier: Complex<Double>, _ resultVector: UnsafeMutablePointer<Complex<Double>>) {
     precondition(matrixColumns == vectorComponents)
-    if matrixRows == 2 && matrixColumns == 2, matrixRows * matrixColumns > 1000 {
+    if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let zhemv = BLAS.zhemv {
@@ -340,7 +340,7 @@ public func hermitianMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }
@@ -348,10 +348,10 @@ public func hermitianMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
 }
 
 @inlinable
-public func hermitianMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Float>, _ matrix: UnsafePointer<Complex<Float>>, _ vector: UnsafePointer<Complex<Float>>, _ resultMultiplier: Complex<Float> = .zero, _ resultVector: UnsafeMutablePointer<Complex<Float>>) {
+public func hermitianMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Float>, _ matrix: UnsafePointer<Complex<Float>>, _ vector: UnsafePointer<Complex<Float>>, _ resultMultiplier: Complex<Float>, _ resultVector: UnsafeMutablePointer<Complex<Float>>) {
     precondition(matrixColumns == vectorComponents)
     precondition(matrixColumns == vectorComponents)
-    if matrixRows == 2 && matrixColumns == 2, matrixRows * matrixColumns > 1000 {
+    if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let chemv = BLAS.chemv {
@@ -368,7 +368,7 @@ public func hermitianMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }
@@ -377,9 +377,9 @@ public func hermitianMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
 
 //MARK: Symmetric vector-matrix multiply
 @inlinable
-public func vecSymmetricMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Double, _ matrix: UnsafePointer<Double>, _ vector: UnsafePointer<Double>, _ resultMultiplier: Double = .zero, _ resultVector: UnsafeMutablePointer<Double>) {
+public func vecSymmetricMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Double, _ matrix: UnsafePointer<Double>, _ vector: UnsafePointer<Double>, _ resultMultiplier: Double, _ resultVector: UnsafeMutablePointer<Double>) {
     precondition(matrixColumns == vectorComponents)
-    if matrixRows == 2 && matrixColumns == 2, matrixRows * matrixColumns > 1000 {
+    if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let dsymv = BLAS.dsymv {
@@ -392,7 +392,7 @@ public func vecSymmetricMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }
@@ -400,9 +400,9 @@ public func vecSymmetricMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
 }
 
 @inlinable
-public func vecSymmetricMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Float, _ matrix: UnsafePointer<Float>, _ vector: UnsafePointer<Float>, _ resultMultiplier: Float = .zero, _ resultVector: UnsafeMutablePointer<Float>) {
+public func vecSymmetricMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Float, _ matrix: UnsafePointer<Float>, _ vector: UnsafePointer<Float>, _ resultMultiplier: Float, _ resultVector: UnsafeMutablePointer<Float>) {
     precondition(matrixColumns == vectorComponents)
-    if matrixRows == 2 && matrixColumns == 2, matrixRows * matrixColumns > 1000 {
+    if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let ssymv = BLAS.ssymv {
@@ -415,7 +415,7 @@ public func vecSymmetricMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }
@@ -423,9 +423,9 @@ public func vecSymmetricMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
 }
 
 @inlinable
-public func vecHermitianMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Double>, _ matrix: UnsafePointer<Complex<Double>>, _ vector: UnsafePointer<Complex<Double>>, _ resultMultiplier: Complex<Double> = .zero, _ resultVector: UnsafeMutablePointer<Complex<Double>>) {
+public func vecHermitianMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Double>, _ matrix: UnsafePointer<Complex<Double>>, _ vector: UnsafePointer<Complex<Double>>, _ resultMultiplier: Complex<Double>, _ resultVector: UnsafeMutablePointer<Complex<Double>>) {
     precondition(matrixColumns == vectorComponents)
-    if matrixRows == 2 && matrixColumns == 2, matrixRows * matrixColumns > 1000 {
+    if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let zhemv = BLAS.zhemv {
@@ -442,7 +442,7 @@ public func vecHermitianMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }
@@ -450,10 +450,10 @@ public func vecHermitianMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
 }
 
 @inlinable
-public func vecHermitianMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Float>, _ matrix: UnsafePointer<Complex<Float>>, _ vector: UnsafePointer<Complex<Float>>, _ resultMultiplier: Complex<Float> = .zero, _ resultVector: UnsafeMutablePointer<Complex<Float>>) {
+public func vecHermitianMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Float>, _ matrix: UnsafePointer<Complex<Float>>, _ vector: UnsafePointer<Complex<Float>>, _ resultMultiplier: Complex<Float>, _ resultVector: UnsafeMutablePointer<Complex<Float>>) {
     precondition(matrixColumns == vectorComponents)
     precondition(matrixColumns == vectorComponents)
-    if matrixRows == 2 && matrixColumns == 2, matrixRows * matrixColumns > 1000 {
+    if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let chemv = BLAS.chemv {
@@ -470,7 +470,7 @@ public func vecHermitianMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
         for i in 0..<matrixRows {
             result = .zero
             for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i * matrixColumns + j], result)
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
             }
             resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
         }

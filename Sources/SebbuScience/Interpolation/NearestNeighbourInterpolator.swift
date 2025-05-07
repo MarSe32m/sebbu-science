@@ -32,7 +32,7 @@ public struct NearestNeighbourInterpolator<Element> {
     }
     
     @inlinable
-    func callAsFunction(_ t: Double) -> Element {
+    public func callAsFunction(_ t: Double) -> Element {
         if t <= x[0] { return y[0] }
         if t >= x.last! { return y.last! }
         let k = x.intervalIndex(t)
@@ -41,7 +41,7 @@ public struct NearestNeighbourInterpolator<Element> {
     }
     
     @inlinable
-    func sample(_ t: Double) -> Element {
+    public func sample(_ t: Double) -> Element {
         self(t)
     }
 }
