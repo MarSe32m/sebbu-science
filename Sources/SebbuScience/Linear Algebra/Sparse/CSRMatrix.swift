@@ -196,16 +196,22 @@ public extension CSRMatrix {
                 columnIndices.withUnsafeBufferPointer { columnIndices in
                     values.withUnsafeBufferPointer { values in
                         var tempValue: T = .zero
-                        for i in 0..<rows {
-                            tempValue = .zero
-                            let elementCount = rowIndices[i + 1] - rowIndices[i]
-                            if elementCount == 0 {
+                        var i = 0
+                        var j = 0
+                        while i < rows {
+                            let upperBound = rowIndices[i &+ 1]
+                            j = rowIndices[i]
+                            if j == upperBound {
+                                i &+= 1
                                 continue
                             }
-                            for j in rowIndices[i]..<rowIndices[i + 1] {
+                            tempValue = .zero
+                            while j < upperBound {
                                 tempValue = Relaxed.multiplyAdd(values[j], vector[columnIndices[j]], tempValue)
+                                j &+= 1
                             }
                             into[i] = Relaxed.multiplyAdd(tempValue, multiplied, into[i])
+                            i &+= 1
                         }
                     }
                 }
