@@ -69,7 +69,7 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let dgemv = BLAS.dgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.noTranspose.rawValue
@@ -93,7 +93,7 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let sgemv = BLAS.sgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.noTranspose.rawValue
@@ -117,7 +117,7 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let zgemv = BLAS.zgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.noTranspose.rawValue
@@ -145,7 +145,7 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let cgemv = BLAS.cgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.noTranspose.rawValue
@@ -174,7 +174,7 @@ public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let dgemv = BLAS.dgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.transpose.rawValue
@@ -198,7 +198,7 @@ public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let sgemv = BLAS.sgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.transpose.rawValue
@@ -222,7 +222,7 @@ public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let zgemv = BLAS.zgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.transpose.rawValue
@@ -250,7 +250,7 @@ public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let cgemv = BLAS.cgemv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let transA = BLAS.Transpose.transpose.rawValue
@@ -279,7 +279,7 @@ public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let dsymv = BLAS.dsymv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let uplo = BLAS.UpperLower.upper.rawValue
@@ -302,7 +302,7 @@ public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let ssymv = BLAS.ssymv {
         let order = BLAS.Order.rowMajor.rawValue
         let uplo = BLAS.UpperLower.upper.rawValue
@@ -325,7 +325,7 @@ public func hermitianMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let zhemv = BLAS.zhemv {
         let order = BLAS.Order.rowMajor.rawValue
         let uplo = BLAS.UpperLower.upper.rawValue
@@ -353,7 +353,7 @@ public func hermitianMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let chemv = BLAS.chemv {
         let order = BLAS.Order.rowMajor.rawValue
         let uplo = BLAS.UpperLower.upper.rawValue
@@ -381,7 +381,7 @@ public func vecSymmetricMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let dsymv = BLAS.dsymv {
         let order = BLAS.Order.columnMajor.rawValue
         let uplo = BLAS.UpperLower.upper.rawValue
@@ -404,7 +404,7 @@ public func vecSymmetricMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let ssymv = BLAS.ssymv {
         let order = BLAS.Order.columnMajor.rawValue
         let uplo = BLAS.UpperLower.upper.rawValue
@@ -427,7 +427,7 @@ public func vecHermitianMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let zhemv = BLAS.zhemv {
         let order = BLAS.Order.columnMajor.rawValue
         let uplo = BLAS.UpperLower.upper.rawValue
@@ -455,7 +455,7 @@ public func vecHermitianMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
     precondition(matrixColumns == vectorComponents)
     if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     } else if let chemv = BLAS.chemv {
         let order = BLAS.Order.columnMajor.rawValue
         let uplo = BLAS.UpperLower.upper.rawValue
