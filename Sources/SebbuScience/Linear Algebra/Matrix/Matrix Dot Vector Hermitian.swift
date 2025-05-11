@@ -24,30 +24,46 @@ public extension Matrix<Complex<Double>> {
         return result
     }
     
-    
     @inlinable
+    @_transparent
     func hermitianDot(_ vector: Vector<T>, into: inout Vector<T>) {
-        hermitianDot(vector, multiplied: .one, into: &into)
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, into: &into.components)
     }
     
-    
     @inlinable
+    @_transparent
     func hermitianDot(_ vector: Vector<T>, addingInto into: inout Vector<T>) {
-        hermitianDot(vector, multiplied: .one, addingInto: &into)
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, addingInto: &into.components)
     }
     
-    //TODO: Make a version that takes vector as a UnsafePointer<Complex<Double>> and take into as UnsafeMutablePointer<Complex<Double>>
     @inlinable
+    @_transparent
     func hermitianDot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
-        if rows * columns <= 1000 {
-            _dot(vector, multiplied: multiplied, into: &into)
-            return
-        }
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, multiplied: multiplied, into: &into.components)
+    }
+    
+    @inlinable
+    @_transparent
+    func hermitianDot(_ vector: Vector<T>, multiplied: T, addingInto into: inout Vector<T>) {
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, multiplied: multiplied, addingInto: &into.components)
+    }
+    
+    @inlinable
+    func hermitianDot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
         //TODO: Benchmark when it is worth calling blas functions for this
-        if let zhemv = BLAS.zhemv {
-            precondition(rows == columns)
-            precondition(vector.count == columns)
-            precondition(rows == into.count)
+        if rows * columns > 400, let zhemv = BLAS.zhemv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
             let N = cblas_int(rows)
@@ -55,26 +71,40 @@ public extension Matrix<Complex<Double>> {
             let beta: T = .zero
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    zhemv(order, uplo, N, alpha, elements, lda, vector.components, 1, beta, &into.components, 1)
+                    zhemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
                 }
             }
         } else {
             //TODO: Implement hermitian matrix-vector multiplication (default implementation)
-            _dot(vector, multiplied: multiplied, into: &into)
+            _dot(vector, multiplied: multiplied, into: into)
         }
     }
+    
+    @inlinable
+    func hermitianDot(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
+        //TODO: Benchmark when it is worth calling blas functions for this
+        if rows * columns > 400, let zhemv = BLAS.zhemv {
+            let order = BLAS.Order.rowMajor.rawValue
+            let uplo = BLAS.UpperLower.upper.rawValue
+            let N = cblas_int(rows)
+            let lda = N
+            let alpha: T = .one
+            let beta: T = .zero
+            withUnsafePointer(to: alpha) { alpha in
+                withUnsafePointer(to: beta) { beta in
+                    zhemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+                }
+            }
+        } else {
+            //TODO: Implement hermitian matrix-vector multiplication (default implementation)
+            _dot(vector, into: into)
+        }
+    }
+    
     //TODO: Make a version that takes vector as a UnsafePointer<Complex<Double>> and take addingInto as UnsafeMutablePointer<Complex<Double>>
     @inlinable
-    func hermitianDot(_ vector: Vector<T>, multiplied: T, addingInto into: inout Vector<T>) {
-        if rows * columns <= 1000 {
-            _dot(vector, multiplied: multiplied, addingInto: &into)
-            return
-        }
-        //TODO: Benchmark when it is worth calling blas functions for this
-        if let zhemv = BLAS.zhemv {
-            precondition(rows == columns)
-            precondition(vector.count == columns)
-            precondition(rows == into.count)
+    func hermitianDot(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
+        if rows * columns > 400, let zhemv = BLAS.zhemv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
             let N = cblas_int(rows)
@@ -82,12 +112,32 @@ public extension Matrix<Complex<Double>> {
             let beta: T = .one
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    zhemv(order, uplo, N, alpha, elements, lda, vector.components, 1, beta, &into.components, 1)
+                    zhemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
                 }
             }
         } else {
             //TODO: Implement hermitian matrix-vector multiplication (default implementation)
-            _dot(vector, multiplied: multiplied, addingInto: &into)
+            _dot(vector, multiplied: multiplied, addingInto: into)
+        }
+    }
+    
+    @inlinable
+    func hermitianDot(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
+        if rows * columns > 400, let zhemv = BLAS.zhemv {
+            let order = BLAS.Order.rowMajor.rawValue
+            let uplo = BLAS.UpperLower.upper.rawValue
+            let N = cblas_int(rows)
+            let lda = N
+            let alpha: T = .one
+            let beta: T = .one
+            withUnsafePointer(to: alpha) { alpha in
+                withUnsafePointer(to: beta) { beta in
+                    zhemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+                }
+            }
+        } else {
+            //TODO: Implement hermitian matrix-vector multiplication (default implementation)
+            _dot(vector, addingInto: into)
         }
     }
 }
@@ -108,29 +158,46 @@ public extension Matrix<Complex<Float>> {
         return result
     }
     
-    
     @inlinable
+    @_transparent
     func hermitianDot(_ vector: Vector<T>, into: inout Vector<T>) {
-        hermitianDot(vector, multiplied: .one, into: &into)
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, into: &into.components)
     }
     
-    
     @inlinable
+    @_transparent
     func hermitianDot(_ vector: Vector<T>, addingInto into: inout Vector<T>) {
-        hermitianDot(vector, multiplied: .one, addingInto: &into)
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, addingInto: &into.components)
     }
     
-    //TODO: Make a version that takes vector as a UnsafePointer<Complex<Float>> and take into as UnsafeMutablePointer<Complex<Float>>
     @inlinable
+    @_transparent
     func hermitianDot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
-        if rows * columns <= 1000 {
-            _dot(vector, multiplied: multiplied, into: &into)
-            return
-        }
-        if let chemv = BLAS.chemv {
-            precondition(rows == columns)
-            precondition(vector.count == columns)
-            precondition(rows == into.count)
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, multiplied: multiplied, into: &into.components)
+    }
+    
+    @inlinable
+    @_transparent
+    func hermitianDot(_ vector: Vector<T>, multiplied: T, addingInto into: inout Vector<T>) {
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, multiplied: multiplied, addingInto: &into.components)
+    }
+    
+    @inlinable
+    func hermitianDot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
+        //TODO: Benchmark when it is worth calling blas functions for this
+        if rows * columns > 400, let chemv = BLAS.chemv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
             let N = cblas_int(rows)
@@ -138,25 +205,40 @@ public extension Matrix<Complex<Float>> {
             let beta: T = .zero
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    chemv(order, uplo, N, alpha, elements, lda, vector.components, 1, beta, &into.components, 1)
+                    chemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
                 }
             }
         } else {
             //TODO: Implement hermitian matrix-vector multiplication (default implementation)
-            _dot(vector, multiplied: multiplied, into: &into)
+            _dot(vector, multiplied: multiplied, into: into)
         }
     }
-    //TODO: Make a version that takes vector as a UnsafePointer<Complex<Float>> and take into as UnsafeMutablePointer<Double>
+    
     @inlinable
-    func hermitianDot(_ vector: Vector<T>, multiplied: T, addingInto into: inout Vector<T>) {
-        if rows * columns <= 1000 {
-            _dot(vector, multiplied: multiplied, addingInto: &into)
-            return
+    func hermitianDot(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
+        //TODO: Benchmark when it is worth calling blas functions for this
+        if rows * columns > 400, let chemv = BLAS.chemv {
+            let order = BLAS.Order.rowMajor.rawValue
+            let uplo = BLAS.UpperLower.upper.rawValue
+            let N = cblas_int(rows)
+            let lda = N
+            let alpha: T = .one
+            let beta: T = .zero
+            withUnsafePointer(to: alpha) { alpha in
+                withUnsafePointer(to: beta) { beta in
+                    chemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+                }
+            }
+        } else {
+            //TODO: Implement hermitian matrix-vector multiplication (default implementation)
+            _dot(vector, into: into)
         }
-        if let chemv = BLAS.chemv {
-            precondition(rows == columns)
-            precondition(vector.count == columns)
-            precondition(rows == into.count)
+    }
+    
+    //TODO: Make a version that takes vector as a UnsafePointer<Complex<Double>> and take addingInto as UnsafeMutablePointer<Complex<Double>>
+    @inlinable
+    func hermitianDot(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
+        if rows * columns > 400, let chemv = BLAS.chemv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
             let N = cblas_int(rows)
@@ -164,12 +246,32 @@ public extension Matrix<Complex<Float>> {
             let beta: T = .one
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    chemv(order, uplo, N, alpha, elements, lda, vector.components, 1, beta, &into.components, 1)
+                    chemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
                 }
             }
         } else {
             //TODO: Implement hermitian matrix-vector multiplication (default implementation)
-            _dot(vector, multiplied: multiplied, addingInto: &into)
+            _dot(vector, multiplied: multiplied, addingInto: into)
+        }
+    }
+    
+    @inlinable
+    func hermitianDot(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
+        if rows * columns > 400, let chemv = BLAS.chemv {
+            let order = BLAS.Order.rowMajor.rawValue
+            let uplo = BLAS.UpperLower.upper.rawValue
+            let N = cblas_int(rows)
+            let lda = N
+            let alpha: T = .one
+            let beta: T = .one
+            withUnsafePointer(to: alpha) { alpha in
+                withUnsafePointer(to: beta) { beta in
+                    chemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+                }
+            }
+        } else {
+            //TODO: Implement hermitian matrix-vector multiplication (default implementation)
+            _dot(vector, addingInto: into)
         }
     }
 }

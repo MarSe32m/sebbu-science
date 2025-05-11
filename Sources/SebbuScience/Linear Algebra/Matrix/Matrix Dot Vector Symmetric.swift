@@ -25,54 +25,95 @@ public extension Matrix<Double> {
     }
     
     @inlinable
+    @_transparent
     func symmetricDot(_ vector: Vector<T>, into: inout Vector<T>) {
-        symmetricDot(vector, multiplied: 1.0, into: &into)
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, into: &into.components)
     }
     
     @inlinable
+    @_transparent
     func symmetricDot(_ vector: Vector<T>, addingInto into: inout Vector<T>) {
-        symmetricDot(vector, multiplied: 1.0, addingInto: &into)
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, addingInto: &into.components)
     }
-    //TODO: Make a version that takes vector as a UnsafePointer<Double> and take into as UnsafeMutablePointer<Double>
+    
     @inlinable
+    @_transparent
     func symmetricDot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
-        if rows * columns <= 1000 {
-            _dot(vector, multiplied: multiplied, into: &into)
-            return
-        }
-        if let dsymv = BLAS.dsymv {
-            precondition(rows == columns)
-            precondition(vector.count == columns)
-            precondition(rows == into.count)
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, multiplied: multiplied, into: &into.components)
+    }
+    
+    @inlinable
+    @_transparent
+    func symmetricDot(_ vector: Vector<T>, multiplied: T, addingInto into: inout Vector<T>) {
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, multiplied: multiplied, addingInto: &into.components)
+    }
+    
+    @inlinable
+    func symmetricDot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
+        if rows * columns > 400, let dsymv = BLAS.dsymv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
             let N = cblas_int(rows)
             let lda = N
-            dsymv(order, uplo, N, multiplied, elements, lda, vector.components, 1, .zero, &into.components, 1)
+            dsymv(order, uplo, N, multiplied, elements, lda, vector, 1, .zero, into, 1)
         } else {
             //TODO: Implement symmetric matrix-vector multiplication (default implementation)
-            _dot(vector, multiplied: multiplied, into: &into)
+            _dot(vector, multiplied: multiplied, into: into)
         }
     }
+    
+    @inlinable
+    func symmetricDot(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
+        if rows * columns > 400, let dsymv = BLAS.dsymv {
+            let order = BLAS.Order.rowMajor.rawValue
+            let uplo = BLAS.UpperLower.upper.rawValue
+            let N = cblas_int(rows)
+            let lda = N
+            dsymv(order, uplo, N, 1.0, elements, lda, vector, 1, .zero, into, 1)
+        } else {
+            //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+            _dot(vector, into: into)
+        }
+    }
+    
     //TODO: Make a version that takes vector as a UnsafePointer<Double> and take addingInto as UnsafeMutablePointer<Double>
     @inlinable
-    func symmetricDot(_ vector: Vector<T>, multiplied: T, addingInto into: inout Vector<T>) {
-        if rows * columns <= 1000 {
-            _dot(vector, multiplied: multiplied, addingInto: &into)
-            return
-        }
-        if let dsymv = BLAS.dsymv {
-            precondition(rows == columns)
-            precondition(vector.count == columns)
-            precondition(rows == into.count)
+    func symmetricDot(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
+        if rows * columns > 400, let dsymv = BLAS.dsymv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
             let N = cblas_int(rows)
             let lda = N
-            dsymv(order, uplo, N, multiplied, elements, lda, vector.components, 1, 1.0, &into.components, 1)
+            dsymv(order, uplo, N, multiplied, elements, lda, vector, 1, 1.0, into, 1)
         } else {
             //TODO: Implement symmetric matrix-vector multiplication (default implementation)
-            _dot(vector, multiplied: multiplied, addingInto: &into)
+            _dot(vector, multiplied: multiplied, addingInto: into)
+        }
+    }
+    
+    @inlinable
+    func symmetricDot(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
+        if rows * columns > 400, let dsymv = BLAS.dsymv {
+            let order = BLAS.Order.rowMajor.rawValue
+            let uplo = BLAS.UpperLower.upper.rawValue
+            let N = cblas_int(rows)
+            let lda = N
+            dsymv(order, uplo, N, 1.0, elements, lda, vector, 1, 1.0, into, 1)
+        } else {
+            //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+            _dot(vector, addingInto: into)
         }
     }
 }
@@ -94,54 +135,95 @@ public extension Matrix<Float> {
     }
     
     @inlinable
+    @_transparent
     func symmetricDot(_ vector: Vector<T>, into: inout Vector<T>) {
-        symmetricDot(vector, multiplied: 1.0, into: &into)
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, into: &into.components)
     }
     
     @inlinable
+    @_transparent
     func symmetricDot(_ vector: Vector<T>, addingInto into: inout Vector<T>) {
-        symmetricDot(vector, multiplied: 1.0, addingInto: &into)
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, addingInto: &into.components)
     }
-    //TODO: Make a version that takes vector as a UnsafePointer<Float> and take into as UnsafeMutablePointer<Float>
+    
     @inlinable
+    @_transparent
     func symmetricDot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
-        if rows * columns <= 1000 {
-            _dot(vector, multiplied: multiplied, into: &into)
-            return
-        }
-        if let ssymv = BLAS.ssymv {
-            precondition(rows == columns)
-            precondition(vector.count == columns)
-            precondition(rows == into.count)
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, multiplied: multiplied, into: &into.components)
+    }
+    
+    @inlinable
+    @_transparent
+    func symmetricDot(_ vector: Vector<T>, multiplied: T, addingInto into: inout Vector<T>) {
+        precondition(rows == columns)
+        precondition(columns == vector.count)
+        precondition(rows == into.count)
+        dot(vector.components, multiplied: multiplied, addingInto: &into.components)
+    }
+    
+    @inlinable
+    func symmetricDot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
+        if rows * columns > 400, let ssymv = BLAS.ssymv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
             let N = cblas_int(rows)
             let lda = N
-            ssymv(order, uplo, N, multiplied, elements, lda, vector.components, 1, .zero, &into.components, 1)
+            ssymv(order, uplo, N, multiplied, elements, lda, vector, 1, .zero, into, 1)
         } else {
             //TODO: Implement symmetric matrix-vector multiplication (default implementation)
-            _dot(vector, multiplied: multiplied, into: &into)
+            _dot(vector, multiplied: multiplied, into: into)
         }
     }
-    //TODO: Make a version that takes vector as a UnsafePointer<Float> and take addingInto as UnsafeMutablePointer<Float>
+    
     @inlinable
-    func symmetricDot(_ vector: Vector<T>, multiplied: T, addingInto into: inout Vector<T>) {
-        if rows * columns <= 1000 {
-            _dot(vector, multiplied: multiplied, addingInto: &into)
-            return
-        }
-        if let ssymv = BLAS.ssymv {
-            precondition(rows == columns)
-            precondition(vector.count == columns)
-            precondition(rows == into.count)
+    func symmetricDot(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
+        if rows * columns > 400, let ssymv = BLAS.ssymv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
             let N = cblas_int(rows)
             let lda = N
-            ssymv(order, uplo, N, multiplied, elements, lda, vector.components, 1, 1.0, &into.components, 1)
+            ssymv(order, uplo, N, 1.0, elements, lda, vector, 1, .zero, into, 1)
         } else {
             //TODO: Implement symmetric matrix-vector multiplication (default implementation)
-            _dot(vector, multiplied: multiplied, addingInto: &into)
+            _dot(vector, into: into)
+        }
+    }
+    
+    //TODO: Make a version that takes vector as a UnsafePointer<Double> and take addingInto as UnsafeMutablePointer<Double>
+    @inlinable
+    func symmetricDot(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
+        if rows * columns > 400, let ssymv = BLAS.ssymv {
+            let order = BLAS.Order.rowMajor.rawValue
+            let uplo = BLAS.UpperLower.upper.rawValue
+            let N = cblas_int(rows)
+            let lda = N
+            ssymv(order, uplo, N, multiplied, elements, lda, vector, 1, 1.0, into, 1)
+        } else {
+            //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+            _dot(vector, multiplied: multiplied, addingInto: into)
+        }
+    }
+    
+    @inlinable
+    func symmetricDot(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
+        if rows * columns > 400, let ssymv = BLAS.ssymv {
+            let order = BLAS.Order.rowMajor.rawValue
+            let uplo = BLAS.UpperLower.upper.rawValue
+            let N = cblas_int(rows)
+            let lda = N
+            ssymv(order, uplo, N, 1.0, elements, lda, vector, 1, 1.0, into, 1)
+        } else {
+            //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+            _dot(vector, addingInto: into)
         }
     }
 }

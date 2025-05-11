@@ -192,80 +192,84 @@ public extension CSRMatrix where T: AlgebraicField {
         return result
     }
     
-    
-    //TODO: Make a version that takes vector as a UnsafePointer<T> and take into as UnsafeMutablePointer<T>
     @inlinable
-    @_optimize(speed)
+    @_transparent
     func dot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
-        into.components.withUnsafeMutableBufferPointer { into in
-            rowIndices.withUnsafeBufferPointer { rowIndices in
-                columnIndices.withUnsafeBufferPointer { columnIndices in
-                    values.withUnsafeBufferPointer { values in
-                        var tempValue: T = .zero
-                        var i = 0
-                        var j = 0
-                        while i < rows {
-                            let upperBound = rowIndices[i &+ 1]
-                            j = rowIndices[i]
-                            if j == upperBound {
-                                i &+= 1
-                                continue
-                            }
-                            while j &+ 2 <= upperBound {
-                                tempValue = Relaxed.multiplyAdd(values[j], vector[columnIndices[j]], tempValue)
-                                tempValue = Relaxed.multiplyAdd(values[j &+ 1], vector[columnIndices[j &+ 1]], tempValue)
-                                j &+= 2
-                            }
-                            while j < upperBound {
-                                tempValue = Relaxed.multiplyAdd(values[j], vector[columnIndices[j]], tempValue)
-                                j &+= 1
-                            }
-                            into[i] = Relaxed.product(tempValue, multiplied)
-                            i &+= 1
-                        }
-                    }
-                }
-            }
-        }
+        dot(vector.components, multiplied: multiplied, into: &into.components)
     }
     
-    //TODO: Make a version that takes vector as a UnsafePointer<T> and take into as UnsafeMutablePointer<T>
     @inlinable
     @_optimize(speed)
-    func dot(_ vector: Vector<T>, multiplied: T, addingInto: inout Vector<T>) {
-        addingInto.components.withUnsafeMutableBufferPointer { into in
-            rowIndices.withUnsafeBufferPointer { rowIndices in
-                columnIndices.withUnsafeBufferPointer { columnIndices in
-                    values.withUnsafeBufferPointer { values in
-                        var tempValue: T = .zero
-                        var i = 0
-                        var j = 0
-                        while i < rows {
-                            let upperBound = rowIndices[i &+ 1]
-                            j = rowIndices[i]
-                            if j == upperBound {
-                                i &+= 1
-                                continue
-                            }
-                            tempValue = .zero
-                            while j &+ 2 <= upperBound {
-                                tempValue = Relaxed.multiplyAdd(values[j], vector[columnIndices[j]], tempValue)
-                                tempValue = Relaxed.multiplyAdd(values[j &+ 1], vector[columnIndices[j &+ 1]], tempValue)
-                                j &+= 2
-                            }
-                            while j < upperBound {
-                                tempValue = Relaxed.multiplyAdd(values[j], vector[columnIndices[j]], tempValue)
-                                j &+= 1
-                            }
-                            into[i] = Relaxed.multiplyAdd(tempValue, multiplied, into[i])
+    func dot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
+        rowIndices.withUnsafeBufferPointer { rowIndices in
+            columnIndices.withUnsafeBufferPointer { columnIndices in
+                values.withUnsafeBufferPointer { values in
+                    var tempValue: T = .zero
+                    var i = 0
+                    var j = 0
+                    while i < rows {
+                        let upperBound = rowIndices[i &+ 1]
+                        j = rowIndices[i]
+                        if j == upperBound {
                             i &+= 1
+                            continue
                         }
+                        while j &+ 2 <= upperBound {
+                            tempValue = Relaxed.multiplyAdd(values[j], vector[columnIndices[j]], tempValue)
+                            tempValue = Relaxed.multiplyAdd(values[j &+ 1], vector[columnIndices[j &+ 1]], tempValue)
+                            j &+= 2
+                        }
+                        while j < upperBound {
+                            tempValue = Relaxed.multiplyAdd(values[j], vector[columnIndices[j]], tempValue)
+                            j &+= 1
+                        }
+                        into[i] = Relaxed.product(tempValue, multiplied)
+                        i &+= 1
                     }
                 }
             }
         }
     }
     
+    @inlinable
+    @_transparent
+    func dot(_ vector: Vector<T>, multiplied: T, addingInto: inout Vector<T>) {
+        dot(vector.components, multiplied: multiplied, addingInto: &addingInto.components)
+    }
+    
+    @inlinable
+    @_optimize(speed)
+    func dot(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
+        rowIndices.withUnsafeBufferPointer { rowIndices in
+            columnIndices.withUnsafeBufferPointer { columnIndices in
+                values.withUnsafeBufferPointer { values in
+                    var tempValue: T = .zero
+                    var i = 0
+                    var j = 0
+                    while i < rows {
+                        let upperBound = rowIndices[i &+ 1]
+                        j = rowIndices[i]
+                        if j == upperBound {
+                            i &+= 1
+                            continue
+                        }
+                        tempValue = .zero
+                        while j &+ 2 <= upperBound {
+                            tempValue = Relaxed.multiplyAdd(values[j], vector[columnIndices[j]], tempValue)
+                            tempValue = Relaxed.multiplyAdd(values[j &+ 1], vector[columnIndices[j &+ 1]], tempValue)
+                            j &+= 2
+                        }
+                        while j < upperBound {
+                            tempValue = Relaxed.multiplyAdd(values[j], vector[columnIndices[j]], tempValue)
+                            j &+= 1
+                        }
+                        into[i] = Relaxed.multiplyAdd(tempValue, multiplied, into[i])
+                        i &+= 1
+                    }
+                }
+            }
+        }
+    }
     
     @_optimize(speed)
     @inlinable
@@ -317,7 +321,6 @@ public extension CSRMatrix where T: AlgebraicField {
         }
     }
 }
-
 
 public extension CSRMatrix<Complex<Double>> {
     @_optimize(speed)
