@@ -139,7 +139,7 @@ public extension MatrixOperations {
             var _A: [Double] = Array(A.elements)
             let V = Int8(bitPattern: UInt8(ascii: "V"))
             let U = Int8(bitPattern: UInt8(ascii: "U"))
-            let info = LAPACKE_dsyevd(LAPACKE.MatrixLayout.rowMajor.rawValue, V, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
+            let info = LAPACKE_dsyevd(LAPACKE.MatrixLayout.columnMajor.rawValue, V, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
             if info != 0 { throw MatrixOperationError.info(Int(info)) }
             var eigenVectors = [Vector<Double>](repeating: .zero(N), count: N)
             for i in 0..<N {
@@ -198,7 +198,7 @@ public extension MatrixOperations {
             var _A: [Double] = Array(A.elements)
             let _N = Int8(bitPattern: UInt8(ascii: "N"))
             let U = Int8(bitPattern: UInt8(ascii: "U"))
-            let info = LAPACKE_dsyevd(LAPACKE.MatrixLayout.rowMajor.rawValue, _N, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
+            let info = LAPACKE_dsyevd(LAPACKE.MatrixLayout.columnMajor.rawValue, _N, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
             if info != 0 { throw MatrixOperationError.info(Int(info)) }
             return eigenValues
         }
