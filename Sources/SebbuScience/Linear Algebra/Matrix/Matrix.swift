@@ -14,6 +14,17 @@ public struct Matrix<T> {
     public let columns: Int
     
     @inlinable
+    public var transpose: Self {
+        var result: Self = .init(rows: columns, columns: rows, {_ in })
+        for i in 0..<columns {
+            for j in 0..<rows {
+                result[i, j] = self[j, i]
+            }
+        }
+        return result
+    }
+    
+    @inlinable
     public init(elements: [T], rows: Int, columns: Int) {
         precondition(elements.count == rows * columns)
         self.elements = elements
@@ -34,13 +45,13 @@ public struct Matrix<T> {
     @inlinable
     public subscript(_ i: Int, _ j: Int) -> T {
         _read {
-            let index = i * columns + j
+            let index = i &* columns &+ j
             precondition(index < elements.count)
             yield elements[index]
         }
         
         _modify {
-            let index = i * columns + j
+            let index = i &* columns &+ j
             precondition(index < elements.count)
             yield &elements[index]
         }

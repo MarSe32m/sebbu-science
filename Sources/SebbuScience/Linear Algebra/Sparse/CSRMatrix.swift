@@ -5,12 +5,11 @@
 //  Created by Sebastian Toivonen on 23.8.2023.
 //
 
-import RealModule
-import ComplexModule
 import NumericsExtensions
 import SebbuCollections
+import BLAS
 
-public struct CSRMatrix<T: Sendable>: SparseMatrix, Sendable where T: AlgebraicField {
+public struct CSRMatrix<T>: SparseMatrix {
     @usableFromInline
     internal var values: [T]
     
@@ -20,9 +19,20 @@ public struct CSRMatrix<T: Sendable>: SparseMatrix, Sendable where T: AlgebraicF
     @usableFromInline
     internal var rowIndices: [Int]
     
+    @inlinable
+    public var transpose: CSRMatrix<T> {
+        //TODO: Is there a way to optimize this?
+        var tuples = rowColumnValueTuples()
+        tuples = tuples.map { ($0.column, $0.row, $0.value) }
+        var result = self
+        result.setValuesFromRowColumnValueTuples(tuples: tuples)
+        return result
+    }
+    
     public let columns: Int
     public let rows: Int
     
+    @inlinable
     public init(rows: Int, columns: Int, values: [T], rowIndices: [Int], columnIndices: [Int]) {
         self.rows = rows
         self.columns = columns
@@ -31,41 +41,10 @@ public struct CSRMatrix<T: Sendable>: SparseMatrix, Sendable where T: AlgebraicF
         self.rowIndices = rowIndices
     }
     
+    @inlinable
     public init<S: SparseMatrix>(from matrix: S) where S.T == T {
         self.init(rows: matrix.rows, columns: matrix.columns, values: [], rowIndices: [], columnIndices: [])
         setValuesFromRowColumnValueTuples(tuples: matrix.rowColumnValueTuples())
-    }
-    
-    @inlinable
-    @_optimize(speed)
-    public func dot(_ matrix: CSRMatrix<T>) -> Matrix<T> {
-        var _ = CSRMatrix<T>(rows: self.rows, columns: self.columns, values: [], rowIndices: [], columnIndices: [])
-        fatalError("TODO: Implement")
-    }
-    
-    @inlinable
-    @_optimize(speed)
-    public subscript(row: Int, column: Int) -> T {
-        _read {
-            let row = extract(row: row)
-            var result: T? = nil
-            for (col, value) in row {
-                if col > column { break }
-                if col == column {
-                    result = value
-                    break
-                }
-            }
-            if let result = result {
-                yield result
-            } else {
-                yield .zero
-            }
-        }
-        _modify {
-            //TODO: Do we want to be able to modify?
-            fatalError("Not implemented")
-        }
     }
     
     @inlinable
@@ -84,7 +63,8 @@ public struct CSRMatrix<T: Sendable>: SparseMatrix, Sendable where T: AlgebraicF
         return Array(zip(columnIndices[rowStartIndex..<rowEndIndex], values[rowStartIndex..<rowEndIndex]))
     }
     
-    private mutating func setValuesFromRowColumnValueTuples(tuples: [(row: Int, column: Int, value: T)]) {
+    @inlinable
+    internal mutating func setValuesFromRowColumnValueTuples(tuples: [(row: Int, column: Int, value: T)]) {
         // Sort tuples by row and then by column
         let sortedTuples = tuples.sorted { $0.row == $1.row ? $0.column < $1.column : $0.row < $1.row }
 
@@ -115,23 +95,75 @@ public struct CSRMatrix<T: Sendable>: SparseMatrix, Sendable where T: AlgebraicF
     }
 }
 
+public extension CSRMatrix where T: AlgebraicField {
+    @inlinable
+    @_optimize(speed)
+    func dot(_ matrix: CSRMatrix<T>) -> Matrix<T> {
+        var _ = CSRMatrix<T>(rows: self.rows, columns: self.columns, values: [], rowIndices: [], columnIndices: [])
+        fatalError("TODO: Implement")
+    }
+    
+    @inlinable
+    @_optimize(speed)
+    subscript(row: Int, column: Int) -> T {
+        _read {
+            let row = extract(row: row)
+            var result: T? = nil
+            for (col, value) in row {
+                if col > column { break }
+                if col == column {
+                    result = value
+                    break
+                }
+            }
+            if let result = result {
+                yield result
+            } else {
+                yield .zero
+            }
+        }
+        _modify {
+            //TODO: Do we want to be able to modify?
+            fatalError("Not implemented")
+        }
+    }
+}
+
 public extension CSRMatrix where T == Complex<Double> {
+    @inlinable
     var conjugate: CSRMatrix<T> {
         CSRMatrix(rows: rows, columns: columns, values: values.map { $0.conjugate }, rowIndices: rowIndices, columnIndices: columnIndices)
     }
     
-    var transpose: CSRMatrix<T> {
+    @inlinable
+    var conjugateTranspose: CSRMatrix<T> {
         //TODO: Is there a way to optimize this?
         var tuples = rowColumnValueTuples()
-        tuples = tuples.map { ($0.column, $0.row, $0.value) }
+        tuples = tuples.betterMap { ($0.column, $0.row, $0.value.conjugate) }
         var result = self
         result.setValuesFromRowColumnValueTuples(tuples: tuples)
         return result
     }
 }
 
-public extension CSRMatrix {
+public extension CSRMatrix where T == Complex<Float> {
+    @inlinable
+    var conjugate: CSRMatrix<T> {
+        CSRMatrix(rows: rows, columns: columns, values: values.map { $0.conjugate }, rowIndices: rowIndices, columnIndices: columnIndices)
+    }
     
+    @inlinable
+    var conjugateTranspose: CSRMatrix<T> {
+        //TODO: Is there a way to optimize this?
+        var tuples = rowColumnValueTuples()
+        tuples = tuples.map { ($0.column, $0.row, $0.value.conjugate) }
+        var result = self
+        result.setValuesFromRowColumnValueTuples(tuples: tuples)
+        return result
+    }
+}
+
+public extension CSRMatrix where T: AlgebraicField {
     @inlinable
     @_optimize(speed)
     func dot(_ vector: Vector<T>) -> Vector<T> {
@@ -139,7 +171,6 @@ public extension CSRMatrix {
         dot(vector, into: &result)
         return result
     }
-    
     
     @inlinable
     @_optimize(speed)
@@ -162,6 +193,7 @@ public extension CSRMatrix {
     }
     
     
+    //TODO: Make a version that takes vector as a UnsafePointer<T> and take into as UnsafeMutablePointer<T>
     @inlinable
     @_optimize(speed)
     func dot(_ vector: Vector<T>, multiplied: T, into: inout Vector<T>) {
@@ -170,17 +202,26 @@ public extension CSRMatrix {
                 columnIndices.withUnsafeBufferPointer { columnIndices in
                     values.withUnsafeBufferPointer { values in
                         var tempValue: T = .zero
-                        for i in 0..<rows {
-                            tempValue = .zero
-                            let elementCount = rowIndices[i + 1] - rowIndices[i]
-                            if elementCount == 0 {
-                                into[i] = .zero
+                        var i = 0
+                        var j = 0
+                        while i < rows {
+                            let upperBound = rowIndices[i &+ 1]
+                            j = rowIndices[i]
+                            if j == upperBound {
+                                i &+= 1
                                 continue
                             }
-                            for j in rowIndices[i]..<rowIndices[i + 1] {
+                            while j &+ 2 <= upperBound {
                                 tempValue = Relaxed.multiplyAdd(values[j], vector[columnIndices[j]], tempValue)
+                                tempValue = Relaxed.multiplyAdd(values[j &+ 1], vector[columnIndices[j &+ 1]], tempValue)
+                                j &+= 2
+                            }
+                            while j < upperBound {
+                                tempValue = Relaxed.multiplyAdd(values[j], vector[columnIndices[j]], tempValue)
+                                j &+= 1
                             }
                             into[i] = Relaxed.product(tempValue, multiplied)
+                            i &+= 1
                         }
                     }
                 }
@@ -188,6 +229,7 @@ public extension CSRMatrix {
         }
     }
     
+    //TODO: Make a version that takes vector as a UnsafePointer<T> and take into as UnsafeMutablePointer<T>
     @inlinable
     @_optimize(speed)
     func dot(_ vector: Vector<T>, multiplied: T, addingInto: inout Vector<T>) {
@@ -206,6 +248,11 @@ public extension CSRMatrix {
                                 continue
                             }
                             tempValue = .zero
+                            while j &+ 2 <= upperBound {
+                                tempValue = Relaxed.multiplyAdd(values[j], vector[columnIndices[j]], tempValue)
+                                tempValue = Relaxed.multiplyAdd(values[j &+ 1], vector[columnIndices[j &+ 1]], tempValue)
+                                j &+= 2
+                            }
                             while j < upperBound {
                                 tempValue = Relaxed.multiplyAdd(values[j], vector[columnIndices[j]], tempValue)
                                 j &+= 1
@@ -223,27 +270,24 @@ public extension CSRMatrix {
     @_optimize(speed)
     @inlinable
     static func *(lhs: T, rhs: CSRMatrix<T>) -> CSRMatrix<T> {
-        let newValues = rhs.values.map { Relaxed.product($0, lhs) }
+        let newValues = rhs.values.betterMap { Relaxed.product($0, lhs) }
         return CSRMatrix(rows: rhs.rows, columns: rhs.columns, values: newValues, rowIndices: rhs.rowIndices, columnIndices: rhs.columnIndices)
     }
     
     
     @_optimize(speed)
     @inlinable
-    
     static func *=(lhs: inout CSRMatrix<T>, rhs: T)  {
         lhs.multiply(by: rhs)
     }
     
     @inlinable
     @_optimize(speed)
-    
     mutating func multiply(by: T) {
         for i in 0..<values.count {
             values[i] = Relaxed.product(values[i], by)
         }
     }
-    
     
     @_optimize(speed)
     @inlinable
@@ -294,9 +338,16 @@ public extension CSRMatrix<Complex<Double>> {
     @_optimize(speed)
     @inlinable
     mutating func multiply(by: Double) {
-        for i in 0..<values.count {
-            values[i].real = Relaxed.product(values[i].real, by)
-            values[i].imaginary = Relaxed.product(values[i].imaginary, by)
+        if let zscal = BLAS.zscal {
+            let N = cblas_int(values.count)
+            withUnsafePointer(to: by) { alpha in
+                zscal(N, alpha, &values, 1)
+            }
+        } else {
+            for i in 0..<values.count {
+                values[i].real = Relaxed.product(values[i].real, by)
+                values[i].imaginary = Relaxed.product(values[i].imaginary, by)
+            }
         }
     }
     
@@ -329,3 +380,8 @@ public extension CSRMatrix<Complex<Double>> {
         }
     }
 }
+
+extension CSRMatrix: Sendable where T: Sendable {}
+extension CSRMatrix: Equatable where T: Equatable {}
+extension CSRMatrix: Hashable where T: Hashable {}
+extension CSRMatrix: Codable where T: Codable {}

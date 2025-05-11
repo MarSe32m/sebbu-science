@@ -392,8 +392,8 @@ public enum Trapezoid {
         var result: Matrix<Double> = .zeros(rows: y[0].rows, columns: y[0].columns)
         for i in 1..<y.count {
             let dx = 0.5 * (x[i] - x[i - 1])
-            result.add(y[i], scaling: dx)
-            result.add(y[i - 1], scaling: dx)
+            result.add(y[i], multiplied: dx)
+            result.add(y[i - 1], multiplied: dx)
         }
         return result
     }
@@ -408,8 +408,8 @@ public enum Trapezoid {
             let xi1 = x[i - 1]
             let dx = 0.5 * (xi - xi1)
             let yi = y(xi)
-            result.add(lastY, scaling: dx)
-            result.add(yi, scaling: dx)
+            result.add(lastY, multiplied: dx)
+            result.add(yi, multiplied: dx)
             lastY = yi
         }
         return result
@@ -424,8 +424,8 @@ public enum Trapezoid {
         for i in 1..<y.count {
             let dx = 0.5 * (x[i] - x[i - 1])
             result[i] += result[i - 1]
-            result[i].add(y[i], scaling: dx)
-            result[i].add(y[i - 1], scaling: dx)
+            result[i].add(y[i], multiplied: dx)
+            result[i].add(y[i - 1], multiplied: dx)
         }
         return result
     }
@@ -450,8 +450,8 @@ public enum Trapezoid {
         let dx = 0.5 * dx
         for i in 1..<y.count {
             result[i].add(result[i - 1])
-            result[i].add(y[i - 1], scaling: dx)
-            result[i].add(y[i], scaling: dx)
+            result[i].add(y[i - 1], multiplied: dx)
+            result[i].add(y[i], multiplied: dx)
         }
         return result
     }
@@ -481,8 +481,8 @@ public enum Trapezoid {
         var result: Matrix<Complex<Double>> = .zeros(rows: y[0].rows, columns: y[0].columns)
         for i in 1..<y.count {
             let dx = 0.5 * (x[i] - x[i - 1])
-            result.add(y[i], scaling: dx)
-            result.add(y[i - 1], scaling: dx)
+            result.add(y[i], multiplied: dx)
+            result.add(y[i - 1], multiplied: dx)
         }
         return result
     }
@@ -497,8 +497,8 @@ public enum Trapezoid {
             let xi1 = x[i - 1]
             let dx = 0.5 * (xi - xi1)
             let yi = y(xi)
-            result.add(lastY, scaling: dx)
-            result.add(yi, scaling: dx)
+            result.add(lastY, multiplied: dx)
+            result.add(yi, multiplied: dx)
             lastY = yi
         }
         return result
@@ -513,8 +513,8 @@ public enum Trapezoid {
         for i in 1..<y.count {
             let dx = 0.5 * (x[i] - x[i - 1])
             result[i].add(result[i - 1])
-            result[i].add(y[i], scaling: dx)
-            result[i].add(y[i - 1], scaling: dx)
+            result[i].add(y[i], multiplied: dx)
+            result[i].add(y[i - 1], multiplied: dx)
         }
         return result
     }
@@ -539,8 +539,8 @@ public enum Trapezoid {
         let dx = 0.5 * dx
         for i in 1..<y.count {
             result[i].add(result[i - 1])
-            result[i].add(y[i], scaling: dx)
-            result[i].add(y[i - 1], scaling: dx)
+            result[i].add(y[i], multiplied: dx)
+            result[i].add(y[i - 1], multiplied: dx)
         }
         return result
     }

@@ -14,6 +14,7 @@ public struct Vector<T> {
     @inlinable
     public var count: Int { components.count }
     
+    @inlinable
     public init(_ components: [T]) {
         self.components = components
     }
@@ -48,6 +49,7 @@ public struct Vector<T> {
 extension Vector: ExpressibleByArrayLiteral {
     public typealias ArrayLiteralElement = T
     
+    @inlinable
     public init(arrayLiteral elements: ArrayLiteralElement...) {
         self.components = Array(elements)
     }
@@ -59,6 +61,7 @@ extension Vector: Codable where T: Codable {}
 extension Vector: Sendable where T: Sendable {}
 
 extension Vector where T: AlgebraicField, T.Magnitude: FloatingPoint {
+    @inlinable
     func isApproximatelyEqual(to: Self) -> Bool {
         if count != to.count { return false }
         for i in 0..<count {

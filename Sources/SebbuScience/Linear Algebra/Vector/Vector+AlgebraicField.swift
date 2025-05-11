@@ -11,7 +11,13 @@ import ComplexModule
 public extension Vector where T: AlgebraicField {
     @inlinable
     static func zero(_ count: Int) -> Vector<T> {
-        Vector(.init(repeating: .zero, count: count))
+        Vector(count: count) { buffer in
+            var i = 0
+            while i < count {
+                buffer[i] = .zero
+                i &+= 1
+            }
+        }
     }
     
     @inlinable
@@ -31,11 +37,13 @@ public extension Vector where T: AlgebraicField {
     }
     
     @inlinable
+    @_transparent
     static func *=(lhs: inout Self, rhs: T) {
         lhs.multiply(by: rhs)
     }
     
     @inlinable
+    @_transparent
     mutating func multiply(by: T) {
         _multiply(by: by)
     }

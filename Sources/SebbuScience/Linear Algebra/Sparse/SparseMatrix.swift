@@ -8,7 +8,7 @@ import RealModule
 import ComplexModule
 
 public protocol SparseMatrix: CustomStringConvertible {
-    associatedtype T: AlgebraicField
+    associatedtype T
     
     var rows: Int { get }
     var columns: Int { get }
