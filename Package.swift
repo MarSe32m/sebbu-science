@@ -65,6 +65,7 @@ let package = Package(
         .target(
             name: "FFT",
             dependencies: [
+                .target(name: "_SebbuScienceCommon"),
                 .target(name: "CFFTW", condition: .when(platforms: [.linux, .windows])),
                 .product(name: "Numerics", package: "swift-numerics"),
                 .target(name: "NumericsExtensions")
