@@ -256,8 +256,8 @@ extension CubicHermiteSpline<Vector<Double>> {
         let t3 = t2 * t
         let dx = x[k + 1] - x[k]
         var result = t3 * a[k]
-        result.add(b[k], scaling: t2)
-        result.add(m[k], scaling: t * dx)
+        result.add(b[k], multiplied: t2)
+        result.add(m[k], multiplied: t * dx)
         result.add(y[k])
         return result
     }
@@ -339,8 +339,8 @@ extension CubicHermiteSpline<Vector<Complex<Double>>> {
         let t3 = t2 * t
         let dx = x[k + 1] - x[k]
         var result: Element = t3 * a[k]
-        result.add(b[k], scaling: t2)
-        result.add(m[k], scaling: t * dx)
+        result.add(b[k], multiplied: t2)
+        result.add(m[k], multiplied: t * dx)
         result.add(y[k])
         return result
     }

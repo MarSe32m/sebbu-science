@@ -192,22 +192,22 @@ extension RK45FixedStep<Vector<Double>> {
         k4Argument.copyComponents(from: currentState)
         
         // k2Argument = y0 + dtPer2 * k1
-        k2Argument.add(k1, scaling: dtPer2)
+        k2Argument.add(k1, multiplied: dtPer2)
         let k2 = f(t0 + dtPer2, k2Argument) // Do not modify, this is cached in the calling code
         
         // k3Arguments = y0 + dtPer2 * k2
-        k3Argument.add(k2, scaling: dtPer2)
+        k3Argument.add(k2, multiplied: dtPer2)
         let k3 = f(t0 + dtPer2, k3Argument) // Do not modify, this is cached in the calling code
         
         // k4Argument = y0 + dy * k3
-        k4Argument.add(k3, scaling: dt)
+        k4Argument.add(k3, multiplied: dt)
         let k4 = f(t0 + dt, k4Argument) // Do not modify, this is cached in the calling code
         
         // currentState += dtPer6 * (k1 + 2 * k2 + 2 * k3 + k4)
-        currentState.add(k1, scaling: dtPer6)
-        currentState.add(k2, scaling: dtPer3)
-        currentState.add(k3, scaling: dtPer3)
-        currentState.add(k4, scaling: dtPer6)
+        currentState.add(k1, multiplied: dtPer6)
+        currentState.add(k2, multiplied: dtPer3)
+        currentState.add(k3, multiplied: dtPer3)
+        currentState.add(k4, multiplied: dtPer6)
         
         t += dt
     }
@@ -232,24 +232,24 @@ extension RK45FixedStep<[Vector<Double>]> {
         let k1 = f(t0, currentState)
         for i in 0..<k2Argument.count {
             k2Argument[i].copyComponents(from: currentState[i])
-            k2Argument[i].add(k1[i], scaling: dtPer2)
+            k2Argument[i].add(k1[i], multiplied: dtPer2)
         }
         let k2 = f(t0 + dtPer2, k2Argument)
         for i in 0..<k3Argument.count {
             k3Argument[i].copyComponents(from: currentState[i])
-            k3Argument[i].add(k2[i], scaling: dtPer2)
+            k3Argument[i].add(k2[i], multiplied: dtPer2)
         }
         let k3 = f(t0 + dtPer2, k3Argument)
         for i in 0..<k4Argument.count {
             k4Argument[i].copyComponents(from: currentState[i])
-            k4Argument[i].add(k3[i], scaling: dt)
+            k4Argument[i].add(k3[i], multiplied: dt)
         }
         let k4 = f(t0 + dt, k4Argument)
         for i in 0..<currentState.count {
-            currentState[i].add(k1[i], scaling: dtPer6)
-            currentState[i].add(k2[i], scaling: dtPer3)
-            currentState[i].add(k3[i], scaling: dtPer3)
-            currentState[i].add(k4[i], scaling: dtPer6)
+            currentState[i].add(k1[i], multiplied: dtPer6)
+            currentState[i].add(k2[i], multiplied: dtPer3)
+            currentState[i].add(k3[i], multiplied: dtPer3)
+            currentState[i].add(k4[i], multiplied: dtPer6)
         }
         t += dt
     }
@@ -279,22 +279,22 @@ extension RK45FixedStep<Vector<Complex<Double>>> {
         k4Argument.copyComponents(from: currentState)
         
         // k2Argument = y0 + dtPer2 * k1
-        k2Argument.add(k1, scaling: dtPer2)
+        k2Argument.add(k1, multiplied: dtPer2)
         let k2 = f(t0 + dtPer2, k2Argument) // Do not modify, this is cached in the calling code
         
         // k3Arguments = y0 + dtPer2 * k2
-        k3Argument.add(k2, scaling: dtPer2)
+        k3Argument.add(k2, multiplied: dtPer2)
         let k3 = f(t0 + dtPer2, k3Argument) // Do not modify, this is cached in the calling code
         
         // k4Argument = y0 + dt * k3
-        k4Argument.add(k3, scaling: dt)
+        k4Argument.add(k3, multiplied: dt)
         let k4 = f(t0 + dt, k4Argument) // Do not modify, this is cached in the calling code
         
         // currentState += dtPer6 * (k1 + 2 * k2 + 2 * k3 + k4)
-        currentState.add(k1, scaling: dtPer6)
-        currentState.add(k2, scaling: dtPer3)
-        currentState.add(k3, scaling: dtPer3)
-        currentState.add(k4, scaling: dtPer6)
+        currentState.add(k1, multiplied: dtPer6)
+        currentState.add(k2, multiplied: dtPer3)
+        currentState.add(k3, multiplied: dtPer3)
+        currentState.add(k4, multiplied: dtPer6)
         
         t += dt
     }
@@ -319,24 +319,24 @@ extension RK45FixedStep<[Vector<Complex<Double>>]> {
         let k1 = f(t0, currentState)
         for i in 0..<k2Argument.count {
             k2Argument[i].copyComponents(from: currentState[i])
-            k2Argument[i].add(k1[i], scaling: dtPer2)
+            k2Argument[i].add(k1[i], multiplied: dtPer2)
         }
         let k2 = f(t0 + dtPer2, k2Argument)
         for i in 0..<k3Argument.count {
             k3Argument[i].copyComponents(from: currentState[i])
-            k3Argument[i].add(k2[i], scaling: dtPer2)
+            k3Argument[i].add(k2[i], multiplied: dtPer2)
         }
         let k3 = f(t0 + dtPer2, k3Argument)
         for i in 0..<k4Argument.count {
             k4Argument[i].copyComponents(from: currentState[i])
-            k4Argument[i].add(k3[i], scaling: dt)
+            k4Argument[i].add(k3[i], multiplied: dt)
         }
         let k4 = f(t0 + dt, k4Argument)
         for i in 0..<currentState.count {
-            currentState[i].add(k1[i], scaling: dtPer6)
-            currentState[i].add(k2[i], scaling: dtPer3)
-            currentState[i].add(k3[i], scaling: dtPer3)
-            currentState[i].add(k4[i], scaling: dtPer6)
+            currentState[i].add(k1[i], multiplied: dtPer6)
+            currentState[i].add(k2[i], multiplied: dtPer3)
+            currentState[i].add(k3[i], multiplied: dtPer3)
+            currentState[i].add(k4[i], multiplied: dtPer6)
         }
         t += dt
     }

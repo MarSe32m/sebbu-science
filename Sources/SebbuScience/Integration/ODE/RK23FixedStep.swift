@@ -165,10 +165,10 @@ extension RK23FixedStep<Vector<Double>> {
         
         let k1 = f(t0, currentState) // Do not modify, this is cached in the calling code
         k2Argument.copyComponents(from: currentState)
-        k2Argument.add(k1, scaling: dt23)
+        k2Argument.add(k1, multiplied: dt23)
         let k2 = f(t0 + dt23, k2Argument) // Do not modify, this is cached in the calling code
-        currentState.add(k1, scaling: dt14)
-        currentState.add(k2, scaling: dt34)
+        currentState.add(k1, multiplied: dt14)
+        currentState.add(k2, multiplied: dt34)
         t += dt
     }
 }
@@ -191,12 +191,12 @@ extension RK23FixedStep<[Vector<Double>]> {
         let k1 = f(t0, currentState) // Do not modify, this is cached in the calling code
         for i in 0..<k2Argument.count {
             k2Argument[i].copyComponents(from: currentState[i])
-            k2Argument[i].add(k1[i], scaling: dt23)
+            k2Argument[i].add(k1[i], multiplied: dt23)
         }
         let k2 = f(t0 + dt23, k2Argument) // Do not modify, this is cached in the calling code
         for i in 0..<currentState.count {
-            currentState[i].add(k1[i], scaling: dt14)
-            currentState[i].add(k2[i], scaling: dt34)
+            currentState[i].add(k1[i], multiplied: dt14)
+            currentState[i].add(k2[i], multiplied: dt34)
         }
         t += dt
     }
@@ -221,10 +221,10 @@ extension RK23FixedStep<Vector<Complex<Double>>> {
         
         let k1 = f(t0, currentState) // Do not modify, this is cached in the calling code
         k2Argument.copyComponents(from: currentState)
-        k2Argument.add(k1, scaling: dt23)
+        k2Argument.add(k1, multiplied: dt23)
         let k2 = f(t0 + dt23, k2Argument) // Do not modify, this is cached in the calling code
-        currentState.add(k1, scaling: dt14)
-        currentState.add(k2, scaling: dt34)
+        currentState.add(k1, multiplied: dt14)
+        currentState.add(k2, multiplied: dt34)
         t += dt
     }
 }
@@ -247,12 +247,12 @@ extension RK23FixedStep<[Vector<Complex<Double>>]> {
         let k1 = f(t0, currentState) // Do not modify, this is cached in the calling code
         for i in 0..<k2Argument.count {
             k2Argument[i].copyComponents(from: currentState[i])
-            k2Argument[i].add(k1[i], scaling: dt23)
+            k2Argument[i].add(k1[i], multiplied: dt23)
         }
         let k2 = f(t0 + dt23, k2Argument) // Do not modify, this is cached in the calling code
         for i in 0..<currentState.count {
-            currentState[i].add(k1[i], scaling: dt14)
-            currentState[i].add(k2[i], scaling: dt34)
+            currentState[i].add(k1[i], multiplied: dt14)
+            currentState[i].add(k2[i], multiplied: dt34)
         }
         t += dt
     }

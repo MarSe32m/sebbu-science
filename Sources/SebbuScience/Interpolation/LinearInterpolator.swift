@@ -68,7 +68,7 @@ public extension LinearInterpolator<Vector<Double>> {
         let k = x.intervalIndex(t)
         let _t = (t - x[k]) / (x[k + 1] - x[k])
         var result = (1 - _t) * y[k]
-        result.add(y[k + 1], scaling: _t)
+        result.add(y[k + 1], multiplied: _t)
         return result
     }
     
@@ -86,7 +86,7 @@ public extension LinearInterpolator<Vector<Complex<Double>>> {
         let k = x.intervalIndex(t)
         let _t = (t - x[k]) / (x[k + 1] - x[k])
         var result = (1 - _t) * y[k]
-        result.add(y[k + 1], scaling: _t)
+        result.add(y[k + 1], multiplied: _t)
         return result
     }
     

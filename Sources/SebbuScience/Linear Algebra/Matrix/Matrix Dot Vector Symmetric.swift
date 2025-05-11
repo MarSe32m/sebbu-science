@@ -145,3 +145,49 @@ public extension Matrix<Float> {
         }
     }
 }
+
+@inlinable
+public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Double, _ matrix: UnsafePointer<Double>, _ vector: UnsafePointer<Double>, _ resultMultiplier: Double, _ resultVector: UnsafeMutablePointer<Double>) {
+    precondition(matrixColumns == vectorComponents)
+    if matrixRows == 2 && matrixColumns == 2 {
+        resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+    } else if let dsymv = BLAS.dsymv, matrixRows &* matrixColumns > 1000 {
+        let order = BLAS.Order.rowMajor.rawValue
+        let uplo = BLAS.UpperLower.upper.rawValue
+        let n = cblas_int(matrixRows)
+        dsymv(order, uplo, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
+    } else {
+        var result: Double = .zero
+        for i in 0..<matrixRows {
+            result = .zero
+            for j in 0..<matrixColumns {
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
+            }
+            resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
+        }
+    }
+}
+
+@inlinable
+public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Float, _ matrix: UnsafePointer<Float>, _ vector: UnsafePointer<Float>, _ resultMultiplier: Float, _ resultVector: UnsafeMutablePointer<Float>) {
+    precondition(matrixColumns == vectorComponents)
+    if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
+        resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
+        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
+    } else if let ssymv = BLAS.ssymv {
+        let order = BLAS.Order.rowMajor.rawValue
+        let uplo = BLAS.UpperLower.upper.rawValue
+        let n = cblas_int(matrixRows)
+        ssymv(order, uplo, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
+    } else {
+        var result: Float = .zero
+        for i in 0..<matrixRows {
+            result = .zero
+            for j in 0..<matrixColumns {
+                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
+            }
+            resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
+        }
+    }
+}

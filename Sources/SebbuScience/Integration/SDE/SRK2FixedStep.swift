@@ -185,17 +185,17 @@ extension SRK2FixedStep<Vector<Double>, Double> {
         
         //yAux = currentState + dt * fty0 + dW * gty0
         auxiliaryState.copyComponents(from: currentState)
-        auxiliaryState.add(fty0, scaling: dt)
-        auxiliaryState.add(gty0, scaling: dW)
+        auxiliaryState.add(fty0, multiplied: dt)
+        auxiliaryState.add(gty0, multiplied: dW)
         
         let ftyAux = f(t + dt, auxiliaryState) // Returns non-cachable and non-modifiable state!
         let gtyAux = g(t + dt, auxiliaryState) // Returns non-cachable and non-modifiable state!
         
         // currentState += halfdt * (fty0 + ftyAux) + halfdW * (gty0 + gtyAux)
-        currentState.add(fty0, scaling: halfdt)
-        currentState.add(ftyAux, scaling: halfdt)
-        currentState.add(gty0, scaling: halfdW)
-        currentState.add(gtyAux, scaling: halfdW)
+        currentState.add(fty0, multiplied: halfdt)
+        currentState.add(ftyAux, multiplied: halfdt)
+        currentState.add(gty0, multiplied: halfdW)
+        currentState.add(gtyAux, multiplied: halfdW)
         t += dt
     }
 }
@@ -220,18 +220,18 @@ extension SRK2FixedStep<[Vector<Double>], Double> {
         //yAux = currentState + dt * fty0 + dW * gty0
         for i in 0..<auxiliaryState.count {
             auxiliaryState[i].copyComponents(from: currentState[i])
-            auxiliaryState[i].add(fty0[i], scaling: dt)
-            auxiliaryState[i].add(gty0[i], scaling: dW)
+            auxiliaryState[i].add(fty0[i], multiplied: dt)
+            auxiliaryState[i].add(gty0[i], multiplied: dW)
         }
         
         let ftyAux = f(t + dt, auxiliaryState) // Returns non-cachable and non-modifiable state!
         let gtyAux = g(t + dt, auxiliaryState) // Returns non-cachable and non-modifiable state!
         
         for i in 0..<currentState.count {
-            currentState[i].add(fty0[i], scaling: halfdt)
-            currentState[i].add(ftyAux[i], scaling: halfdt)
-            currentState[i].add(gty0[i], scaling: halfdW)
-            currentState[i].add(gtyAux[i], scaling: halfdW)
+            currentState[i].add(fty0[i], multiplied: halfdt)
+            currentState[i].add(ftyAux[i], multiplied: halfdt)
+            currentState[i].add(gty0[i], multiplied: halfdW)
+            currentState[i].add(gtyAux[i], multiplied: halfdW)
         }
         
         t += dt
@@ -258,17 +258,17 @@ extension SRK2FixedStep<Vector<Complex<Double>>, Complex<Double>> {
         
         //yAux = currentState + dt * fty0 + dW * gty0
         auxiliaryState.copyComponents(from: currentState)
-        auxiliaryState.add(fty0, scaling: dt)
-        auxiliaryState.add(gty0, scaling: dW)
+        auxiliaryState.add(fty0, multiplied: dt)
+        auxiliaryState.add(gty0, multiplied: dW)
         
         let ftyAux = f(t + dt, auxiliaryState) // Returns non-cachable and non-modifiable state!
         let gtyAux = g(t + dt, auxiliaryState) // Returns non-cachable and non-modifiable state!
         
         // currentState += halfdt * (fty0 + ftyAux) + halfdW * (gty0 + gtyAux)
-        currentState.add(fty0, scaling: halfdt)
-        currentState.add(ftyAux, scaling: halfdt)
-        currentState.add(gty0, scaling: halfdW)
-        currentState.add(gtyAux, scaling: halfdW)
+        currentState.add(fty0, multiplied: halfdt)
+        currentState.add(ftyAux, multiplied: halfdt)
+        currentState.add(gty0, multiplied: halfdW)
+        currentState.add(gtyAux, multiplied: halfdW)
         
         t += dt
     }
@@ -294,18 +294,18 @@ extension SRK2FixedStep<[Vector<Complex<Double>>], Double> {
         //yAux = currentState + dt * fty0 + dW * gty0
         for i in 0..<auxiliaryState.count {
             auxiliaryState[i].copyComponents(from: currentState[i])
-            auxiliaryState[i].add(fty0[i], scaling: dt)
-            auxiliaryState[i].add(gty0[i], scaling: dW)
+            auxiliaryState[i].add(fty0[i], multiplied: dt)
+            auxiliaryState[i].add(gty0[i], multiplied: dW)
         }
         
         let ftyAux = f(t + dt, auxiliaryState) // Returns non-cachable and non-modifiable state!
         let gtyAux = g(t + dt, auxiliaryState) // Returns non-cachable and non-modifiable state!
         
         for i in 0..<currentState.count {
-            currentState[i].add(fty0[i], scaling: halfdt)
-            currentState[i].add(ftyAux[i], scaling: halfdt)
-            currentState[i].add(gty0[i], scaling: halfdW)
-            currentState[i].add(gtyAux[i], scaling: halfdW)
+            currentState[i].add(fty0[i], multiplied: halfdt)
+            currentState[i].add(ftyAux[i], multiplied: halfdt)
+            currentState[i].add(gty0[i], multiplied: halfdW)
+            currentState[i].add(gtyAux[i], multiplied: halfdW)
         }
         
         t += dt
