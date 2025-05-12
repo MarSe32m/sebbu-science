@@ -199,6 +199,12 @@ public extension CSRMatrix where T: AlgebraicField {
     }
     
     @inlinable
+    @_transparent
+    func dot(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
+        dot(vector, multiplied: 1, into: into)
+    }
+    
+    @inlinable
     @_optimize(speed)
     func dot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
         rowIndices.withUnsafeBufferPointer { rowIndices in
@@ -235,6 +241,12 @@ public extension CSRMatrix where T: AlgebraicField {
     @_transparent
     func dot(_ vector: Vector<T>, multiplied: T, addingInto: inout Vector<T>) {
         dot(vector.components, multiplied: multiplied, addingInto: &addingInto.components)
+    }
+    
+    @inlinable
+    @_transparent
+    func dot(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
+        dot(vector, multiplied: 1, addingInto: into)
     }
     
     @inlinable
