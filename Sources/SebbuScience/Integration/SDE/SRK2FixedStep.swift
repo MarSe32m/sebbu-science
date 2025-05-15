@@ -274,7 +274,7 @@ extension SRK2FixedStep<Vector<Complex<Double>>, Complex<Double>> {
     }
 }
 
-extension SRK2FixedStep<[Vector<Complex<Double>>], Double> {
+extension SRK2FixedStep<[Vector<Complex<Double>>], Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
         borrowedState = currentState
@@ -424,7 +424,7 @@ extension SRK2FixedStep<Matrix<Complex<Double>>, Complex<Double>> {
     }
 }
 
-extension SRK2FixedStep<[Matrix<Complex<Double>>], Double> {
+extension SRK2FixedStep<[Matrix<Complex<Double>>], Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
         borrowedState = currentState
