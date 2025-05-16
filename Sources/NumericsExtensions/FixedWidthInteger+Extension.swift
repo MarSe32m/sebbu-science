@@ -5,7 +5,7 @@
 //  Created by Sebastian Toivonen on 3.5.2025.
 //
 
-package extension FixedWidthInteger {
+public extension FixedWidthInteger {
     /// Returns the next power of two.
     @inline(__always)
     @inlinable
