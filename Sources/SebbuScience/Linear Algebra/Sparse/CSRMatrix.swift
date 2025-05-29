@@ -93,6 +93,21 @@ public struct CSRMatrix<T>: SparseMatrix {
         self.columnIndices = columnIndices
         self.rowIndices = rowIndices
     }
+    
+    @inlinable
+    public func withValues<R>(_ body: (([T]) throws -> R)) rethrows -> R {
+        try body(values)
+    }
+    
+    @inlinable
+    public func withColumnIndices<R>(_ body: (([Int]) throws -> R)) rethrows -> R {
+        try body(columnIndices)
+    }
+    
+    @inlinable
+    public func withRowIndices<R>(_ body: (([Int]) throws -> R)) rethrows -> R {
+        try body(rowIndices)
+    }
 }
 
 public extension CSRMatrix where T: AlgebraicField {
@@ -220,6 +235,7 @@ public extension CSRMatrix where T: AlgebraicField {
                             i &+= 1
                             continue
                         }
+                        tempValue = .zero
                         while j &+ 2 <= upperBound {
                             tempValue = Relaxed.multiplyAdd(values[j], vector[columnIndices[j]], tempValue)
                             tempValue = Relaxed.multiplyAdd(values[j &+ 1], vector[columnIndices[j &+ 1]], tempValue)
