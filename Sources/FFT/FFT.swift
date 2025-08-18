@@ -52,7 +52,7 @@ public enum FFT {
             if largerThanBestCandidateCount == factors.count { return bestCandidate }
         }
         #else
-        return n
+        return Swift.max(n, 8)
         #endif
     }
     
