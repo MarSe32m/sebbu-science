@@ -235,7 +235,7 @@ public extension MatrixOperations {
 
         a.withUnsafeMutableBufferPointer { a in
             work.withUnsafeMutableBufferPointer { work in
-                zheevd_("V", "U", &n, OpaquePointer(a.baseAddress), &lda, &eigenValues, OpaquePointer(work.baseAddress!), &lwork, &rwork, &lrwork, &iwork, &liwork, &info)
+                zheevd_("N", "U", &n, OpaquePointer(a.baseAddress), &lda, &eigenValues, OpaquePointer(work.baseAddress!), &lwork, &rwork, &lrwork, &iwork, &liwork, &info)
             }
         }
         return eigenValues
