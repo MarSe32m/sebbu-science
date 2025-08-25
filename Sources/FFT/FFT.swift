@@ -59,8 +59,10 @@ public enum FFT {
     public static func fft(_ x: [Complex<Double>], spacing: Double = 1.0) -> (frequencies: [Double], spectrum: [Complex<Double>]) {
         #if os(macOS)
         let plan = AccelerateFFTPlan(sampleSize: x.count)
+        #elseif canImport(CFFTW) || canImport(_CFFTWWindows)
+        let plan = FFTWPlan(sampleSize: x.count)
         #else
-        let plan = FFTW.isAvailable ? FFTWPlan(sampleSize: x.count) : FFTPlan(sampleSize: x.count)
+        let plan = FFTPlan(sampleSize: x.count)
         #endif
         return plan.execute(x, spacing: spacing)
     }
@@ -73,8 +75,10 @@ public enum FFT {
     nonisolated public static func ifft(_ x: [Complex<Double>], spacing: Double = 1.0) -> (t: [Double], signal: [Complex<Double>]) {
             #if os(macOS)
             let plan = AccelerateiFFTPlan(sampleSize: x.count)
+            #elseif canImport(CFFTW) || canImport(_CFFTWWindows)
+            let plan = iFFTWPlan(sampleSize: x.count) 
             #else
-            let plan = FFTW.isAvailable ? iFFTWPlan(sampleSize: x.count) : iFFTPlan(sampleSize: x.count)
+            let plan = iFFTPlan(sampleSize: x.count)
             #endif
             return plan.execute(x, spacing: spacing)
     }

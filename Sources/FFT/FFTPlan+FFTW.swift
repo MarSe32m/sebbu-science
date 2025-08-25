@@ -4,12 +4,11 @@
 //
 //  Created by Sebastian Toivonen on 30.4.2025.
 //
-#if canImport(DynamicCFFTW) || canImport(CFFTW)
-#if canImport(DynamicCFFTW)
-import DynamicCFFTW
-#endif
+#if canImport(CFFTW) || canImport(_CFFTWWindows)
 #if canImport(CFFTW)
 import CFFTW
+#elseif canImport(_CFFTWWindows)
+import _CFFTWWindows
 #endif
 import Numerics
 import Synchronization
@@ -21,10 +20,10 @@ public extension FFT {
         internal let plan: OpaquePointer?
         
         public override init(sampleSize: Int, measure: Bool = false) {
-            let buffer = FFTW.alloc_complex(sampleSize)
+            let buffer = fftw_alloc_complex(sampleSize)
             self._buffer = UnsafeMutableRawPointer(buffer)
             FFT.planMutex._unsafeLock()
-            self.plan = FFTW.plan_dft_1d(numericCast(sampleSize), buffer, buffer, FFTW_FORWARD, measure ? FFTW_MEASURE : FFTW_ESTIMATE)
+            self.plan = fftw_plan_dft_1d(.init(sampleSize), buffer, buffer, FFTW_FORWARD, measure ? FFTW_MEASURE : FFTW_ESTIMATE)
             FFT.planMutex._unsafeUnlock()
             super.init(sampleSize: sampleSize, measure: measure)
         }
@@ -37,7 +36,7 @@ public extension FFT {
                 let bytesCopied = bytes.copyBytes(to: bufferBufferPointer)
                 guard bytesCopied == sampleSize * MemoryLayout<fftw_complex>.size else { fatalError("Copied memory didn't match the buffer size") }
             }
-            FFTW.execute(plan)
+            fftw_execute(plan)
             let result = [Complex<Double>](unsafeUninitializedCapacity: sampleSize) { resultBuffer, initializedCount in
                 let rawResultBuffer = UnsafeMutableRawBufferPointer(resultBuffer)
                 let rawBufferPointer = UnsafeRawBufferPointer(start: _buffer, count: sampleSize * MemoryLayout<fftw_complex>.size)
@@ -65,8 +64,8 @@ public extension FFT {
         
         deinit {
             FFT.planMutex.withLock { _ in
-                FFTW.destroy_plan(plan)
-                FFTW.free(_buffer)
+                fftw_destroy_plan(plan)
+                fftw_free(_buffer)
             }
         }
     }
@@ -76,10 +75,10 @@ public extension FFT {
         internal let plan: OpaquePointer?
         
         public override init(sampleSize: Int, measure: Bool = false) {
-            let buffer = FFTW.alloc_complex(sampleSize)
+            let buffer = fftw_alloc_complex(sampleSize)
             self._buffer = UnsafeMutableRawPointer(buffer)
             FFT.planMutex._unsafeLock()
-            self.plan = FFTW.plan_dft_1d(numericCast(sampleSize), buffer, buffer, FFTW_BACKWARD, measure ? FFTW_MEASURE : FFTW_ESTIMATE)
+            self.plan = fftw_plan_dft_1d(numericCast(sampleSize), buffer, buffer, FFTW_BACKWARD, measure ? FFTW_MEASURE : FFTW_ESTIMATE)
             FFT.planMutex._unsafeUnlock()
             super.init(sampleSize: sampleSize, measure: measure)
         }
@@ -92,7 +91,7 @@ public extension FFT {
                 let bytesCopied = bytes.copyBytes(to: bufferBufferPointer)
                 guard bytesCopied == sampleSize * MemoryLayout<fftw_complex>.size else { fatalError("Copied memory didn't match the buffer size") }
             }
-            FFTW.execute(plan)
+            fftw_execute(plan)
             let result = [Complex<Double>](unsafeUninitializedCapacity: sampleSize) { resultBuffer, initializedCount in
                 let rawResultBuffer = UnsafeMutableRawBufferPointer(resultBuffer)
                 let rawBufferPointer = UnsafeRawBufferPointer(start: _buffer, count: sampleSize * MemoryLayout<fftw_complex>.size)
@@ -112,8 +111,8 @@ public extension FFT {
         
         deinit {
             FFT.planMutex.withLock { _ in
-                FFTW.destroy_plan(plan)
-                FFTW.free(_buffer)
+                fftw_destroy_plan(plan)
+                fftw_free(_buffer)
             }
         }
     }

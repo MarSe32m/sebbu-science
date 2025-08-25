@@ -5,10 +5,11 @@
 //  Created by Sebastian Toivonen on 13.10.2024.
 //
 
-import LAPACKE
-import BLAS
-
-#if canImport(Accelerate)
+#if canImport(COpenBLAS)
+import COpenBLAS
+#elseif canImport(_COpenBLASWindows)
+import _COpenBLASWindows
+#elseif canImport(Accelerate)
 import Accelerate
 #endif
 
@@ -22,7 +23,17 @@ public extension Matrix<Double> {
     //@inlinable
     var inverse: Self? {
         if rows != columns { return nil }
-#if os(macOS)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        var a = elements
+        var m = rows
+        var lda = columns
+        var ipiv: [lapack_int] = .init(repeating: .zero, count: m)
+        var info = LAPACKE_dgetrf(LAPACK_ROW_MAJOR, .init(m), .init(m), &a, .init(lda), &ipiv)
+        if info != 0 { return nil }
+        info = LAPACKE_dgetri(LAPACK_ROW_MAJOR, .init(m), &a, .init(lda), ipiv)
+        if info != 0 { return nil }
+        return .init(elements: a, rows: rows, columns: columns)
+        #elseif canImport(Accelerate)
         var a: [Double] = []
         a.reserveCapacity(elements.count)
         for j in 0..<columns {
@@ -55,18 +66,6 @@ public extension Matrix<Double> {
             }
         }
 #else
-        if let LAPACKE_dgetrf = LAPACKE.dgetrf,
-           let LAPACKE_dgetri = LAPACKE.dgetri {
-            var a = elements
-            var m = rows
-            var lda = columns
-            var ipiv: [lapack_int] = .init(repeating: .zero, count: m)
-            var info = LAPACKE_dgetrf(LAPACKE.MatrixLayout.rowMajor.rawValue, numericCast(m), numericCast(m), &a, numericCast(lda), &ipiv)
-            if info != 0 { return nil }
-            info = LAPACKE_dgetri(LAPACKE.MatrixLayout.rowMajor.rawValue, numericCast(m), &a, numericCast(lda), ipiv)
-            if info != 0 { return nil }
-            return .init(elements: a, rows: rows, columns: columns)
-        }
         fatalError("TODO: Not yet implemented")
 #endif
     }
@@ -77,14 +76,19 @@ public extension Matrix<Double> {
     @inlinable
     mutating func copyElements(from other: Self) {
         precondition(elements.count == other.elements.count)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(elements.count)
+        cblas_dcopy(N, other.elements, 1, &elements, 1)
+        #elseif canImport(Accelerate)
         if let dcopy = BLAS.dcopy {
-            let N = cblas_int(elements.count)
-            dcopy(N, other.elements, 1, &elements, 1)
-        } else {
-            for i in 0..<elements.count {
-                elements[i] = other.elements[i]
-            }
+        let N = cblas_int(elements.count)
+        cblas_dcopy(N, other.elements, 1, &elements, 1)
+        } 
+        #else
+        for i in 0..<elements.count {
+            elements[i] = other.elements[i]
         }
+        #endif
     }
 }
 
@@ -98,8 +102,24 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func diagonalizeSymmetric(_ A: Matrix<Double>) throws -> (eigenValues: [Double], eigenVectors: [Vector<Double>]) {
-#if os(macOS)
         precondition(A.rows == A.columns)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = A.rows
+        let lda = N
+        var eigenValues: [Double] = .init(repeating: .zero, count: N)
+        var _A: [Double] = Array(A.elements)
+        let V = Int8(bitPattern: UInt8(ascii: "V"))
+        let U = Int8(bitPattern: UInt8(ascii: "U"))
+        let info = LAPACKE_dsyevd(LAPACK_COL_MAJOR, V, U, .init(N), &_A, .init(lda), &eigenValues)
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        var eigenVectors = [Vector<Double>](repeating: .zero(N), count: N)
+        for i in 0..<N {
+            for j in 0..<N {
+                eigenVectors[i][j] = _A[N * i + j]
+            }
+        }
+        return (eigenValues, eigenVectors)
+        #elseif canImport(Accelerate)
         var a: [Double] = []
         a.reserveCapacity(A.elements.count)
         for j in 0..<A.columns {
@@ -132,23 +152,6 @@ public extension MatrixOperations {
         }
         return (eigenValues, eigenVectors)
 #else
-        if let LAPACKE_dsyevd = LAPACKE.dsyevd {
-            let N = A.rows
-            let lda = N
-            var eigenValues: [Double] = .init(repeating: .zero, count: N)
-            var _A: [Double] = Array(A.elements)
-            let V = Int8(bitPattern: UInt8(ascii: "V"))
-            let U = Int8(bitPattern: UInt8(ascii: "U"))
-            let info = LAPACKE_dsyevd(LAPACKE.MatrixLayout.columnMajor.rawValue, V, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            var eigenVectors = [Vector<Double>](repeating: .zero(N), count: N)
-            for i in 0..<N {
-                for j in 0..<N {
-                    eigenVectors[i][j] = _A[N * i + j]
-                }
-            }
-            return (eigenValues, eigenVectors)
-        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -162,8 +165,18 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func eigenValuesSymmetric(_ A: Matrix<Double>) throws -> [Double] {
-#if os(macOS)
         precondition(A.rows == A.columns)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = A.rows
+        let lda = N
+        var eigenValues: [Double] = .init(repeating: .zero, count: N)
+        var _A: [Double] = Array(A.elements)
+        let _N = Int8(bitPattern: UInt8(ascii: "N"))
+        let U = Int8(bitPattern: UInt8(ascii: "U"))
+        let info = LAPACKE_dsyevd(LAPACK_COL_MAJOR, _N, U, .init(N), &_A, .init(lda), &eigenValues)
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        return eigenValues
+        #elseif canImport(Accelerate)
         var a: [Double] = []
         a.reserveCapacity(A.elements.count)
         for j in 0..<A.columns {
@@ -191,17 +204,6 @@ public extension MatrixOperations {
         
         return eigenValues
 #else
-        if let LAPACKE_dsyevd = LAPACKE.dsyevd {
-            let N = A.rows
-            let lda = N
-            var eigenValues: [Double] = .init(repeating: .zero, count: N)
-            var _A: [Double] = Array(A.elements)
-            let _N = Int8(bitPattern: UInt8(ascii: "N"))
-            let U = Int8(bitPattern: UInt8(ascii: "U"))
-            let info = LAPACKE_dsyevd(LAPACKE.MatrixLayout.columnMajor.rawValue, _N, U, numericCast(N), &_A, numericCast(lda), &eigenValues)
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            return eigenValues
-        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -215,8 +217,41 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func diagonalize(_ A: Matrix<Double>) throws -> (eigenValues: [Complex<Double>], leftEigenVectors: [Vector<Complex<Double>>], rightEigenVectors: [Vector<Complex<Double>>]) {
-#if os(macOS)
         precondition(A.rows == A.columns)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = A.rows
+        let lda = N
+        let ldvl = N
+        let ldvr = N
+        var _A = Array(A.elements)
+        var eigenReal: [Double] = .init(repeating: .zero, count: N)
+        var eigenImaginary: [Double] = .init(repeating: .zero, count: N)
+        var vl: [Double] = .init(repeating: .zero, count: N*N)
+        var vr: [Double] = .init(repeating: .zero, count: N*N)
+        let V = Int8(bitPattern: UInt8(ascii: "V"))
+        let info = LAPACKE_dgeev(LAPACK_ROW_MAJOR, V, V, .init(N), &_A, .init(lda), &eigenReal, &eigenImaginary, &vl, .init(ldvl), &vr, .init(ldvr))
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Double>($0, $1) })
+        var leftEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
+        var rightEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
+        for i in 0..<N {
+            var j = 0
+            while j < N {
+                if eigenImaginary[j] == .zero {
+                    leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j])
+                    rightEigenVectors[j][i] = Complex<Double>(vr[i * N + j])
+                    j += 1
+                } else {
+                    leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j], vl[i * N + j + 1])
+                    leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j], -vl[i * N + j + 1])
+                    rightEigenVectors[j][i] = Complex<Double>(vr[i * N + j], vr[i * N + j + 1])
+                    rightEigenVectors[j][i] = Complex<Double>(vr[i * N + j], -vr[i * N + j + 1])
+                    j += 2
+                }
+            }
+        }
+        return (eigenValues, leftEigenVectors, rightEigenVectors)
+        #elseif canImport(Accelerate)
         var a: [Double] = []
         a.reserveCapacity(A.elements.count)
         for j in 0..<A.columns {
@@ -261,40 +296,6 @@ public extension MatrixOperations {
         }
         return (eigenValues, leftEigenVectors, rightEigenVectors)
 #else
-        if let LAPACKE_dgeev = LAPACKE.dgeev {
-            let N = A.rows
-            let lda = N
-            let ldvl = N
-            let ldvr = N
-            var _A = Array(A.elements)
-            var eigenReal: [Double] = .init(repeating: .zero, count: N)
-            var eigenImaginary: [Double] = .init(repeating: .zero, count: N)
-            var vl: [Double] = .init(repeating: .zero, count: N*N)
-            var vr: [Double] = .init(repeating: .zero, count: N*N)
-            let V = Int8(bitPattern: UInt8(ascii: "V"))
-            let info = LAPACKE_dgeev(LAPACKE.MatrixLayout.rowMajor.rawValue, V, V, numericCast(N), &_A, numericCast(lda), &eigenReal, &eigenImaginary, &vl, numericCast(ldvl), &vr, numericCast(ldvr))
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Double>($0, $1) })
-            var leftEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
-            var rightEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
-            for i in 0..<N {
-                var j = 0
-                while j < N {
-                    if eigenImaginary[j] == .zero {
-                        leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j])
-                        rightEigenVectors[j][i] = Complex<Double>(vr[i * N + j])
-                        j += 1
-                    } else {
-                        leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j], vl[i * N + j + 1])
-                        leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j], -vl[i * N + j + 1])
-                        rightEigenVectors[j][i] = Complex<Double>(vr[i * N + j], vr[i * N + j + 1])
-                        rightEigenVectors[j][i] = Complex<Double>(vr[i * N + j], -vr[i * N + j + 1])
-                        j += 2
-                    }
-                }
-            }
-            return (eigenValues, leftEigenVectors, rightEigenVectors)
-        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -308,8 +309,37 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func diagonalizeLeft(_ A: Matrix<Double>) throws -> (eigenValues: [Complex<Double>], leftEigenVectors: [Vector<Complex<Double>>]) {
-#if os(macOS)
         precondition(A.rows == A.columns)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = A.rows
+        let lda = N
+        let ldvl = N
+        let ldvr = N
+        var _A = Array(A.elements)
+        var eigenReal: [Double] = .init(repeating: .zero, count: N)
+        var eigenImaginary: [Double] = .init(repeating: .zero, count: N)
+        var vl: [Double] = .init(repeating: .zero, count: N*N)
+        let V = Int8(bitPattern: UInt8(ascii: "V"))
+        let _N = Int8(bitPattern: UInt8(ascii: "N"))
+        let info = LAPACKE_dgeev(LAPACK_ROW_MAJOR, V, _N, .init(N), &_A, .init(lda), &eigenReal, &eigenImaginary, &vl, .init(ldvl), nil, .init(ldvr))
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Double>($0, $1) })
+        var leftEigenVectors: [Vector<Complex<Double>>] =  .init(repeating: .zero(N), count: N)
+        for i in 0..<N {
+            var j = 0
+            while j < N {
+                if eigenImaginary[j] == .zero {
+                    leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j])
+                    j += 1
+                } else {
+                    leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j], vl[i * N + j + 1])
+                    leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j], -vl[i * N + j + 1])
+                    j += 2
+                }
+            }
+        }
+        return (eigenValues, leftEigenVectors)
+        #elseif canImport(Accelerate)
         var a: [Double] = []
         a.reserveCapacity(A.elements.count)
         for j in 0..<A.columns {
@@ -349,36 +379,6 @@ public extension MatrixOperations {
         }
         return (eigenValues, leftEigenVectors)
 #else
-        if let LAPACKE_dgeev = LAPACKE.dgeev {
-            let N = A.rows
-            let lda = N
-            let ldvl = N
-            let ldvr = N
-            var _A = Array(A.elements)
-            var eigenReal: [Double] = .init(repeating: .zero, count: N)
-            var eigenImaginary: [Double] = .init(repeating: .zero, count: N)
-            var vl: [Double] = .init(repeating: .zero, count: N*N)
-            let V = Int8(bitPattern: UInt8(ascii: "V"))
-            let _N = Int8(bitPattern: UInt8(ascii: "N"))
-            let info = LAPACKE_dgeev(LAPACKE.MatrixLayout.rowMajor.rawValue, V, _N, numericCast(N), &_A, numericCast(lda), &eigenReal, &eigenImaginary, &vl, numericCast(ldvl), nil, numericCast(ldvr))
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Double>($0, $1) })
-            var leftEigenVectors: [Vector<Complex<Double>>] =  .init(repeating: .zero(N), count: N)
-            for i in 0..<N {
-                var j = 0
-                while j < N {
-                    if eigenImaginary[j] == .zero {
-                        leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j])
-                        j += 1
-                    } else {
-                        leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j], vl[i * N + j + 1])
-                        leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j], -vl[i * N + j + 1])
-                        j += 2
-                    }
-                }
-            }
-            return (eigenValues, leftEigenVectors)
-        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -392,8 +392,37 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func diagonalizeRight(_ A: Matrix<Double>) throws -> (eigenValues: [Complex<Double>], rightEigenVectors: [Vector<Complex<Double>>]) {
-#if os(macOS)
         precondition(A.rows == A.columns)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = A.rows
+        let lda = N
+        let ldvl = N
+        let ldvr = N
+        var _A = Array(A.elements)
+        var eigenReal: [Double] = .init(repeating: .zero, count: N)
+        var eigenImaginary: [Double] = .init(repeating: .zero, count: N)
+        var vr: [Double] = .init(repeating: .zero, count: N*N)
+        let V = Int8(bitPattern: UInt8(ascii: "V"))
+        let _N = Int8(bitPattern: UInt8(ascii: "N"))
+        let info = LAPACKE_dgeev(LAPACK_ROW_MAJOR, _N, V, .init(N), &_A, .init(lda), &eigenReal, &eigenImaginary, nil, .init(ldvl), &vr, .init(ldvr))
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Double>($0, $1) })
+        var rightEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
+        for i in 0..<N {
+            var j = 0
+            while j < N {
+                if eigenImaginary[j] == .zero {
+                    rightEigenVectors[j][i] = Complex<Double>(vr[i * N + j])
+                    j += 1
+                } else {
+                    rightEigenVectors[j][i] = Complex<Double>(vr[i * N + j], vr[i * N + j + 1])
+                    rightEigenVectors[j][i] = Complex<Double>(vr[i * N + j], -vr[i * N + j + 1])
+                    j += 2
+                }
+            }
+        }
+        return (eigenValues, rightEigenVectors)
+        #elseif canImport(Accelerate)
         var a: [Double] = []
         a.reserveCapacity(A.elements.count)
         for j in 0..<A.columns {
@@ -433,36 +462,6 @@ public extension MatrixOperations {
         }
         return (eigenValues, rightEigenVectors)
 #else
-        if let LAPACKE_dgeev = LAPACKE.dgeev {
-            let N = A.rows
-            let lda = N
-            let ldvl = N
-            let ldvr = N
-            var _A = Array(A.elements)
-            var eigenReal: [Double] = .init(repeating: .zero, count: N)
-            var eigenImaginary: [Double] = .init(repeating: .zero, count: N)
-            var vr: [Double] = .init(repeating: .zero, count: N*N)
-            let V = Int8(bitPattern: UInt8(ascii: "V"))
-            let _N = Int8(bitPattern: UInt8(ascii: "N"))
-            let info = LAPACKE_dgeev(LAPACKE.MatrixLayout.rowMajor.rawValue, _N, V, numericCast(N), &_A, numericCast(lda), &eigenReal, &eigenImaginary, nil, numericCast(ldvl), &vr, numericCast(ldvr))
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Double>($0, $1) })
-            var rightEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
-            for i in 0..<N {
-                var j = 0
-                while j < N {
-                    if eigenImaginary[j] == .zero {
-                        rightEigenVectors[j][i] = Complex<Double>(vr[i * N + j])
-                        j += 1
-                    } else {
-                        rightEigenVectors[j][i] = Complex<Double>(vr[i * N + j], vr[i * N + j + 1])
-                        rightEigenVectors[j][i] = Complex<Double>(vr[i * N + j], -vr[i * N + j + 1])
-                        j += 2
-                    }
-                }
-            }
-            return (eigenValues, rightEigenVectors)
-        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -476,8 +475,21 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func eigenValues(_ A: Matrix<Double>) throws -> [Complex<Double>] {
-#if os(macOS)
         precondition(A.rows == A.columns)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = A.rows
+        let lda = N
+        let ldvl = N
+        let ldvr = N
+        var _A = Array(A.elements)
+        var eigenReal: [Double] = .init(repeating: .zero, count: N)
+        var eigenImaginary: [Double] = .init(repeating: .zero, count: N)
+        let _N = Int8(bitPattern: UInt8(ascii: "N"))
+        let info = LAPACKE_dgeev(LAPACK_ROW_MAJOR, _N, _N, .init(N), &_A, .init(lda), &eigenReal, &eigenImaginary, nil, .init(ldvl), nil, .init(ldvr))
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Double>($0, $1) })
+        return eigenValues
+        #elseif canImport(Accelerate)
         var a: [Double] = []
         a.reserveCapacity(A.elements.count)
         for j in 0..<A.columns {
@@ -502,20 +514,6 @@ public extension MatrixOperations {
         let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Double>($0, $1) })
         return eigenValues
 #else
-        if let LAPACKE_dgeev = LAPACKE.dgeev {
-            let N = A.rows
-            let lda = N
-            let ldvl = N
-            let ldvr = N
-            var _A = Array(A.elements)
-            var eigenReal: [Double] = .init(repeating: .zero, count: N)
-            var eigenImaginary: [Double] = .init(repeating: .zero, count: N)
-            let _N = Int8(bitPattern: UInt8(ascii: "N"))
-            let info = LAPACKE_dgeev(LAPACKE.MatrixLayout.rowMajor.rawValue, _N, _N, numericCast(N), &_A, numericCast(lda), &eigenReal, &eigenImaginary, nil, numericCast(ldvl), nil, numericCast(ldvr))
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Double>($0, $1) })
-            return eigenValues
-        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
@@ -523,8 +521,19 @@ public extension MatrixOperations {
     //TODO: Test!
     //@inlinable
     static func solve(A: Matrix<Double>, b: Vector<Double>) throws -> Vector<Double> {
-#if os(macOS)
         precondition(A.rows == A.columns)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = A.rows
+        let nrhs: lapack_int = 1
+        let lda: lapack_int = lapack_int(N)
+        let ldb: lapack_int = 1
+        var ipiv = [lapack_int](repeating: .zero, count: N)
+        var _A = Array(A.elements)
+        var _b = Array(b.components)
+        let info = LAPACKE_dgesv(LAPACK_ROW_MAJOR, .init(N), nrhs, &_A, lda, &ipiv, &_b, ldb)
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        return Vector(_b)
+        #elseif canImport(Accelerate)
         var a: [Double] = []
         a.reserveCapacity(A.rows * A.columns)
         for j in 0..<A.columns {
@@ -543,18 +552,6 @@ public extension MatrixOperations {
         if info != 0 { throw MatrixOperationError.info(Int(info)) }
         return Vector(_b)
 #else
-        if let LAPACKE_dgesv = LAPACKE.dgesv {
-            let N = A.rows
-            let nrhs: lapack_int = 1
-            let lda: lapack_int = lapack_int(N)
-            let ldb: lapack_int = 1
-            var ipiv = [lapack_int](repeating: .zero, count: N)
-            var _A = Array(A.elements)
-            var _b = Array(b.components)
-            let info = LAPACKE_dgesv(LAPACKE.MatrixLayout.rowMajor.rawValue, numericCast(N), nrhs, &_A, lda, &ipiv, &_b, ldb)
-            if info != 0 { throw MatrixOperationError.info(Int(info)) }
-            return Vector(_b)
-        }
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }

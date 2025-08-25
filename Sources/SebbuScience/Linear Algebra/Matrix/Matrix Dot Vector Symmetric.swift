@@ -5,7 +5,14 @@
 //  Created by Sebastian Toivonen on 10.5.2025.
 //
 
-import BLAS
+#if canImport(COpenBLAS)
+import COpenBLAS
+#elseif canImport(_COpenBLASWindows)
+import _COpenBLASWindows
+#elseif canImport(Accelerate)
+import Accelerate
+#endif
+
 import NumericsExtensions
 
 //MARK: Symmetric Matrix-Vector multiplication for Double
@@ -62,6 +69,19 @@ public extension Matrix<Double> {
     
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
+            let lda = N
+            cblas_dsymv(order, uplo, N, multiplied, elements, lda, vector, 1, .zero, into, 1)
+        } else {
+            //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+            _dot(vector, multiplied: multiplied, into: into)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if rows * columns > 400, let dsymv = BLAS.dsymv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
@@ -72,10 +92,27 @@ public extension Matrix<Double> {
             //TODO: Implement symmetric matrix-vector multiplication (default implementation)
             _dot(vector, multiplied: multiplied, into: into)
         }
+        #else
+        //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+        _dot(vector, multiplied: multiplied, into: into)
+        #endif
     }
     
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
+            let lda = N
+            cblas_dsymv(order, uplo, N, 1.0, elements, lda, vector, 1, .zero, into, 1)
+        } else {
+            //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+            _dot(vector, into: into)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if rows * columns > 400, let dsymv = BLAS.dsymv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
@@ -86,11 +123,28 @@ public extension Matrix<Double> {
             //TODO: Implement symmetric matrix-vector multiplication (default implementation)
             _dot(vector, into: into)
         }
+        #else
+        //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+        _dot(vector, into: into)
+        #endif
     }
     
     //TODO: Make a version that takes vector as a UnsafePointer<Double> and take addingInto as UnsafeMutablePointer<Double>
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
+            let lda = N
+            cblas_dsymv(order, uplo, N, multiplied, elements, lda, vector, 1, 1.0, into, 1)
+        } else {
+            //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+            _dot(vector, multiplied: multiplied, addingInto: into)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if rows * columns > 400, let dsymv = BLAS.dsymv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
@@ -101,10 +155,27 @@ public extension Matrix<Double> {
             //TODO: Implement symmetric matrix-vector multiplication (default implementation)
             _dot(vector, multiplied: multiplied, addingInto: into)
         }
+        #else
+        //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+        _dot(vector, multiplied: multiplied, addingInto: into)
+        #endif
     }
     
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
+            let lda = N
+            cblas_dsymv(order, uplo, N, 1.0, elements, lda, vector, 1, 1.0, into, 1)
+        } else {
+            //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+            _dot(vector, addingInto: into)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if rows * columns > 400, let dsymv = BLAS.dsymv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
@@ -115,6 +186,10 @@ public extension Matrix<Double> {
             //TODO: Implement symmetric matrix-vector multiplication (default implementation)
             _dot(vector, addingInto: into)
         }
+        #else
+        //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+        _dot(vector, addingInto: into)
+        #endif
     }
 }
 
@@ -172,6 +247,19 @@ public extension Matrix<Float> {
     
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
+            let lda = N
+            cblas_ssymv(order, uplo, N, multiplied, elements, lda, vector, 1, .zero, into, 1)
+        } else {
+            //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+            _dot(vector, multiplied: multiplied, into: into)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if rows * columns > 400, let ssymv = BLAS.ssymv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
@@ -182,10 +270,27 @@ public extension Matrix<Float> {
             //TODO: Implement symmetric matrix-vector multiplication (default implementation)
             _dot(vector, multiplied: multiplied, into: into)
         }
+        #else
+        //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+        _dot(vector, multiplied: multiplied, into: into)
+        #endif
     }
     
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
+            let lda = N
+            cblas_ssymv(order, uplo, N, 1.0, elements, lda, vector, 1, .zero, into, 1)
+        } else {
+            //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+            _dot(vector, into: into)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if rows * columns > 400, let ssymv = BLAS.ssymv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
@@ -196,11 +301,28 @@ public extension Matrix<Float> {
             //TODO: Implement symmetric matrix-vector multiplication (default implementation)
             _dot(vector, into: into)
         }
+        #else
+        //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+        _dot(vector, into: into)
+        #endif
     }
     
     //TODO: Make a version that takes vector as a UnsafePointer<Double> and take addingInto as UnsafeMutablePointer<Double>
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
+            let lda = N
+            cblas_ssymv(order, uplo, N, multiplied, elements, lda, vector, 1, 1.0, into, 1)
+        } else {
+            //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+            _dot(vector, multiplied: multiplied, addingInto: into)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if rows * columns > 400, let ssymv = BLAS.ssymv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
@@ -211,10 +333,27 @@ public extension Matrix<Float> {
             //TODO: Implement symmetric matrix-vector multiplication (default implementation)
             _dot(vector, multiplied: multiplied, addingInto: into)
         }
+        #else
+        //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+        _dot(vector, multiplied: multiplied, addingInto: into)
+        #endif
     }
     
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
+            let lda = N
+            cblas_ssymv(order, uplo, N, 1.0, elements, lda, vector, 1, 1.0, into, 1)
+        } else {
+            //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+            _dot(vector, addingInto: into)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if rows * columns > 400, let ssymv = BLAS.ssymv {
             let order = BLAS.Order.rowMajor.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
@@ -225,6 +364,10 @@ public extension Matrix<Float> {
             //TODO: Implement symmetric matrix-vector multiplication (default implementation)
             _dot(vector, addingInto: into)
         }
+        #else
+        //TODO: Implement symmetric matrix-vector multiplication (default implementation)
+        _dot(vector, addingInto: into)
+        #endif
     }
 }
 
@@ -234,20 +377,33 @@ public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
     if matrixRows == 2 && matrixColumns == 2 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-    } else if let dsymv = BLAS.dsymv, matrixRows &* matrixColumns > 1000 {
+        return
+    } 
+    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+    if matrixRows &* matrixColumns > 1000 {
+        let order = CblasRowMajor
+        let uplo = CblasUpper
+        let n = blasint(matrixRows)
+        cblas_dsymv(order, uplo, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
+        return 
+    }
+    #elseif canImport(Accelerate)
+    #error("TODO: Reimplement")
+    if let dsymv = BLAS.dsymv, matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let uplo = BLAS.UpperLower.upper.rawValue
         let n = cblas_int(matrixRows)
         dsymv(order, uplo, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
-    } else {
-        var result: Double = .zero
-        for i in 0..<matrixRows {
-            result = .zero
-            for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
-            }
-            resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
+        return
+    }
+    #endif
+    var result: Double = .zero
+    for i in 0..<matrixRows {
+        result = .zero
+        for j in 0..<matrixColumns {
+            result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
         }
+        resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
     }
 }
 
@@ -257,19 +413,32 @@ public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
     if matrixRows == 2 && matrixColumns == 2, matrixRows &* matrixColumns > 1000 {
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-    } else if let ssymv = BLAS.ssymv {
+        return
+    }
+    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+    if matrixRows &* matrixColumns > 1000 {
+        let order = CblasRowMajor
+        let uplo = CblasUpper
+        let n = blasint(matrixRows)
+        cblas_ssymv(order, uplo, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
+        return
+    }
+    #elseif canImport(Accelerate)
+    #error("TODO: Reimplement")
+    if matrixRows &* matrixColumns > 1000 {
         let order = BLAS.Order.rowMajor.rawValue
         let uplo = BLAS.UpperLower.upper.rawValue
         let n = cblas_int(matrixRows)
         ssymv(order, uplo, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
-    } else {
-        var result: Float = .zero
-        for i in 0..<matrixRows {
-            result = .zero
-            for j in 0..<matrixColumns {
-                result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
-            }
-            resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
+        return
+    } 
+    #endif
+    var result: Float = .zero
+    for i in 0..<matrixRows {
+        result = .zero
+        for j in 0..<matrixColumns {
+            result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
         }
+        resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
     }
 }

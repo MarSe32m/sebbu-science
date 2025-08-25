@@ -5,7 +5,13 @@
 //  Created by Sebastian Toivonen on 11.4.2025.
 //
 
-import BLAS
+#if canImport(COpenBLAS)
+import COpenBLAS
+#elseif canImport(_COpenBLASWindows)
+import _COpenBLASWindows
+#elseif canImport(Accelerate)
+import Accelerate
+#endif
 
 import RealModule
 import ComplexModule
@@ -29,14 +35,20 @@ public extension Vector<Complex<Double>> {
     @inlinable
     mutating func copyComponents(from other: Self) {
         precondition(count == other.count)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(count)
+        cblas_zcopy(N, other.components, 1, &components, 1)
+        #elseif canImport(Accelerate)
+        #error("TODO: Implement")
         if let zcopy = BLAS.zcopy {
             let N = cblas_int(count)
             zcopy(N, other.components, 1, &components, 1)
-        } else {
-            for i in 0..<count {
-                components[i] = other.components[i]
-            }
+        } 
+        #else
+        for i in 0..<count {
+            components[i] = other.components[i]
         }
+        #endif
     }
     
     @inlinable

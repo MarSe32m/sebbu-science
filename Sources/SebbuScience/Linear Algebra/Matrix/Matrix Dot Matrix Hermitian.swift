@@ -5,7 +5,14 @@
 //  Created by Sebastian Toivonen on 10.5.2025.
 //
 
-import BLAS
+#if canImport(COpenBLAS)
+import COpenBLAS
+#elseif canImport(_COpenBLASWindows)
+import _COpenBLASWindows
+#elseif canImport(Accelerate)
+import Accelerate
+#endif
+
 import NumericsExtensions
 
 //MARK: Hermitian Matrix-Matrix multiplication for Complex<Double>
@@ -76,10 +83,30 @@ public extension Matrix<Complex<Double>> {
     
     @inlinable
     func dot(hermitianSide: HermitianSide = .left, _ other: Self, multiplied: T, into: inout Self) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        let order = CblasRowMajor
+        let side = hermitianSide == .left ? CblasLeft : CblasRight
+        let uplo = CblasUpper
+        let A = hermitianSide == .left ? self : other
+        let B = hermitianSide == .right ? self : other
+        let m = blasint(A.rows), n = blasint(B.columns)
+        let beta: T = .zero
+        let lda = blasint(columns), ldb = n, ldc = n
+        withUnsafePointer(to: multiplied) { alpha in 
+            withUnsafePointer(to: beta) { beta in 
+                cblas_zhemm(order, side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+            }
+
+        }
+        #elseif canImport(Accelerate)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        #error("TODO: Reimplement")
         if let zhemm = BLAS.zhemm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
             let order = BLAS.Order.rowMajor.rawValue
             let _side = hermitianSide == .left ? BLAS.Side.left.rawValue : BLAS.Side.right.rawValue
             let uplo = BLAS.UpperLower.upper.rawValue
@@ -97,10 +124,33 @@ public extension Matrix<Complex<Double>> {
             //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm
             _dot(other, multiplied: multiplied, into: &into)
         }
+        #else
+        //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm
+        _dot(other, multiplied: multiplied, into: &into)
+        #endif
     }
     
     @inlinable
     func dot(hermitianSide: HermitianSide = .left, _ other: Self, multiplied: T, addingInto into: inout Self) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        let order = CblasRowMajor
+        let side = hermitianSide == .left ? CblasLeft : CblasRight
+        let uplo = CblasUpper
+        let A = hermitianSide == .left ? self : other
+        let B = hermitianSide == .right ? self : other
+        let m = blasint(A.rows), n = blasint(B.columns)
+        let beta: T = .one
+        let lda = blasint(columns), ldb = n, ldc = n
+        withUnsafePointer(to: multiplied) { alpha in
+            withUnsafePointer(to: beta) { beta in
+                cblas_zhemm(order, side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+            }
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let zhemm = BLAS.zhemm {
             precondition(columns == other.rows)
             precondition(into.rows == rows)
@@ -122,6 +172,10 @@ public extension Matrix<Complex<Double>> {
             //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm
             _dot(other, multiplied: multiplied, addingInto: &into)
         }
+        #else
+        //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm
+        _dot(other, multiplied: multiplied, addingInto: &into)
+        #endif
     }
 }
 
@@ -193,6 +247,25 @@ public extension Matrix<Complex<Float>> {
     
     @inlinable
     func dot(hermitianSide: HermitianSide, _ other: Self, multiplied: T, into: inout Self) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        let order = CblasRowMajor
+        let side = hermitianSide == .left ? CblasLeft : CblasRight
+        let uplo = CblasUpper
+        let A = hermitianSide == .left ? self : other
+        let B = hermitianSide == .right ? self : other
+        let m = blasint(A.rows), n = blasint(B.columns)
+        let beta: T = .zero
+        let lda = blasint(columns), ldb = n, ldc = n
+        withUnsafePointer(to: multiplied) { alpha in
+            withUnsafePointer(to: beta) { beta in
+                cblas_chemm(order, side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+            }
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let chemm = BLAS.chemm {
             precondition(columns == other.rows)
             precondition(into.rows == rows)
@@ -214,10 +287,33 @@ public extension Matrix<Complex<Float>> {
             //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm
             _dot(other, multiplied: multiplied, into: &into)
         }
+        #else
+        //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm
+        _dot(other, multiplied: multiplied, into: &into)
+        #endif
     }
     
     @inlinable
     func dot(hermitianSide: HermitianSide, _ other: Self, multiplied: T, addingInto into: inout Self) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        let order = CblasRowMajor
+        let side = hermitianSide == .left ? CblasLeft : CblasRight
+        let uplo = CblasUpper
+        let A = hermitianSide == .left ? self : other
+        let B = hermitianSide == .right ? self : other
+        let m = blasint(A.rows), n = blasint(B.columns)
+        let beta: T = .one
+        let lda = blasint(columns), ldb = n, ldc = n
+        withUnsafePointer(to: multiplied) { alpha in
+            withUnsafePointer(to: beta) { beta in
+                cblas_chemm(order, side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+            }
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let chemm = BLAS.chemm {
             precondition(columns == other.rows)
             precondition(into.rows == rows)
@@ -239,5 +335,9 @@ public extension Matrix<Complex<Float>> {
             //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm
             _dot(other, multiplied: multiplied, addingInto: &into)
         }
+        #else
+        //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm
+        _dot(other, multiplied: multiplied, addingInto: &into)
+        #endif
     }
 }

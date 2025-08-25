@@ -5,7 +5,14 @@
 //  Created by Sebastian Toivonen on 10.5.2025.
 //
 
-import BLAS
+#if canImport(COpenBLAS)
+import COpenBLAS
+#elseif canImport(_COpenBLASWindows)
+import _COpenBLASWindows
+#elseif canImport(Accelerate)
+import Accelerate
+#endif
+
 import NumericsExtensions
 
 //MARK: Symmetric Matrix-Matrix multiplication for Double
@@ -86,6 +93,20 @@ public extension Matrix<Double> {
     
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, into: inout Self) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        let order = CblasRowMajor
+        let side = symmetricSide == .left ? CblasLeft : CblasRight
+        let uplo = CblasUpper
+        let A = symmetricSide == .left ? self : other
+        let B = symmetricSide == .right ? self : other
+        let m = blasint(A.rows), n = blasint(B.columns)
+        let lda = blasint(columns), ldb = n, ldc = n
+        cblas_dsymm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, .zero, &into.elements, ldc)
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let dsymm = BLAS.dsymm {
             precondition(columns == other.rows)
             precondition(into.rows == rows)
@@ -102,10 +123,28 @@ public extension Matrix<Double> {
             //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
             _dot(other, multiplied: multiplied, into: &into)
         }
+        #else
+        //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
+        _dot(other, multiplied: multiplied, into: &into)
+        #endif
     }
     
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, addingInto into: inout Self) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        let order = CblasRowMajor
+        let side = symmetricSide == .left ? CblasLeft : CblasRight
+        let uplo = CblasUpper
+        let A = symmetricSide == .left ? self : other
+        let B = symmetricSide == .right ? self : other
+        let m = blasint(A.rows), n = blasint(B.columns)
+        let lda = blasint(columns), ldb = n, ldc = n
+        cblas_dsymm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, 1.0, &into.elements, ldc)
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let dsymm = BLAS.dsymm {
             precondition(columns == other.rows)
             precondition(into.rows == rows)
@@ -122,6 +161,10 @@ public extension Matrix<Double> {
             //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
             _dot(other, multiplied: multiplied, addingInto: &into)
         }
+        #else
+        //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
+        _dot(other, multiplied: multiplied, addingInto: &into)
+        #endif
     }
 }
 
@@ -203,6 +246,20 @@ public extension Matrix<Float> {
     
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, into: inout Self) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        let order = CblasRowMajor
+        let side = symmetricSide == .left ? CblasLeft : CblasRight
+        let uplo = CblasUpper
+        let A = symmetricSide == .left ? self : other
+        let B = symmetricSide == .right ? self : other
+        let m = blasint(A.rows), n = blasint(B.columns)
+        let lda = blasint(columns), ldb = n, ldc = n
+        cblas_ssymm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, .zero, &into.elements, ldc)
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let ssymm = BLAS.ssymm {
             precondition(columns == other.rows)
             precondition(into.rows == rows)
@@ -219,10 +276,28 @@ public extension Matrix<Float> {
             //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
             _dot(other, multiplied: multiplied, into: &into)
         }
+        #else
+        //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
+        _dot(other, multiplied: multiplied, into: &into)
+        #endif
     }
     
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, addingInto into: inout Self) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        let order = CblasRowMajor
+        let side = symmetricSide == .left ? CblasLeft : CblasRight
+        let uplo = CblasUpper
+        let A = symmetricSide == .left ? self : other
+        let B = symmetricSide == .right ? self : other
+        let m = blasint(A.rows), n = blasint(B.columns)
+        let lda = blasint(columns), ldb = n, ldc = n
+        cblas_ssymm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, 1.0, &into.elements, ldc)
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let ssymm = BLAS.ssymm {
             precondition(columns == other.rows)
             precondition(into.rows == rows)
@@ -239,5 +314,9 @@ public extension Matrix<Float> {
             //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
             _dot(other, multiplied: multiplied, addingInto: &into)
         }
+        #else
+        //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
+        _dot(other, multiplied: multiplied, addingInto: &into)
+        #endif
     }
 }

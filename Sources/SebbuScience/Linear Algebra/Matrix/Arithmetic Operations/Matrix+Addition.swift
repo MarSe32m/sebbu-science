@@ -5,7 +5,12 @@
 //  Created by Sebastian Toivonen on 10.5.2025.
 //
 
-import BLAS
+//import BLAS
+#if canImport(COpenBLAS)
+import COpenBLAS
+#elseif canImport(_COpenBLASWindows)
+import _COpenBLASWindows
+#endif
 import NumericsExtensions
 
 //MARK: Addition for AlgebraicField
@@ -33,16 +38,20 @@ public extension Matrix where T: AlgebraicField {
     mutating func _add(_ other: Self, multiplied: T) {
         precondition(self.rows == other.rows)
         precondition(self.columns == other.columns)
+        
+        var elementsSpan = elements.mutableSpan
+        let otherSpan = other.elements.span
+
         var i = 0
-        while i &+ 4 <= elements.count {
-            elements[i] = Relaxed.multiplyAdd(multiplied, other.elements[i], elements[i])
-            elements[i &+ 1] = Relaxed.multiplyAdd(multiplied, other.elements[i &+ 1], elements[i &+ 1])
-            elements[i &+ 2] = Relaxed.multiplyAdd(multiplied, other.elements[i &+ 2], elements[i &+ 2])
-            elements[i &+ 3] = Relaxed.multiplyAdd(multiplied, other.elements[i &+ 3], elements[i &+ 3])
+        while i &+ 4 <= elementsSpan.count {
+            elementsSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i], elementsSpan[unchecked: i])
+            elementsSpan[unchecked: i &+ 1] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i &+ 1], elementsSpan[unchecked: i &+ 1])
+            elementsSpan[unchecked: i &+ 2] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i &+ 2], elementsSpan[unchecked: i &+ 2])
+            elementsSpan[unchecked: i &+ 3] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i &+ 3], elementsSpan[unchecked: i &+ 3])
             i &+= 4
         }
-        while i < elements.count {
-            elements[i] = Relaxed.multiplyAdd(multiplied, other.elements[i], elements[i])
+        while i < elementsSpan.count {
+            elementsSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i], elementsSpan[unchecked: i])
             i &+= 1
         }
     }
@@ -57,16 +66,19 @@ public extension Matrix where T: AlgebraicField {
     mutating func _add(_ other: Self) {
         precondition(self.rows == other.rows)
         precondition(self.columns == other.columns)
+        var elementsSpan = elements.mutableSpan
+        let otherSpan = other.elements.span
+
         var i = 0
-        while i &+ 4 <= elements.count {
-            elements[i] = Relaxed.sum(other.elements[i], elements[i])
-            elements[i &+ 1] = Relaxed.sum(other.elements[i &+ 1], elements[i &+ 1])
-            elements[i &+ 2] = Relaxed.sum(other.elements[i &+ 2], elements[i &+ 2])
-            elements[i &+ 3] = Relaxed.sum(other.elements[i &+ 3], elements[i &+ 3])
+        while i &+ 4 <= elementsSpan.count {
+            elementsSpan[unchecked: i] = Relaxed.sum(otherSpan[unchecked: i], elementsSpan[unchecked: i])
+            elementsSpan[unchecked: i &+ 1] = Relaxed.sum(otherSpan[unchecked: i &+ 1], elementsSpan[unchecked: i &+ 1])
+            elementsSpan[unchecked: i &+ 2] = Relaxed.sum(otherSpan[unchecked: i &+ 2], elementsSpan[unchecked: i &+ 2])
+            elementsSpan[unchecked: i &+ 3] = Relaxed.sum(otherSpan[unchecked: i &+ 3], elementsSpan[unchecked: i &+ 3])
             i &+= 4
         }
-        while i < elements.count {
-            elements[i] = Relaxed.sum(other.elements[i], elements[i])
+        while i < elementsSpan.count {
+            elementsSpan[unchecked: i] = Relaxed.sum(otherSpan[unchecked: i], elementsSpan[unchecked: i])
             i &+= 1
         }
     }
@@ -89,6 +101,11 @@ public extension Matrix<Double> {
 
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
+        #if canImport(COpenBlas) || canImport(_COpenBLASWindows)
+        let N = blasint(elements.count)
+        cblas_daxpy(N, multiplied, other.elements, 1, &elements, 1)
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let daxpy = BLAS.daxpy {
             precondition(rows == other.rows)
             precondition(columns == other.columns)
@@ -97,6 +114,9 @@ public extension Matrix<Double> {
         } else {
             _add(other, multiplied: multiplied)
         }
+        #else
+        _add(other, multiplied: multiplied)
+        #endif
     }
     
     @inlinable
@@ -123,14 +143,22 @@ public extension Matrix<Float> {
 
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
+        precondition(rows == other.rows)
+        precondition(columns == other.columns)
+        #if canImport(COpenBlas) || canImport(_COpenBLASWindows)
+        let N = blasint(elements.count)
+        cblas_saxpy(N, multiplied, other.elements, 1, &elements, 1)
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let saxpy = BLAS.saxpy {
-            precondition(rows == other.rows)
-            precondition(columns == other.columns)
             let N = cblas_int(elements.count)
             saxpy(N, multiplied, other.elements, 1, &elements, 1)
         } else {
             _add(other, multiplied: multiplied)
         }
+        #else
+        _add(other, multiplied: multiplied)
+        #endif
     }
     
     @inlinable
@@ -157,9 +185,16 @@ public extension Matrix<Complex<Double>> {
 
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
+        #if canImport(COpenBlas) || canImport(_COpenBLASWindows)
+        precondition(rows == other.rows)
+        precondition(columns == other.columns)
+        let N = blasint(elements.count)
+        withUnsafePointer(to: multiplied) { alpha in 
+            cblas_zaxpy(N, alpha, other.elements, 1, &elements, 1)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let zaxpy = BLAS.zaxpy {
-            precondition(rows == other.rows)
-            precondition(columns == other.columns)
             let N = cblas_int(elements.count)
             withUnsafePointer(to: multiplied) { alpha in
                 zaxpy(N, alpha, other.elements, 1, &elements, 1)
@@ -167,6 +202,9 @@ public extension Matrix<Complex<Double>> {
         } else {
             _add(other, multiplied: multiplied)
         }
+        #else
+        _add(other, multiplied: multiplied)
+        #endif
     }
     
     @inlinable
@@ -200,6 +238,15 @@ public extension Matrix<Complex<Float>> {
     @inlinable
     @_transparent
     mutating func add(_ other: Self, multiplied: T) {
+        #if canImport(COpenBlas) || canImport(_COpenBLASWindows)
+        precondition(rows == other.rows)
+        precondition(columns == other.columns)
+        let N = blasint(elements.count)
+        withUnsafePointer(to: multiplied) { alpha in 
+            cblas_caxpy(N, alpha, other.elements, 1, &elements, 1)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let caxpy = BLAS.caxpy {
             precondition(rows == other.rows)
             precondition(columns == other.columns)
@@ -210,6 +257,9 @@ public extension Matrix<Complex<Float>> {
         } else {
             _add(other, multiplied: multiplied)
         }
+        #else
+        _add(other, multiplied: multiplied)
+        #endif
     }
     
     @inlinable

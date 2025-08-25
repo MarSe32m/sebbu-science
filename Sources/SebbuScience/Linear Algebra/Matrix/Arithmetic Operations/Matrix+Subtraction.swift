@@ -5,7 +5,6 @@
 //  Created by Sebastian Toivonen on 10.5.2025.
 //
 
-import BLAS
 import NumericsExtensions
 
 
@@ -40,16 +39,18 @@ public extension Matrix where T: AlgebraicField {
     mutating func _subtract(_ other: Self) {
         precondition(self.rows == other.rows)
         precondition(self.columns == other.columns)
+        var elementsSpan = elements.mutableSpan
+        let otherSpan = other.elements.span
         var i = 0
-        while i &+ 4 <= elements.count {
-            elements[i] = Relaxed.sum(elements[i], -other.elements[i])
-            elements[i] = Relaxed.sum(elements[i &+ 1], -other.elements[i &+ 1])
-            elements[i] = Relaxed.sum(elements[i &+ 2], -other.elements[i &+ 2])
-            elements[i] = Relaxed.sum(elements[i &+ 3], -other.elements[i &+ 3])
+        while i &+ 4 <= elementsSpan.count {
+            elementsSpan[unchecked: i] = Relaxed.sum(elementsSpan[unchecked: i], -otherSpan[unchecked: i])
+            elementsSpan[unchecked: i] = Relaxed.sum(elementsSpan[unchecked: i &+ 1], -otherSpan[unchecked: i &+ 1])
+            elementsSpan[unchecked: i] = Relaxed.sum(elementsSpan[unchecked: i &+ 2], -otherSpan[unchecked: i &+ 2])
+            elementsSpan[unchecked: i] = Relaxed.sum(elementsSpan[unchecked: i &+ 3], -otherSpan[unchecked: i &+ 3])
             i &+= 4
         }
-        while i < elements.count {
-            elements[i] = Relaxed.sum(elements[i], -other.elements[i])
+        while i < elementsSpan.count {
+            elementsSpan[unchecked: i] = Relaxed.sum(elementsSpan[unchecked: i], -otherSpan[unchecked: i])
             i &+= 1
         }
     }

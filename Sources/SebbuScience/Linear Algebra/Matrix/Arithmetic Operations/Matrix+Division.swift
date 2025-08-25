@@ -5,7 +5,6 @@
 //  Created by Sebastian Toivonen on 10.5.2025.
 //
 
-import BLAS
 import NumericsExtensions
 
 //MARK: Division for AlgebraicField
@@ -34,16 +33,17 @@ public extension Matrix where T: AlgebraicField {
         if let reciprocal = by.reciprocal {
             multiply(by: reciprocal)
         } else {
+            var span = elements.mutableSpan
             var i = 0
-            while i &+ 4 <= elements.count {
-                elements[i] /= by
-                elements[i &+ 1] /= by
-                elements[i &+ 2] /= by
-                elements[i &+ 3] /= by
+            while i &+ 4 <= span.count {
+                span[unchecked: i] /= by
+                span[unchecked: i &+ 1] /= by
+                span[unchecked: i &+ 2] /= by
+                span[unchecked: i &+ 3] /= by
                 i &+= 4
             }
-            while i < elements.count {
-                elements[i] /= by
+            while i < span.count {
+                span[unchecked: i] /= by
                 i &+= 1
             }
         }
@@ -61,16 +61,18 @@ public extension Matrix where T: AlgebraicField {
         if let reciprocal = by.reciprocal {
             multiply(by: reciprocal, into: &into)
         } else {
+            let elementsSpan = elements.span
+            var intoSpan = into.elements.mutableSpan
             var i = 0
-            while i &+ 4 <= elements.count {
-                into.elements[i] = elements[i] / by
-                into.elements[i &+ 1] = elements[i &+ 1] / by
-                into.elements[i &+ 2] = elements[i &+ 2] / by
-                into.elements[i &+ 3] = elements[i &+ 3] / by
+            while i &+ 4 <= elementsSpan.count {
+                intoSpan[unchecked: i] = elementsSpan[unchecked: i] / by
+                intoSpan[unchecked: i &+ 1] = elementsSpan[unchecked: i &+ 1] / by
+                intoSpan[unchecked: i &+ 2] = elementsSpan[unchecked: i &+ 2] / by
+                intoSpan[unchecked: i &+ 3] = elementsSpan[unchecked: i &+ 3] / by
                 i &+= 4
             }
-            while i < elements.count {
-                into.elements[i] = elements[i] / by
+            while i < elementsSpan.count {
+                intoSpan[unchecked: i] = elementsSpan[unchecked: i] / by
                 i &+= 1
             }
         }
@@ -98,16 +100,17 @@ public extension Matrix<Double> {
         if let recip = by.reciprocal {
             multiply(by: recip)
         } else {
+            var span = elements.mutableSpan
             var i = 0
-            while i &+ 4 <= elements.count {
-                elements[i] /= by
-                elements[i &+ 1] /= by
-                elements[i &+ 2] /= by
-                elements[i &+ 3] /= by
+            while i &+ 4 <= span.count {
+                span[unchecked: i] /= by
+                span[unchecked: i &+ 1] /= by
+                span[unchecked: i &+ 2] /= by
+                span[unchecked: i &+ 3] /= by
                 i &+= 4
             }
-            while i < elements.count {
-                elements[i] /= by
+            while i < span.count {
+                span[unchecked: i] /= by
                 i &+= 1
             }
         }
@@ -141,16 +144,17 @@ public extension Matrix<Float> {
         if let recip = by.reciprocal {
             multiply(by: recip)
         } else {
+            var span = elements.mutableSpan
             var i = 0
-            while i &+ 4 <= elements.count {
-                elements[i] /= by
-                elements[i &+ 1] /= by
-                elements[i &+ 2] /= by
-                elements[i &+ 3] /= by
+            while i &+ 4 <= span.count {
+                span[unchecked: i] /= by
+                span[unchecked: i &+ 1] /= by
+                span[unchecked: i &+ 2] /= by
+                span[unchecked: i &+ 3] /= by
                 i &+= 4
             }
-            while i < elements.count {
-                elements[i] /= by
+            while i < span.count {
+                span[unchecked: i] /= by
                 i &+= 1
             }
         }
@@ -196,16 +200,17 @@ public extension Matrix<Complex<Double>> {
         if let recip = by.reciprocal {
             multiply(by: recip)
         } else {
+            var span = elements.mutableSpan
             var i = 0
-            while i &+ 4 <= elements.count {
-                elements[i] /= by
-                elements[i &+ 1] /= by
-                elements[i &+ 2] /= by
-                elements[i &+ 3] /= by
+            while i &+ 4 <= span.count {
+                span[unchecked: i] /= by
+                span[unchecked: i &+ 1] /= by
+                span[unchecked: i &+ 2] /= by
+                span[unchecked: i &+ 3] /= by
                 i &+= 4
             }
-            while i < elements.count {
-                elements[i] /= by
+            while i < span.count {
+                span[unchecked: i] /= by
                 i &+= 1
             }
         }
@@ -216,16 +221,17 @@ public extension Matrix<Complex<Double>> {
         if let recip = by.reciprocal {
             multiply(by: recip)
         } else {
+            var span = elements.mutableSpan
             var i = 0
-            while i &+ 4 <= elements.count {
-                elements[i] /= by
-                elements[i &+ 1] /= by
-                elements[i &+ 2] /= by
-                elements[i &+ 3] /= by
+            while i &+ 4 <= span.count {
+                span[unchecked: i] /= by
+                span[unchecked: i &+ 1] /= by
+                span[unchecked: i &+ 2] /= by
+                span[unchecked: i &+ 3] /= by
                 i &+= 4
             }
-            while i < elements.count {
-                elements[i] /= by
+            while i < span.count {
+                span[unchecked: i] /= by
                 i &+= 1
             }
         }
@@ -242,16 +248,19 @@ public extension Matrix<Complex<Double>> {
         if let reciprocal = by.reciprocal {
             multiply(by: reciprocal, into: &into)
         } else {
+            precondition(elements.count == into.elements.count)
+            let elementsSpan = elements.span
+            var intoSpan = into.elements.mutableSpan
             var i = 0
-            while i &+ 4 <= elements.count {
-                into.elements[i] = elements[i] / by
-                into.elements[i] = elements[i &+ 1] / by
-                into.elements[i] = elements[i &+ 2] / by
-                into.elements[i] = elements[i &+ 3] / by
+            while i &+ 4 <= elementsSpan.count {
+                intoSpan[unchecked: i] = elementsSpan[unchecked: i] / by
+                intoSpan[unchecked: i] = elementsSpan[unchecked: i &+ 1] / by
+                intoSpan[unchecked: i] = elementsSpan[unchecked: i &+ 2] / by
+                intoSpan[unchecked: i] = elementsSpan[unchecked: i &+ 3] / by
                 i &+= 4
             }
-            while i < elements.count {
-                into.elements[i] = elements[i] / by
+            while i < elementsSpan.count {
+                intoSpan[unchecked: i] = elementsSpan[unchecked: i] / by
                 i &+= 1
             }
         }
@@ -293,16 +302,17 @@ public extension Matrix<Complex<Float>> {
         if let recip = by.reciprocal {
             multiply(by: recip)
         } else {
+            var span = elements.mutableSpan
             var i = 0
-            while i &+ 4 <= elements.count {
-                elements[i] /= by
-                elements[i &+ 1] /= by
-                elements[i &+ 2] /= by
-                elements[i &+ 3] /= by
+            while i &+ 4 <= span.count {
+                span[unchecked: i] /= by
+                span[unchecked: i &+ 1] /= by
+                span[unchecked: i &+ 2] /= by
+                span[unchecked: i &+ 3] /= by
                 i &+= 4
             }
-            while i < elements.count {
-                elements[i] /= by
+            while i < span.count {
+                span[unchecked: i] /= by
                 i &+= 1
             }
         }
@@ -314,16 +324,17 @@ public extension Matrix<Complex<Float>> {
         if let recip = by.reciprocal {
             multiply(by: recip)
         } else {
+            var span = elements.mutableSpan
             var i = 0
-            while i &+ 4 <= elements.count {
-                elements[i] /= by
-                elements[i &+ 1] /= by
-                elements[i &+ 2] /= by
-                elements[i &+ 3] /= by
+            while i &+ 4 <= span.count {
+                span[unchecked: i] /= by
+                span[unchecked: i &+ 1] /= by
+                span[unchecked: i &+ 2] /= by
+                span[unchecked: i &+ 3] /= by
                 i &+= 4
             }
-            while i < elements.count {
-                elements[i] /= by
+            while i < span.count {
+                span[unchecked: i] /= by
                 i &+= 1
             }
         }
@@ -340,16 +351,19 @@ public extension Matrix<Complex<Float>> {
         if let reciprocal = by.reciprocal {
             multiply(by: reciprocal, into: &into)
         } else {
+            precondition(elements.count == into.elements.count)
+            let elementsSpan = elements.span
+            var intoSpan = into.elements.mutableSpan
             var i = 0
-            while i &+ 4 <= elements.count {
-                into.elements[i] = elements[i] / by
-                into.elements[i] = elements[i &+ 1] / by
-                into.elements[i] = elements[i &+ 2] / by
-                into.elements[i] = elements[i &+ 3] / by
+            while i &+ 4 <= elementsSpan.count {
+                intoSpan[unchecked: i] = elementsSpan[unchecked: i] / by
+                intoSpan[unchecked: i] = elementsSpan[unchecked: i &+ 1] / by
+                intoSpan[unchecked: i] = elementsSpan[unchecked: i &+ 2] / by
+                intoSpan[unchecked: i] = elementsSpan[unchecked: i &+ 3] / by
                 i &+= 4
             }
-            while i < elements.count {
-                into.elements[i] = elements[i] / by
+            while i < elementsSpan.count {
+                intoSpan[unchecked: i] = elementsSpan[unchecked: i] / by
                 i &+= 1
             }
         }

@@ -23,7 +23,7 @@
                 },
                 
                 {
-                    "path": "lib/windows/openblas.lib",
+                    "path": "lib/windows/libopenblas.lib",
                     "supportedTriples": ["x86_64-unknown-windows-msvc"],
                     "staticLibraryMetadata": {
                         "headerPaths": ["include/windows"],

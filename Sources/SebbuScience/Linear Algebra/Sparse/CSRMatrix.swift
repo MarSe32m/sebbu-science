@@ -5,9 +5,17 @@
 //  Created by Sebastian Toivonen on 23.8.2023.
 //
 
+#if canImport(COpenBLAS)
+import COpenBLAS
+#elseif canImport(_COpenBLASWindows)
+import _COpenBLASWindows
+#elseif canImport(Accelerate)
+import Accelerate
+#endif
+
 import NumericsExtensions
 import SebbuCollections
-import BLAS
+
 
 public struct CSRMatrix<T>: SparseMatrix {
     @usableFromInline
@@ -369,17 +377,25 @@ public extension CSRMatrix<Complex<Double>> {
     @_optimize(speed)
     @inlinable
     mutating func multiply(by: Double) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(values.count)
+        withUnsafePointer(to: by) { alpha in
+            cblas_zscal(N, alpha, &values, 1)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let zscal = BLAS.zscal {
             let N = cblas_int(values.count)
             withUnsafePointer(to: by) { alpha in
                 zscal(N, alpha, &values, 1)
             }
-        } else {
-            for i in 0..<values.count {
-                values[i].real = Relaxed.product(values[i].real, by)
-                values[i].imaginary = Relaxed.product(values[i].imaginary, by)
-            }
         }
+        #else
+        var span = values.mutableSpan
+        for i in 0..<span.count {
+            span[unchecked: i] = Relaxed.product(span[unchecked: i], by)
+        }
+        #endif
     }
     
     

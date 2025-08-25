@@ -48,8 +48,10 @@ public extension FFT {
         public static func makePlan(sampleSize: Int, measure: Bool = false) -> FFTPlan {
             #if os(macOS)
             AccelerateFFTPlan(sampleSize: sampleSize, measure: measure)
+            #elseif canImport(CFFTW) || canImport(_CFFTWWindows)
+            FFTWPlan(sampleSize: sampleSize, measure: measure) 
             #else
-            FFTW.isAvailable ? FFTWPlan(sampleSize: sampleSize, measure: measure) : FFTPlan(sampleSize: sampleSize, measure: measure)
+            FFTPlan(sampleSize: sampleSize, measure: measure)
             #endif
         }
     }
@@ -80,8 +82,10 @@ public extension FFT {
         public static func makePlan(sampleSize: Int, measure: Bool = false) -> iFFTPlan {
             #if os(macOS)
             AccelerateiFFTPlan(sampleSize: sampleSize, measure: measure)
+            #elseif canImport(CFFTW) || canImport(_CFFTWWindows)
+            iFFTWPlan(sampleSize: sampleSize, measure: measure)
             #else
-            FFTW.isAvailable ? iFFTWPlan(sampleSize: sampleSize, measure: measure) : iFFTPlan(sampleSize: sampleSize, measure: measure)
+            iFFTPlan(sampleSize: sampleSize, measure: measure)
             #endif
         }
     }

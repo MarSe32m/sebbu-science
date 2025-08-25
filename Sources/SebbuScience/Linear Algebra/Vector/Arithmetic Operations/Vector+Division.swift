@@ -5,7 +5,6 @@
 //  Created by Sebastian Toivonen on 11.5.2025.
 //
 
-import BLAS
 import NumericsExtensions
 
 //MARK: Division for AlgebraicField

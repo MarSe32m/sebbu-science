@@ -5,7 +5,14 @@
 //  Created by Sebastian Toivonen on 11.5.2025.
 //
 
-import BLAS
+#if canImport(COpenBLAS)
+import COpenBLAS
+#elseif canImport(_COpenBLASWindows)
+import _COpenBLASWindows
+#elseif canImport(Accelerate)
+import Accelerate
+#endif
+
 import NumericsExtensions
 
 //MARK: Addition for AlgebraicField
@@ -32,17 +39,19 @@ public extension Vector where T: AlgebraicField {
     @inlinable
     mutating func _add(_ other: Self, multiplied: T) {
         precondition(other.components.count == self.components.count)
+        var componentSpan = components.mutableSpan
+        let otherSpan = other.components.span
         var i = 0
-        while i &+ 4 <= components.count {
-            components[i] = Relaxed.multiplyAdd(multiplied, other.components[i], components[i])
-            components[i &+ 1] = Relaxed.multiplyAdd(multiplied, other.components[i &+ 1], components[i &+ 1])
-            components[i &+ 2] = Relaxed.multiplyAdd(multiplied, other.components[i &+ 2], components[i &+ 2])
-            components[i &+ 3] = Relaxed.multiplyAdd(multiplied, other.components[i &+ 3], components[i &+ 3])
+        while i &+ 4 <= componentSpan.count {
+            componentSpan[i] = Relaxed.multiplyAdd(multiplied, otherSpan[i], componentSpan[i])
+            componentSpan[unchecked: i &+ 1] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i &+ 1], componentSpan[unchecked: i &+ 1])
+            componentSpan[unchecked: i &+ 2] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i &+ 2], componentSpan[unchecked: i &+ 2])
+            componentSpan[unchecked: i &+ 3] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i &+ 3], componentSpan[unchecked: i &+ 3])
             i &+= 4
             
         }
-        while i < components.count {
-            components[i] = Relaxed.multiplyAdd(multiplied, other.components[i], components[i])
+        while i < componentSpan.count {
+            componentSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i], componentSpan[unchecked: i])
             i &+= 1
         }
     }
@@ -56,16 +65,18 @@ public extension Vector where T: AlgebraicField {
     @inlinable
     mutating func _add(_ other: Self) {
         precondition(other.components.count == self.components.count)
+        var componentSpan = components.mutableSpan
+        let otherSpan = other.components.span
         var i = 0
-        while i &+ 4 <= components.count {
-            components[i] = Relaxed.sum(components[i], other.components[i])
-            components[i &+ 1] = Relaxed.sum(components[i &+ 1], other.components[i &+ 1])
-            components[i &+ 2] = Relaxed.sum(components[i &+ 2], other.components[i &+ 2])
-            components[i &+ 3] = Relaxed.sum(components[i &+ 3], other.components[i &+ 3])
+        while i &+ 4 <= componentSpan.count {
+            componentSpan[unchecked: i] = Relaxed.sum(componentSpan[unchecked: i], otherSpan[unchecked: i])
+            componentSpan[unchecked: i &+ 1] = Relaxed.sum(componentSpan[unchecked: i &+ 1], otherSpan[unchecked: i &+ 1])
+            componentSpan[unchecked: i &+ 2] = Relaxed.sum(componentSpan[unchecked: i &+ 2], otherSpan[unchecked: i &+ 2])
+            componentSpan[unchecked: i &+ 3] = Relaxed.sum(componentSpan[unchecked: i &+ 3], otherSpan[unchecked: i &+ 3])
             i &+= 4
         }
-        while i < components.count {
-            components[i] = Relaxed.sum(components[i], other.components[i])
+        while i < componentSpan.count {
+            componentSpan[unchecked: i] = Relaxed.sum(componentSpan[unchecked: i], otherSpan[unchecked: i])
             i &+= 1
         }
     }
@@ -88,13 +99,19 @@ public extension Vector<Double> {
     
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
+        precondition(count == other.count)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(count)
+        cblas_daxpy(N, multiplied, other.components, 1, &components, 1)
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let daxpy = BLAS.daxpy {
-            precondition(count == other.count)
             let N = cblas_int(count)
             daxpy(N, multiplied, other.components, 1, &components, 1)
-        } else {
-            _add(other, multiplied: multiplied)
         }
+        #else
+        _add(other, multiplied: multiplied)
+        #endif
     }
     
     @inlinable
@@ -122,13 +139,19 @@ public extension Vector<Float> {
     
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
+        precondition(count == other.count)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(count)
+        cblas_saxpy(N, multiplied, other.components, 1, &components, 1)
+        #elseif canImport(Accelerate)
+        #error("TODO: Implement")
         if let saxpy = BLAS.saxpy {
-            precondition(count == other.count)
             let N = cblas_int(count)
             saxpy(N, multiplied, other.components, 1, &components, 1)
-        } else {
-            _add(other, multiplied: multiplied)
         }
+        #else
+        _add(other, multiplied: multiplied)
+        #endif
     }
     
     @inlinable
@@ -155,14 +178,23 @@ public extension Vector<Complex<Double>> {
     
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
+        precondition(count == other.count)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(count)
+        withUnsafePointer(to: multiplied) { alpha in
+            cblas_zaxpy(N, alpha, other.components, 1, &components, 1)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Implement")
         if let zaxpy = BLAS.zaxpy {
             let N = cblas_int(count)
             withUnsafePointer(to: multiplied) { alpha in
                 zaxpy(N, alpha, other.components, 1, &components, 1)
             }
-        } else {
-            _add(other, multiplied: multiplied)
         }
+        #else
+        _add(other, multiplied: multiplied)
+        #endif
     }
     
     @inlinable
@@ -195,15 +227,23 @@ public extension Vector<Complex<Float>> {
     
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
+        precondition(count == other.count)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(count)
+        withUnsafePointer(to: multiplied) { alpha in
+            cblas_caxpy(N, alpha, other.components, 1, &components, 1)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Implement")
         if let caxpy = BLAS.caxpy {
-            precondition(count == other.count)
             let N = cblas_int(count)
             withUnsafePointer(to: multiplied) { alpha in
                 caxpy(N, alpha, other.components, 1, &components, 1)
             }
-        } else {
-            _add(other, multiplied: multiplied)
         }
+        #else
+        _add(other, multiplied: multiplied)
+        #endif
     }
     
     @inlinable

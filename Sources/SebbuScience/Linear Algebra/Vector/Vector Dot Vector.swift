@@ -5,7 +5,14 @@
 //  Created by Sebastian Toivonen on 11.5.2025.
 //
 
-import BLAS
+#if canImport(COpenBLAS)
+import COpenBLAS
+#elseif canImport(_COpenBLASWindows)
+import _COpenBLASWindows
+#elseif canImport(Accelerate)
+import Accelerate
+#endif
+
 import NumericsExtensions
 
 //MARK: Dot, inner and outer product for AlgebraicField
@@ -103,13 +110,20 @@ public extension Vector where T: AlgebraicField {
 public extension Vector<Double> {
     @inlinable
     func dot(_ other: Self) -> T {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        precondition(count == other.count)
+        let N = blasint(count)
+        return cblas_ddot(N, components, 1, other.components, 1)
+        #elseif canImport(Accelerate)
+        precondition(count == other.count)
+        #error("TODO: Implement")
         if let ddot = BLAS.ddot {
-            precondition(count == other.count)
             let N = cblas_int(count)
             return ddot(N, components, 1, other.components, 1)
-        } else {
-            return _dot(other)
         }
+        #else
+        return _dot(other)
+        #endif
     }
     
     @inlinable
@@ -123,13 +137,20 @@ public extension Vector<Double> {
 public extension Vector<Float> {
     @inlinable
     func dot(_ other: Self) -> T {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        precondition(count == other.count)
+        let N = blasint(count)
+        return cblas_sdot(N, components, 1, other.components, 1)
+        #elseif canImport(Accelerate)
+        precondition(count == other.count)
+        #error("TODO: Implement")
         if let sdot = BLAS.sdot {
-            precondition(count == other.count)
             let N = cblas_int(count)
             return sdot(N, components, 1, other.components, 1)
-        } else {
-            return _dot(other)
-        }
+        } 
+        #else
+        return _dot(other)
+        #endif
     }
     
     @inlinable
@@ -143,28 +164,46 @@ public extension Vector<Float> {
 public extension Vector<Complex<Double>> {
     @inlinable
     func dot(_ other: Self) -> T {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        precondition(count == other.count)
+        let N = blasint(count)
+        var result: T = .zero
+        cblas_zdotu_sub(N, components, 1, other.components, 1, &result)
+        return result
+        #elseif canImport(Accelerate)
+        precondition(count == other.count)
+        #error("TODO: Implement")
         if let zdotu_sub = BLAS.zdotu_sub {
-            precondition(count == other.count)
             let N = cblas_int(count)
             var result: T = .zero
             zdotu_sub(N, components, 1, other.components, 1, &result)
             return result
-        } else {
-            return _dot(other)
-        }
+        } 
+        #else
+        return _dot(other)
+        #endif
     }
     
     @inlinable
     func inner(_ other: Self) -> T {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        precondition(count == other.count)
+        let N = blasint(count)
+        var result: T = .zero
+        cblas_zdotc_sub(N, components, 1, other.components, 1, &result)
+        return result
+        #elseif canImport(Accelerate)
+        precondition(count == other.count)
+        #error("TODO: Implement")
         if let zdotc_sub = BLAS.zdotc_sub {
-            precondition(count == other.count)
             let N = cblas_int(count)
             var result: T = .zero
             zdotc_sub(N, components, 1, other.components, 1, &result)
             return result
-        } else {
-            return _inner(other)
         }
+        #else
+        return _inner(other)
+        #endif
     }
 
     @inlinable
@@ -195,28 +234,46 @@ public extension Vector<Complex<Double>> {
 public extension Vector<Complex<Float>> {
     @inlinable
     func dot(_ other: Self) -> T {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        precondition(count == other.count)
+        let N = blasint(count)
+        var result: T = .zero
+        cblas_cdotu_sub(N, components, 1, other.components, 1, &result)
+        return result
+        #elseif canImport(Accelerate)
+        precondition(count == other.count)
+        #error("TODO: Implement")
         if let cdotu_sub = BLAS.cdotu_sub {
-            precondition(count == other.count)
             let N = cblas_int(count)
             var result: T = .zero
             cdotu_sub(N, components, 1, other.components, 1, &result)
             return result
-        } else {
-            return _dot(other)
-        }
+        } 
+        #else
+        return _dot(other)
+        #endif
     }
     
     @inlinable
     func inner(_ other: Self) -> T {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        precondition(count == other.count)
+        let N = blasint(count)
+        var result: T = .zero
+        cblas_cdotc_sub(N, components, 1, other.components, 1, &result)
+        return result
+        #elseif canImport(Accelerate)
+        #error("TODO: Implement")
         if let cdotc_sub = BLAS.cdotc_sub {
             precondition(count == other.count)
             let N = cblas_int(count)
             var result: T = .zero
             cdotc_sub(N, components, 1, other.components, 1, &result)
             return result
-        } else {
-            return _inner(other)
-        }
+        } 
+        #else
+        return _inner(other)
+        #endif
     }
 
     @inlinable

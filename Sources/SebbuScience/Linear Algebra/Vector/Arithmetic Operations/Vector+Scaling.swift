@@ -5,7 +5,14 @@
 //  Created by Sebastian Toivonen on 11.5.2025.
 //
 
-import BLAS
+#if canImport(COpenBLAS)
+import COpenBLAS
+#elseif canImport(_COpenBLASWindows)
+import _COpenBLASWindows
+#elseif canImport(Accelerate)
+import Accelerate
+#endif
+
 import NumericsExtensions
 
 //MARK: Scaling for AlgebraicField
@@ -67,12 +74,18 @@ public extension Vector<Double> {
     
     @inlinable
     mutating func multiply(by: T) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(count)
+        cblas_dscal(N, by, &components, 1)
+        #elseif canImport(Accelerate)
+        #error("TODO: Implement")
         if let dscal = BLAS.dscal {
             let N = cblas_int(count)
             dscal(N, by, &components, 1)
-        } else {
-            _multiply(by: by)
         }
+        #else
+        _multiply(by: by)
+        #endif
     }
 }
 
@@ -93,12 +106,18 @@ public extension Vector<Float> {
     
     @inlinable
     mutating func multiply(by: T) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(count)
+        cblas_sscal(N, by, &components, 1)
+        #elseif canImport(Accelerate)
+        #error("TODO: Implement")
         if let sscal = BLAS.sscal {
             let N = cblas_int(count)
             sscal(N, by, &components, 1)
-        } else {
-            _multiply(by: by)
-        }
+        } 
+        #else
+        _multiply(by: by)
+        #endif
     }
 }
 
@@ -133,27 +152,40 @@ public extension Vector<Complex<Double>> {
     
     @inlinable
     mutating func multiply(by: T) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(count)
+        withUnsafePointer(to: by) { alpha in
+            cblas_zscal(N, alpha, &components, 1)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Implement")
         if let zscal = BLAS.zscal {
             let N = cblas_int(count)
             withUnsafePointer(to: by) { alpha in
                 zscal(N, alpha, &components, 1)
             }
-        } else {
-            _multiply(by: by)
         }
+        #else
+        _multiply(by: by)
+        #endif
     }
     
     @inlinable
     mutating func multiply(by: Double) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(count)
+        cblas_zdscal(N, by, &components, 1)
+        #elseif canImport(Accelerate)
+        #error("TODO: Implement")
         if let zdscal = BLAS.zdscal {
             let N = cblas_int(count)
             zdscal(N, by, &components, 1)
-        } else {
-            for i in 0..<components.count {
-                components[i].real = Relaxed.product(components[i].real, by)
-                components[i].imaginary = Relaxed.product(components[i].imaginary, by)
-            }
         }
+        #else
+        for i in 0..<components.count {
+            components[i] = Relaxed.product(components[i], by)
+        }
+        #endif
     }
 }
 
@@ -187,26 +219,39 @@ public extension Vector<Complex<Float>> {
     
     @inlinable
     mutating func multiply(by: T) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(count)
+        withUnsafePointer(to: by) { alpha in
+            cblas_cscal(N, alpha, &components, 1)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Implement")
         if let cscal = BLAS.cscal {
             let N = cblas_int(count)
             withUnsafePointer(to: by) { alpha in
                 cscal(N, alpha, &components, 1)
             }
-        } else {
-            _multiply(by: by)
         }
+        #else
+        _multiply(by: by)
+        #endif
     }
     
     @inlinable
     mutating func multiply(by: Float) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(count)
+        cblas_csscal(N, by, &components, 1)
+        #elseif canImport(Accelerate)
+        #error("TODO: Implement")
         if let csscal = BLAS.csscal {
             let N = cblas_int(count)
             csscal(N, by, &components, 1)
-        } else {
-            for i in 0..<count {
-                components[i].real = Relaxed.product(components[i].real, by)
-                components[i].imaginary = Relaxed.product(components[i].imaginary, by)
-            }
         }
+        #else
+        for i in 0..<count {
+            components[i] = Relaxed.product(components[i], by)
+        }
+        #endif
     }
 }

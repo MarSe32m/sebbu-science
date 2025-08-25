@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:sebbu-science}",
+            "name": "Debug Executable",
+            "program": "${workspaceFolder:sebbu-science}/.build/debug/Executable",
+            "preLaunchTask": "swift: Build Debug Executable"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:sebbu-science}",
+            "name": "Release Executable",
+            "program": "${workspaceFolder:sebbu-science}/.build/release/Executable",
+            "preLaunchTask": "swift: Build Release Executable"
+        }
+    ]
+}

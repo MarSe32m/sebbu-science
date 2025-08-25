@@ -4,8 +4,14 @@
 //
 //  Created by Sebastian Toivonen on 10.5.2025.
 //
+#if canImport(COpenBLAS)
+import COpenBLAS
+#elseif canImport(_COpenBLASWindows)
+import _COpenBLASWindows
+#elseif canImport(Accelerate)
+import Accelerate
+#endif
 
-import BLAS
 import NumericsExtensions
 
 //MARK: Scaling for AlgebraicField
@@ -31,16 +37,17 @@ public extension Matrix where T: AlgebraicField {
     
     @inlinable
     mutating func _multiply(by: T) {
+        var span = elements.mutableSpan
         var i = 0
-        while i &+ 4 <= elements.count {
-            elements[i] = Relaxed.product(by, elements[i])
-            elements[i &+ 1] = Relaxed.product(by, elements[i &+ 1])
-            elements[i &+ 2] = Relaxed.product(by, elements[i &+ 2])
-            elements[i &+ 3] = Relaxed.product(by, elements[i &+ 3])
+        while i &+ 4 <= span.count {
+            span[unchecked: i] = Relaxed.product(by, span[unchecked: i])
+            span[unchecked: i &+ 1] = Relaxed.product(by, span[unchecked: i &+ 1])
+            span[unchecked: i &+ 2] = Relaxed.product(by, span[unchecked: i &+ 2])
+            span[unchecked: i &+ 3] = Relaxed.product(by, span[unchecked: i &+ 3])
             i &+= 4
         }
-        while i < elements.count {
-            elements[i] = Relaxed.product(by, elements[i])
+        while i < span.count {
+            span[unchecked: i] = Relaxed.product(by, span[unchecked: i])
             i &+= 1
         }
     }
@@ -54,16 +61,18 @@ public extension Matrix where T: AlgebraicField {
     @inlinable
     func _multiply(by: T, into: inout Self) {
         precondition(into.elements.count == elements.count)
+        let elementsSpan = elements.span
+        var intoSpan = into.elements.mutableSpan
         var i = 0
-        while i &+ 4 <= into.elements.count {
-            into.elements[i] = Relaxed.product(elements[i], by)
-            into.elements[i &+ 1] = Relaxed.product(elements[i &+ 1], by)
-            into.elements[i &+ 2] = Relaxed.product(elements[i &+ 2], by)
-            into.elements[i &+ 3] = Relaxed.product(elements[i &+ 3], by)
+        while i &+ 4 <= intoSpan.count {
+            intoSpan[unchecked: i] = Relaxed.product(elementsSpan[unchecked: i], by)
+            intoSpan[unchecked: i &+ 1] = Relaxed.product(elementsSpan[unchecked: i &+ 1], by)
+            intoSpan[unchecked: i &+ 2] = Relaxed.product(elementsSpan[unchecked: i &+ 2], by)
+            intoSpan[unchecked: i &+ 3] = Relaxed.product(elementsSpan[unchecked: i &+ 3], by)
             i &+= 4
         }
-        while i < into.elements.count {
-            into.elements[i] = Relaxed.product(elements[i], by)
+        while i < intoSpan.count {
+            intoSpan[unchecked: i] = Relaxed.product(elementsSpan[unchecked: i], by)
             i &+= 1
         }
     }
@@ -86,12 +95,20 @@ public extension Matrix<Double> {
     
     @inlinable
     mutating func multiply(by: T) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(elements.count)
+        cblas_dscal(N, by, &elements, 1)
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let dscal = BLAS.dscal {
             let N = cblas_int(elements.count)
             dscal(N, by, &elements, 1)
         } else {
             _multiply(by: by)
         }
+        #else
+        _multiply(by: by)
+        #endif
     }
     
     @inlinable
@@ -118,12 +135,20 @@ public extension Matrix<Float> {
     
     @inlinable
     mutating func multiply(by: T) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(elements.count)
+        cblas_sscal(N, by, &elements, 1)
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let sscal = BLAS.sscal {
             let N = cblas_int(elements.count)
             sscal(N, by, &elements, 1)
         } else {
             _multiply(by: by)
         }
+        #else
+        _multiply(by: by)
+        #endif
     }
     
     @inlinable
@@ -163,18 +188,33 @@ public extension Matrix<Complex<Double>> {
     
     @inlinable
     mutating func multiply(by: T) {
-        if let zscal = BLAS.zscal {
-            let N = cblas_int(elements.count)
-            withUnsafePointer(to: by) { alpha in
-                zscal(N, alpha, &elements, 1)
-            }
-        } else {
-            _multiply(by: by)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(elements.count)
+        withUnsafePointer(to: by) { alpha in 
+            cblas_zscal(N, alpha, &elements, 1)
         }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
+            if let zscal = BLAS.zscal {
+                let N = cblas_int(elements.count)
+                withUnsafePointer(to: by) { alpha in
+                    zscal(N, alpha, &elements, 1)
+                }
+            } else {
+                _multiply(by: by)
+            }
+        #else
+        _multiply(by: by)
+        #endif
     }
     
     @inlinable
     mutating func multiply(by: Double) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(elements.count)
+        cblas_zdscal(N, by, &elements, 1)
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let zdscal = BLAS.zdscal {
             let N = cblas_int(elements.count)
             zdscal(N, by, &elements, 1)
@@ -184,6 +224,21 @@ public extension Matrix<Complex<Double>> {
                 elements[i].imaginary = Relaxed.product(elements[i].imaginary, by)
             }
         }
+        #else
+        var span = elements.mutableSpan
+        var i = 0
+        while i &+ 4 < span.count {
+            span[unchecked: i] = Relaxed.product(span[unchecked: i], by)
+            span[unchecked: i &+ 1] = Relaxed.product(span[unchecked: i &+ 1], by)
+            span[unchecked: i &+ 2] = Relaxed.product(span[unchecked: i &+ 2], by)
+            span[unchecked: i &+ 3] = Relaxed.product(span[unchecked: i &+ 3], by)
+            i &+= 4
+        }
+        while i < span.count {
+            span[unchecked: i] = Relaxed.product(span[unchecked: i], by)
+            i &+= 1
+        }
+        #endif
     }
     
     @inlinable
@@ -194,15 +249,18 @@ public extension Matrix<Complex<Double>> {
     
     @inlinable
     func multiply(by: Double, into: inout Self) {
+        let elementsSpan = elements.span
+        var intoSpan = into.elements.mutableSpan
         var i = 0
-        while i &+ 4 <= elements.count {
-            into.elements[i] = Relaxed.product(elements[i], by)
-            into.elements[i &+ 1] = Relaxed.product(elements[i &+ 1], by)
-            into.elements[i &+ 2] = Relaxed.product(elements[i &+ 2], by)
-            into.elements[i &+ 3] = Relaxed.product(elements[i &+ 3], by)
+        while i &+ 4 <= elementsSpan.count {
+            intoSpan[unchecked: i] = Relaxed.product(elementsSpan[unchecked: i], by)
+            intoSpan[unchecked: i &+ 1] = Relaxed.product(elementsSpan[unchecked: i &+ 1], by)
+            intoSpan[unchecked: i &+ 2] = Relaxed.product(elementsSpan[unchecked: i &+ 2], by)
+            intoSpan[unchecked: i &+ 3] = Relaxed.product(elementsSpan[unchecked: i &+ 3], by)
+            i &+= 4
         }
-        while i < elements.count {
-            into.elements[i] = Relaxed.product(elements[i], by)
+        while i < elementsSpan.count {
+            intoSpan[unchecked: i] = Relaxed.product(elementsSpan[unchecked: i], by)
             i &+= 1
         }
     }
@@ -238,6 +296,13 @@ public extension Matrix<Complex<Float>> {
     @inlinable
     @_transparent
     mutating func multiply(by: T) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(elements.count)
+        withUnsafePointer(to: by) { alpha in
+            cblas_cscal(N, alpha, &elements, 1)
+        }
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let cscal = BLAS.cscal {
             let N = cblas_int(elements.count)
             withUnsafePointer(to: by) { alpha in
@@ -246,9 +311,17 @@ public extension Matrix<Complex<Float>> {
         } else {
             _multiply(by: by)
         }
+        #else
+        _multiply(by: by)
+        #endif
     }
     
     mutating func multiply(by: Float) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = blasint(elements.count)
+        cblas_csscal(N, by, &elements, 1)
+        #elseif canImport(Accelerate)
+        #error("TODO: Reimplement")
         if let csscal = BLAS.csscal {
             let N = cblas_int(elements.count)
             csscal(N, by, &elements, 1)
@@ -258,6 +331,21 @@ public extension Matrix<Complex<Float>> {
                 elements[i].imaginary = Relaxed.product(elements[i].imaginary, by)
             }
         }
+        #else
+        var span = elements.mutableSpan
+        var i = 0
+        while i &+ 4 < span.count {
+            span[unchecked: i] = Relaxed.product(span[unchecked: i], by)
+            span[unchecked: i &+ 1] = Relaxed.product(span[unchecked: i &+ 1], by)
+            span[unchecked: i &+ 2] = Relaxed.product(span[unchecked: i &+ 2], by)
+            span[unchecked: i &+ 3] = Relaxed.product(span[unchecked: i &+ 3], by)
+            i &+= 4
+        }
+        while i < span.count {
+            span[unchecked: i] = Relaxed.product(span[unchecked: i], by)
+            i &+= 1
+        }
+        #endif
     }
     
     @inlinable
@@ -268,16 +356,18 @@ public extension Matrix<Complex<Float>> {
     
     @inlinable
     func multiply(by: Float, into: inout Self) {
+        let elementsSpan = elements.span
+        var intoSpan = into.elements.mutableSpan
         var i = 0
-        while i &+ 4 <= elements.count {
-            into.elements[i] = Relaxed.product(elements[i], by)
-            into.elements[i &+ 1] = Relaxed.product(elements[i &+ 1], by)
-            into.elements[i &+ 2] = Relaxed.product(elements[i &+ 2], by)
-            into.elements[i &+ 3] = Relaxed.product(elements[i &+ 3], by)
+        while i &+ 4 <= elementsSpan.count {
+            intoSpan[unchecked: i] = Relaxed.product(elementsSpan[unchecked: i], by)
+            intoSpan[unchecked: i &+ 1] = Relaxed.product(elementsSpan[unchecked: i &+ 1], by)
+            intoSpan[unchecked: i &+ 2] = Relaxed.product(elementsSpan[unchecked: i &+ 2], by)
+            intoSpan[unchecked: i &+ 3] = Relaxed.product(elementsSpan[unchecked: i &+ 3], by)
             i &+= 4
         }
-        while i < elements.count {
-            into.elements[i] = Relaxed.product(elements[i], by)
+        while i < elementsSpan.count {
+            intoSpan[unchecked: i] = Relaxed.product(elementsSpan[unchecked: i], by)
             i &+= 1
         }
     }

@@ -1,4 +1,0 @@
-module CLAPACK {
-    header "include.h"
-    export *
-}
