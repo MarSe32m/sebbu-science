@@ -5,8 +5,8 @@
 //  Created by Sebastian Toivonen on 24.4.2025.
 //
 
-#if canImport(CLAPACK)
-import CLAPACK
+#if canImport(DynamicCLAPACK)
+import DynamicCLAPACK
 #elseif canImport(Accelerate)
 import Accelerate
 #endif

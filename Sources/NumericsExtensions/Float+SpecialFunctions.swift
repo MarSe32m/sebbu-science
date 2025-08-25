@@ -6,6 +6,7 @@
 //
 
 import CMath
+import RealModule
 
 public extension Float {
     @inlinable

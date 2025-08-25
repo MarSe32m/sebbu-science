@@ -85,8 +85,6 @@ public extension Complex {
     }
 }
 
-extension Complex: Sendable where RealType: Sendable {}
-
 //MARK: Special functions
 public extension Complex<Double> {
     @inlinable

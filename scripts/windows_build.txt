@@ -1,0 +1,3 @@
+Follow instructions at: http://www.openmathlib.org/OpenBLAS/docs/install/#windows_1 to build MSVC compatible static or shared openblas
+FFTW is easy to build just run build_fftw.bat from cmd.
+OpenBLAS build needs to be performed from an Anaconda prompt.

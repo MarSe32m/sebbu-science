@@ -1,0 +1,36 @@
+{
+    "schemaVersion": "1.0",
+    "artifacts": {
+        "COpenBLAS": {
+            "type": "staticLibrary",
+            "version": "0.3.30",
+            "variants": [
+                {
+                    "path": "lib/linux/libopenblasp-r0.3.30.dev-x86_64-gnu.a",
+                    "supportedTriples": ["x86_64-unknown-linux-gnu"],
+                    "staticLibraryMetadata": {
+                        "headerPaths": ["include/linux"],
+                        "moduleMapPath": "include/linux/module.modulemap"
+                    }
+                },
+                {
+                    "path": "lib/linux/libopenblasp-r0.3.30.dev-x86_64-musl.a",
+                    "supportedTriples": ["x86_64-swift-linux-musl"],
+                    "staticLibraryMetadata": {
+                        "headerPaths": ["include/linux"],
+                        "moduleMapPath": "include/linux/module.modulemap"
+                    }
+                },
+                
+                {
+                    "path": "lib/windows/openblas.lib",
+                    "supportedTriples": ["x86_64-unknown-windows-msvc"],
+                    "staticLibraryMetadata": {
+                        "headerPaths": ["include/windows"],
+                        "moduleMapPath": "include/windows/module.modulemap"
+                    }
+                }
+            ]
+        }
+    }
+}

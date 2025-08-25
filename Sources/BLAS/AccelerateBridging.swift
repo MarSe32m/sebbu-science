@@ -1,5 +1,5 @@
 //
-//  static functionLoading.swift
+//  AccelerateBridging.swift
 //  sebbu-science
 //
 //  Created by Sebastian Toivonen on 25.4.2025.

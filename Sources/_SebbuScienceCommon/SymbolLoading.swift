@@ -10,6 +10,8 @@ import WinSDK
 #elseif canImport(Glibc)
 import Glibc
 // Musl doesn't support dynamic library loading
+#elseif canImport(Musl)
+import Musl
 #elseif canImport(Darwin)
 import Darwin
 #endif

@@ -5,6 +5,7 @@
 //  Created by Sebastian Toivonen on 3.5.2025.
 //
 import CMath
+import RealModule
 
 public extension Double {
     @inlinable

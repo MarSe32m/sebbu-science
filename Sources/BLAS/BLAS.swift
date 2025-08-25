@@ -14,7 +14,7 @@ import Glibc
 #endif
 
 #if os(Windows) || os(Linux)
-import COpenBLAS
+import DynamicCOpenBLAS
 #elseif os(macOS)
 import Accelerate
 #else
