@@ -94,10 +94,12 @@ public extension Matrix<Complex<Float>> {
         let N = blasint(elements.count)
         cblas_ccopy(N, other.elements, 1, &elements, 1)
         #elseif canImport(Accelerate)
-        if let ccopy = BLAS.ccopy {
-            let N = cblas_int(elements.count)
-            ccopy(N, other.elements, 1, &elements, 1)
-        } 
+        let N = blasint(elements.count)
+        other.elements.withUnsafeBufferPointer { otherElements in 
+            elements.withUnsafeMutableBufferPointer { elements in 
+                cblas_ccopy(N, .init(otherElements.baseAddress), 1, .init(elements.baseAddress), 1)
+            }
+        }
         #else
         for i in 0..<elements.count {
             elements[i] = other.elements[i]

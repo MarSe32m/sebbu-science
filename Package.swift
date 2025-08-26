@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "sebbu-science",
-    platforms: [.macOS(.v15)],
+    platforms: [.macOS(.v26)],
     products: [
         .library(name: "SebbuScience", targets: ["SebbuScience"]),
         .library(name: "CFFTW", targets: ["CFFTW"]),
@@ -47,7 +47,7 @@ let package = Package(
             name: "FFT",
             dependencies: [
                 .target(name: "_SebbuScienceCommon"),
-                //FIXME: Use static CFFTW on Windows also once https://github.com/swiftlang/swift-package-manager/issues/8657 is fixed
+                //FIXME: Use binaryTarget CFFTW on Windows also once https://github.com/swiftlang/swift-package-manager/issues/8657 is fixed
                 .target(name: "_CFFTWWindows", condition: .when(platforms: [.windows])),
                 .target(name: "CFFTW", condition: .when(platforms: [.linux])),
                 .product(name: "Numerics", package: "swift-numerics"),
@@ -93,7 +93,14 @@ let package = Package(
         ),
         .executableTarget(
             name: "Executable",
-            dependencies: ["SebbuScience"]
+            dependencies: ["SebbuScience"],
+            cSettings: [
+                .define("ACCELERATE_NEW_LAPACK", .when(platforms: [.macOS])),
+                .define("ACCELERATE_LAPACK_ILP64", .when(platforms: [.macOS]))
+            ],
+            linkerSettings: [
+                .linkedFramework("Accelerate", .when(platforms: [.macOS]))
+            ]
         ),
         //FIXME: Remove this and use static COpenBLAS on Windows once https://github.com/swiftlang/swift-package-manager/issues/8657 is fixed
         .target(
@@ -113,7 +120,14 @@ let package = Package(
         ),
         .testTarget(
             name: "SebbuScienceTests",
-            dependencies: ["SebbuScience"]
+            dependencies: ["SebbuScience"],
+            cSettings: [
+                .define("ACCELERATE_NEW_LAPACK", .when(platforms: [.macOS])),
+                .define("ACCELERATE_LAPACK_ILP64", .when(platforms: [.macOS]))
+            ],
+            linkerSettings: [
+                .linkedFramework("Accelerate", .when(platforms: [.macOS]))
+            ]
         ),
     ]
 )

@@ -47,7 +47,7 @@ public extension Vector<Double> {
     func dotSymmetric(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         if matrix.rows &* matrix.columns > 400 {
             let layout = CblasRowMajor
             // Use lower since we want X*A
@@ -58,18 +58,6 @@ public extension Vector<Double> {
             cblas_dsymv(layout, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
             return
         }
-        #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if matrix.rows &* matrix.columns > 400, let dsymv = BLAS.dsymv {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            // Use lower since we want X*A
-            let uplo = BLAS.UpperLower.lower.rawValue
-            let n = cblas_int(matrix.rows)
-            let lda = n
-            let beta: T = .zero
-            dsymv(layout, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
-            return
-        } 
         #endif
         //TODO: Implement vector - hermitian matrix multiply (default implementation)
         _dot(matrix, multiplied: multiplied, into: &into)
@@ -79,7 +67,7 @@ public extension Vector<Double> {
     func dotSymmetric(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         if matrix.rows &* matrix.columns > 400 {
             let layout = CblasRowMajor
             // Use lower since we want X*A
@@ -90,18 +78,6 @@ public extension Vector<Double> {
             cblas_dsymv(layout, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
             return
         }
-        #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if matrix.rows &* matrix.columns > 400, let dsymv = BLAS.dsymv {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            // Use lower since we want X*A
-            let uplo = BLAS.UpperLower.lower.rawValue
-            let n = cblas_int(matrix.rows)
-            let lda = n
-            let beta: T = 1.0
-            dsymv(layout, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
-            return
-        } 
         #endif
         //TODO: Implement vector - hermitian matrix multiply (default implementation)
         _dot(matrix, multiplied: multiplied, addingInto: &into)
@@ -140,7 +116,7 @@ public extension Vector<Float> {
     func dotSymmetric(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         if matrix.rows &* matrix.columns > 400 {
             let layout = CblasRowMajor
             // Use lower since we want X*A
@@ -151,18 +127,6 @@ public extension Vector<Float> {
             cblas_ssymv(layout, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
             return
         }
-        #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if matrix.rows &* matrix.columns > 400, let ssymv = BLAS.ssymv {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            // Use lower since we want X*A
-            let uplo = BLAS.UpperLower.lower.rawValue
-            let n = cblas_int(matrix.rows)
-            let lda = n
-            let beta: T = .zero
-            ssymv(layout, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
-            return
-        } 
         #endif
         //TODO: Implement vector - hermitian matrix multiply (default implementation)
         _dot(matrix, multiplied: multiplied, into: &into)
@@ -172,7 +136,7 @@ public extension Vector<Float> {
     func dotSymmetric(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         if matrix.rows &* matrix.columns > 400 {
             let layout = CblasRowMajor
             // Use lower since we want X*A
@@ -183,18 +147,6 @@ public extension Vector<Float> {
             cblas_ssymv(layout, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
             return
         }
-        #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if matrix.rows &* matrix.columns > 400, let ssymv = BLAS.ssymv {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            // Use lower since we want X*A
-            let uplo = BLAS.UpperLower.lower.rawValue
-            let n = cblas_int(matrix.rows)
-            let lda = n
-            let beta: T = 1.0
-            ssymv(layout, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
-            return
-        } 
         #endif
         //TODO: Implement vector - hermitian matrix multiply (default implementation)
         _dot(matrix, multiplied: multiplied, addingInto: &into)
@@ -209,21 +161,12 @@ public func vecSymmetricMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
         return
     }
-    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
     if matrixRows &* matrixColumns > 1000 {
         let order = CblasColMajor
         let uplo = CblasUpper
         let n = blasint(matrixRows)
         cblas_dsymv(order, uplo, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
-        return
-    } 
-    #elseif canImport(Accelerate)
-    #error("TODO: Implement")
-    if let dsymv = BLAS.dsymv, matrixRows &* matrixColumns > 1000 {
-        let order = BLAS.Order.columnMajor.rawValue
-        let uplo = BLAS.UpperLower.upper.rawValue
-        let n = cblas_int(matrixRows)
-        dsymv(order, uplo, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
         return
     } 
     #endif
@@ -244,21 +187,12 @@ public func vecSymmetricMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
         resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
     }
-    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
     if matrixRows &* matrixColumns > 1000 {
         let order = CblasColMajor
         let uplo = CblasUpper
         let n = blasint(matrixRows)
         cblas_ssymv(order, uplo, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
-        return
-    }
-    #elseif canImport(Accelerate)
-    #error("TODO: Implement")
-    if let ssymv = BLAS.ssymv, matrixRows &* matrixColumns > 1000 {
-        let order = BLAS.Order.columnMajor.rawValue
-        let uplo = BLAS.UpperLower.upper.rawValue
-        let n = cblas_int(matrixRows)
-        ssymv(order, uplo, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
         return
     }
     #endif

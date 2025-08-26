@@ -5,7 +5,7 @@ import FFT
 @main
 struct Main {
     public static func main() {
-        print("Hello world")
+        print("Hello world 2")
         let mat = Matrix<Complex<Double>>(elements: [Complex(1,2), Complex(2,1), Complex(1,2),
                                                      Complex(1,2), Complex(2,1), Complex(1,2),
                                                      Complex(1,2), Complex(2,1), Complex(1,3) ], rows: 3, columns: 3)

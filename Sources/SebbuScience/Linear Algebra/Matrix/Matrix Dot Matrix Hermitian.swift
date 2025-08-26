@@ -105,24 +105,25 @@ public extension Matrix<Complex<Double>> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        #error("TODO: Reimplement")
-        if let zhemm = BLAS.zhemm {
-            let order = BLAS.Order.rowMajor.rawValue
-            let _side = hermitianSide == .left ? BLAS.Side.left.rawValue : BLAS.Side.right.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let A = hermitianSide == .left ? self : other
-            let B = hermitianSide == .right ? self : other
-            let m = cblas_int(A.rows), n = cblas_int(B.columns)
-            let beta: T = .zero
-            let lda = cblas_int(columns), ldb = n, ldc = n
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    zhemm(order, _side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        let order = CblasRowMajor
+        let side = hermitianSide == .left ? CblasLeft : CblasRight
+        let uplo = CblasUpper
+        let A = hermitianSide == .left ? self : other
+        let B = hermitianSide == .right ? self : other
+        let m = blasint(A.rows), n = blasint(B.columns)
+        let beta: T = .zero
+        let lda = blasint(columns), ldb = n, ldc = n
+        withUnsafePointer(to: multiplied) { alpha in 
+            withUnsafePointer(to: beta) { beta in 
+                A.elements.withUnsafeBufferPointer { A in 
+                    B.elements.withUnsafeBufferPointer { B in 
+                        into.elements.withUnsafeMutableBufferPointer { intoElements in 
+                            cblas_zhemm(order, side, uplo, m, n, .init(alpha), .init(A.baseAddress), lda, .init(B.baseAddress), ldb, .init(beta), .init(intoElements.baseAddress), ldc)
+                        }
+                    }
                 }
             }
-        } else {
-            //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm
-            _dot(other, multiplied: multiplied, into: &into)
+
         }
         #else
         //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm
@@ -150,27 +151,27 @@ public extension Matrix<Complex<Double>> {
             }
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let zhemm = BLAS.zhemm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
-            let order = BLAS.Order.rowMajor.rawValue
-            let _side = hermitianSide == .left ? BLAS.Side.left.rawValue : BLAS.Side.right.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let A = hermitianSide == .left ? self : other
-            let B = hermitianSide == .right ? self : other
-            let m = cblas_int(A.rows), n = cblas_int(B.columns)
-            let beta: T = .one
-            let lda = cblas_int(columns), ldb = n, ldc = n
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    zhemm(order, _side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        let order = CblasRowMajor
+        let side = hermitianSide == .left ? CblasLeft : CblasRight
+        let uplo = CblasUpper
+        let A = hermitianSide == .left ? self : other
+        let B = hermitianSide == .right ? self : other
+        let m = blasint(A.rows), n = blasint(B.columns)
+        let beta: T = .one
+        let lda = blasint(columns), ldb = n, ldc = n
+        withUnsafePointer(to: multiplied) { alpha in
+            withUnsafePointer(to: beta) { beta in
+                A.elements.withUnsafeBufferPointer { A in 
+                    B.elements.withUnsafeBufferPointer { B in 
+                        into.elements.withUnsafeMutableBufferPointer { intoElements in 
+                            cblas_zhemm(order, side, uplo, m, n, .init(alpha), .init(A.baseAddress), lda, .init(B.baseAddress), ldb, .init(beta), .init(intoElements.baseAddress), ldc)
+                        }
+                    }
                 }
             }
-        } else {
-            //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm
-            _dot(other, multiplied: multiplied, addingInto: &into)
         }
         #else
         //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm
@@ -265,27 +266,27 @@ public extension Matrix<Complex<Float>> {
             }
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let chemm = BLAS.chemm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
-            let order = BLAS.Order.rowMajor.rawValue
-            let _side = hermitianSide == .left ? BLAS.Side.left.rawValue : BLAS.Side.right.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let A = hermitianSide == .left ? self : other
-            let B = hermitianSide == .right ? self : other
-            let m = cblas_int(A.rows), n = cblas_int(B.columns)
-            let beta: T = .zero
-            let lda = cblas_int(columns), ldb = n, ldc = n
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    chemm(order, _side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        let order = CblasRowMajor
+        let side = hermitianSide == .left ? CblasLeft : CblasRight
+        let uplo = CblasUpper
+        let A = hermitianSide == .left ? self : other
+        let B = hermitianSide == .right ? self : other
+        let m = blasint(A.rows), n = blasint(B.columns)
+        let beta: T = .zero
+        let lda = blasint(columns), ldb = n, ldc = n
+        withUnsafePointer(to: multiplied) { alpha in
+            withUnsafePointer(to: beta) { beta in
+                A.elements.withUnsafeBufferPointer { A in 
+                    B.elements.withUnsafeBufferPointer { B in 
+                        into.elements.withUnsafeMutableBufferPointer { intoElements in 
+                            cblas_chemm(order, side, uplo, m, n, .init(alpha), .init(A.baseAddress), lda, .init(B.baseAddress), ldb, .init(beta), .init(intoElements.baseAddress), ldc)
+                        }
+                    }
                 }
             }
-        } else {
-            //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm
-            _dot(other, multiplied: multiplied, into: &into)
         }
         #else
         //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm
@@ -313,27 +314,27 @@ public extension Matrix<Complex<Float>> {
             }
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let chemm = BLAS.chemm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
-            let order = BLAS.Order.rowMajor.rawValue
-            let _side = hermitianSide == .left ? BLAS.Side.left.rawValue : BLAS.Side.right.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let A = hermitianSide == .left ? self : other
-            let B = hermitianSide == .right ? self : other
-            let m = cblas_int(A.rows), n = cblas_int(B.columns)
-            let beta: T = .one
-            let lda = cblas_int(columns), ldb = n, ldc = n
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    chemm(order, _side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        let order = CblasRowMajor
+        let side = hermitianSide == .left ? CblasLeft : CblasRight
+        let uplo = CblasUpper
+        let A = hermitianSide == .left ? self : other
+        let B = hermitianSide == .right ? self : other
+        let m = blasint(A.rows), n = blasint(B.columns)
+        let beta: T = .one
+        let lda = blasint(columns), ldb = n, ldc = n
+        withUnsafePointer(to: multiplied) { alpha in
+            withUnsafePointer(to: beta) { beta in
+                A.elements.withUnsafeBufferPointer { A in 
+                    B.elements.withUnsafeBufferPointer { B in 
+                        into.elements.withUnsafeMutableBufferPointer { intoElements in 
+                            cblas_chemm(order, side, uplo, m, n, .init(alpha), .init(A.baseAddress), lda, .init(B.baseAddress), ldb, .init(beta), .init(intoElements.baseAddress), ldc)
+                        }
+                    }
                 }
             }
-        } else {
-            //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm
-            _dot(other, multiplied: multiplied, addingInto: &into)
         }
         #else
         //TODO: Implement hermitian matrix-matrix multiplication, for now fall back to gemm

@@ -10,7 +10,10 @@
 import COpenBLAS
 #elseif canImport(_COpenBLASWindows)
 import _COpenBLASWindows
+#elseif canImport(Accelerate)
+import Accelerate
 #endif
+
 import NumericsExtensions
 
 //MARK: Addition for AlgebraicField
@@ -101,19 +104,11 @@ public extension Matrix<Double> {
 
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
-        #if canImport(COpenBlas) || canImport(_COpenBLASWindows)
+        precondition(rows == other.rows)
+        precondition(columns == other.columns)
+        #if canImport(COpenBlas) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         let N = blasint(elements.count)
         cblas_daxpy(N, multiplied, other.elements, 1, &elements, 1)
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let daxpy = BLAS.daxpy {
-            precondition(rows == other.rows)
-            precondition(columns == other.columns)
-            let N = cblas_int(elements.count)
-            daxpy(N, multiplied, other.elements, 1, &elements, 1)
-        } else {
-            _add(other, multiplied: multiplied)
-        }
         #else
         _add(other, multiplied: multiplied)
         #endif
@@ -145,17 +140,9 @@ public extension Matrix<Float> {
     mutating func add(_ other: Self, multiplied: T) {
         precondition(rows == other.rows)
         precondition(columns == other.columns)
-        #if canImport(COpenBlas) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBlas) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         let N = blasint(elements.count)
         cblas_saxpy(N, multiplied, other.elements, 1, &elements, 1)
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let saxpy = BLAS.saxpy {
-            let N = cblas_int(elements.count)
-            saxpy(N, multiplied, other.elements, 1, &elements, 1)
-        } else {
-            _add(other, multiplied: multiplied)
-        }
         #else
         _add(other, multiplied: multiplied)
         #endif
@@ -193,14 +180,15 @@ public extension Matrix<Complex<Double>> {
             cblas_zaxpy(N, alpha, other.elements, 1, &elements, 1)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let zaxpy = BLAS.zaxpy {
-            let N = cblas_int(elements.count)
-            withUnsafePointer(to: multiplied) { alpha in
-                zaxpy(N, alpha, other.elements, 1, &elements, 1)
+        precondition(rows == other.rows)
+        precondition(columns == other.columns)
+        let N = blasint(elements.count)
+        withUnsafePointer(to: multiplied) { alpha in 
+            other.elements.withUnsafeBufferPointer { otherElements in 
+                elements.withUnsafeMutableBytes { elements in 
+                    cblas_zaxpy(N, .init(alpha), .init(otherElements.baseAddress), 1, .init(elements.baseAddress), 1)
+                }
             }
-        } else {
-            _add(other, multiplied: multiplied)
         }
         #else
         _add(other, multiplied: multiplied)
@@ -246,16 +234,15 @@ public extension Matrix<Complex<Float>> {
             cblas_caxpy(N, alpha, other.elements, 1, &elements, 1)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let caxpy = BLAS.caxpy {
-            precondition(rows == other.rows)
-            precondition(columns == other.columns)
-            let N = cblas_int(elements.count)
-            withUnsafePointer(to: multiplied) { alpha in
-                caxpy(N, alpha, other.elements, 1, &elements, 1)
+        precondition(rows == other.rows)
+        precondition(columns == other.columns)
+        let N = blasint(elements.count)
+        withUnsafePointer(to: multiplied) { alpha in 
+            other.elements.withUnsafeBufferPointer { otherElements in 
+                elements.withUnsafeMutableBytes { elements in 
+                    cblas_caxpy(N, .init(alpha), .init(otherElements.baseAddress), 1, .init(elements.baseAddress), 1)
+                }
             }
-        } else {
-            _add(other, multiplied: multiplied)
         }
         #else
         _add(other, multiplied: multiplied)

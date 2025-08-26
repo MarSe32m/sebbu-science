@@ -110,17 +110,10 @@ public extension Vector where T: AlgebraicField {
 public extension Vector<Double> {
     @inlinable
     func dot(_ other: Self) -> T {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         precondition(count == other.count)
         let N = blasint(count)
         return cblas_ddot(N, components, 1, other.components, 1)
-        #elseif canImport(Accelerate)
-        precondition(count == other.count)
-        #error("TODO: Implement")
-        if let ddot = BLAS.ddot {
-            let N = cblas_int(count)
-            return ddot(N, components, 1, other.components, 1)
-        }
         #else
         return _dot(other)
         #endif
@@ -137,17 +130,10 @@ public extension Vector<Double> {
 public extension Vector<Float> {
     @inlinable
     func dot(_ other: Self) -> T {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         precondition(count == other.count)
         let N = blasint(count)
         return cblas_sdot(N, components, 1, other.components, 1)
-        #elseif canImport(Accelerate)
-        precondition(count == other.count)
-        #error("TODO: Implement")
-        if let sdot = BLAS.sdot {
-            let N = cblas_int(count)
-            return sdot(N, components, 1, other.components, 1)
-        } 
         #else
         return _dot(other)
         #endif
@@ -172,13 +158,16 @@ public extension Vector<Complex<Double>> {
         return result
         #elseif canImport(Accelerate)
         precondition(count == other.count)
-        #error("TODO: Implement")
-        if let zdotu_sub = BLAS.zdotu_sub {
-            let N = cblas_int(count)
-            var result: T = .zero
-            zdotu_sub(N, components, 1, other.components, 1, &result)
-            return result
-        } 
+        let N = blasint(count)
+        var result: T = .zero
+        withUnsafeMutablePointer(to: &result) { result in
+            components.withUnsafeBufferPointer { components in 
+                other.components.withUnsafeBufferPointer { otherComponents in 
+                    cblas_zdotu_sub(N, .init(components.baseAddress), 1, .init(otherComponents.baseAddress), 1, .init(result))
+                }
+            }
+        }
+        return result
         #else
         return _dot(other)
         #endif
@@ -194,13 +183,16 @@ public extension Vector<Complex<Double>> {
         return result
         #elseif canImport(Accelerate)
         precondition(count == other.count)
-        #error("TODO: Implement")
-        if let zdotc_sub = BLAS.zdotc_sub {
-            let N = cblas_int(count)
-            var result: T = .zero
-            zdotc_sub(N, components, 1, other.components, 1, &result)
-            return result
+        let N = blasint(count)
+        var result: T = .zero
+        withUnsafeMutablePointer(to: &result) { result in
+            components.withUnsafeBufferPointer { components in 
+                other.components.withUnsafeBufferPointer { otherComponents in 
+                    cblas_zdotc_sub(N, .init(components.baseAddress), 1, .init(otherComponents.baseAddress), 1, .init(result))
+                }
+            }
         }
+        return result
         #else
         return _inner(other)
         #endif
@@ -242,13 +234,16 @@ public extension Vector<Complex<Float>> {
         return result
         #elseif canImport(Accelerate)
         precondition(count == other.count)
-        #error("TODO: Implement")
-        if let cdotu_sub = BLAS.cdotu_sub {
-            let N = cblas_int(count)
-            var result: T = .zero
-            cdotu_sub(N, components, 1, other.components, 1, &result)
-            return result
-        } 
+        let N = blasint(count)
+        var result: T = .zero
+        withUnsafeMutablePointer(to: &result) { result in
+            components.withUnsafeBufferPointer { components in 
+                other.components.withUnsafeBufferPointer { otherComponents in 
+                    cblas_cdotu_sub(N, .init(components.baseAddress), 1, .init(otherComponents.baseAddress), 1, .init(result))
+                }
+            }
+        }
+        return result
         #else
         return _dot(other)
         #endif
@@ -263,14 +258,17 @@ public extension Vector<Complex<Float>> {
         cblas_cdotc_sub(N, components, 1, other.components, 1, &result)
         return result
         #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if let cdotc_sub = BLAS.cdotc_sub {
-            precondition(count == other.count)
-            let N = cblas_int(count)
-            var result: T = .zero
-            cdotc_sub(N, components, 1, other.components, 1, &result)
-            return result
-        } 
+        precondition(count == other.count)
+        let N = blasint(count)
+        var result: T = .zero
+        withUnsafeMutablePointer(to: &result) { result in
+            components.withUnsafeBufferPointer { components in 
+                other.components.withUnsafeBufferPointer { otherComponents in 
+                    cblas_cdotc_sub(N, .init(components.baseAddress), 1, .init(otherComponents.baseAddress), 1, .init(result))
+                }
+            }
+        }
+        return result
         #else
         return _inner(other)
         #endif

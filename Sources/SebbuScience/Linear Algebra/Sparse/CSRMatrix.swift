@@ -383,11 +383,10 @@ public extension CSRMatrix<Complex<Double>> {
             cblas_zscal(N, alpha, &values, 1)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let zscal = BLAS.zscal {
-            let N = cblas_int(values.count)
-            withUnsafePointer(to: by) { alpha in
-                zscal(N, alpha, &values, 1)
+        let N = blasint(values.count)
+        withUnsafePointer(to: by) { alpha in
+            values.withUnsafeMutableBufferPointer { values in 
+                cblas_zscal(N, .init(alpha), .init(values.baseAddress), 1)
             }
         }
         #else

@@ -7,7 +7,6 @@
 
 import NumericsExtensions
 
-
 //MARK: Subtraction for AlgebraicField
 public extension Matrix where T: AlgebraicField {
     @inlinable

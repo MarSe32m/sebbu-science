@@ -93,7 +93,7 @@ public extension Matrix<Double> {
     
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, into: inout Self) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
@@ -105,24 +105,6 @@ public extension Matrix<Double> {
         let m = blasint(A.rows), n = blasint(B.columns)
         let lda = blasint(columns), ldb = n, ldc = n
         cblas_dsymm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, .zero, &into.elements, ldc)
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let dsymm = BLAS.dsymm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
-            let order = BLAS.Order.rowMajor.rawValue
-            let _side = symmetricSide == .left ? BLAS.Side.left.rawValue : BLAS.Side.right.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let A = symmetricSide == .left ? self : other
-            let B = symmetricSide == .right ? self : other
-            let m = cblas_int(A.rows), n = cblas_int(B.columns)
-            let lda = cblas_int(columns), ldb = n, ldc = n
-            dsymm(order, _side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, .zero, &into.elements, ldc)
-        } else {
-            //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
-            _dot(other, multiplied: multiplied, into: &into)
-        }
         #else
         //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
         _dot(other, multiplied: multiplied, into: &into)
@@ -131,7 +113,7 @@ public extension Matrix<Double> {
     
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, addingInto into: inout Self) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
@@ -143,24 +125,6 @@ public extension Matrix<Double> {
         let m = blasint(A.rows), n = blasint(B.columns)
         let lda = blasint(columns), ldb = n, ldc = n
         cblas_dsymm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, 1.0, &into.elements, ldc)
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let dsymm = BLAS.dsymm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
-            let order = BLAS.Order.rowMajor.rawValue
-            let _side = symmetricSide == .left ? BLAS.Side.left.rawValue : BLAS.Side.right.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let A = symmetricSide == .left ? self : other
-            let B = symmetricSide == .right ? self : other
-            let m = cblas_int(A.rows), n = cblas_int(B.columns)
-            let lda = cblas_int(columns), ldb = n, ldc = n
-            dsymm(order, _side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, 1.0, &into.elements, ldc)
-        } else {
-            //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
-            _dot(other, multiplied: multiplied, addingInto: &into)
-        }
         #else
         //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
         _dot(other, multiplied: multiplied, addingInto: &into)
@@ -246,7 +210,7 @@ public extension Matrix<Float> {
     
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, into: inout Self) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
@@ -258,24 +222,6 @@ public extension Matrix<Float> {
         let m = blasint(A.rows), n = blasint(B.columns)
         let lda = blasint(columns), ldb = n, ldc = n
         cblas_ssymm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, .zero, &into.elements, ldc)
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let ssymm = BLAS.ssymm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
-            let order = BLAS.Order.rowMajor.rawValue
-            let _side = symmetricSide == .left ? BLAS.Side.left.rawValue : BLAS.Side.right.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let A = symmetricSide == .left ? self : other
-            let B = symmetricSide == .right ? self : other
-            let m = cblas_int(A.rows), n = cblas_int(B.columns)
-            let lda = cblas_int(columns), ldb = n, ldc = n
-            ssymm(order, _side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, .zero, &into.elements, ldc)
-        } else {
-            //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
-            _dot(other, multiplied: multiplied, into: &into)
-        }
         #else
         //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
         _dot(other, multiplied: multiplied, into: &into)
@@ -284,7 +230,7 @@ public extension Matrix<Float> {
     
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, addingInto into: inout Self) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
@@ -296,24 +242,6 @@ public extension Matrix<Float> {
         let m = blasint(A.rows), n = blasint(B.columns)
         let lda = blasint(columns), ldb = n, ldc = n
         cblas_ssymm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, 1.0, &into.elements, ldc)
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let ssymm = BLAS.ssymm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
-            let order = BLAS.Order.rowMajor.rawValue
-            let _side = symmetricSide == .left ? BLAS.Side.left.rawValue : BLAS.Side.right.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let A = symmetricSide == .left ? self : other
-            let B = symmetricSide == .right ? self : other
-            let m = cblas_int(A.rows), n = cblas_int(B.columns)
-            let lda = cblas_int(columns), ldb = n, ldc = n
-            ssymm(order, _side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, 1.0, &into.elements, ldc)
-        } else {
-            //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
-            _dot(other, multiplied: multiplied, addingInto: &into)
-        }
         #else
         //TODO: Implement symmetric matrix-matrix multiplication, for now fall back to gemm
         _dot(other, multiplied: multiplied, addingInto: &into)

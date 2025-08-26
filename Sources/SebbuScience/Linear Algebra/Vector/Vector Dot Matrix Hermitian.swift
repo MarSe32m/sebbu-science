@@ -63,23 +63,26 @@ public extension Vector<Complex<Double>> {
             return
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if matrix.rows &* matrix.columns > 400, let zhemv = BLAS.zhemv {
-            precondition(matrix.rows == count)
-            precondition(matrix.columns == into.count)
+        if matrix.rows &* matrix.columns > 400 {
             // We use column major since we want to use the transpose of the matrix here
-            let order = BLAS.Layout.columnMajor.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let n = cblas_int(matrix.rows)
+            let order = CblasColMajor
+            let uplo = CblasUpper
+            let n = blasint(matrix.rows)
             let lda = n
             let beta: T = .zero
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    zhemv(order, uplo, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+                    matrix.elements.withUnsafeBufferPointer { matrix in 
+                        components.withUnsafeBufferPointer { components in 
+                            into.components.withUnsafeMutableBufferPointer { intoComponents in
+                                cblas_zhemv(order, uplo, n, .init(alpha), .init(matrix.baseAddress), lda, .init(components.baseAddress), 1, .init(beta), .init(intoComponents.baseAddress), 1)
+                            }
+                        }
+                    }
                 }
             }
             return
-        } 
+        }
         #endif
         //TODO: Implement vector - hermitian matrix multiply (default implementation)
         _dot(matrix, multiplied: multiplied, into: &into)
@@ -105,23 +108,28 @@ public extension Vector<Complex<Double>> {
             return
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if matrix.rows &* matrix.columns > 400, let zhemv = BLAS.zhemv {
+        if matrix.rows &* matrix.columns > 400 {
             precondition(matrix.rows == count)
             precondition(matrix.columns == into.count)
             // We use column major since we want to use the transpose of the matrix here
-            let order = BLAS.Layout.columnMajor.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let n = cblas_int(matrix.rows)
+            let order = CblasColMajor
+            let uplo = CblasUpper
+            let n = blasint(matrix.rows)
             let lda = n
             let beta: T = .one
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    zhemv(order, uplo, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+                    matrix.elements.withUnsafeBufferPointer { matrix in 
+                        components.withUnsafeBufferPointer { components in 
+                            into.components.withUnsafeMutableBufferPointer { intoComponents in
+                                cblas_zhemv(order, uplo, n, .init(alpha), .init(matrix.baseAddress), lda, .init(components.baseAddress), 1, .init(beta), .init(intoComponents.baseAddress), 1)
+                            }
+                        }
+                    }
                 }
             }
             return
-        } 
+        }
         #endif
         //TODO: Implement vector - hermitian matrix multiply (default implementation)
         _dot(matrix, multiplied: multiplied, addingInto: &into)
@@ -176,23 +184,26 @@ public extension Vector<Complex<Float>> {
             return
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if matrix.rows &* matrix.columns > 400, let chemv = BLAS.chemv {
-            precondition(matrix.rows == count)
-            precondition(matrix.columns == into.count)
+        if matrix.rows &* matrix.columns > 400 {
             // We use column major since we want the tranpose of the matrix here
-            let order = BLAS.Layout.columnMajor.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let n = cblas_int(matrix.rows)
+            let order = CblasColMajor
+            let uplo = CblasUpper
+            let n = blasint(matrix.rows)
             let lda = n
             let beta: T = .zero
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    chemv(order, uplo, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+                    matrix.elements.withUnsafeBufferPointer { matrix in 
+                        components.withUnsafeBufferPointer { components in 
+                            into.components.withUnsafeMutableBufferPointer { intoComponents in
+                                cblas_chemv(order, uplo, n, .init(alpha), .init(matrix.baseAddress), lda, .init(components.baseAddress), 1, .init(beta), .init(intoComponents.baseAddress), 1)
+                            }
+                        }
+                    }
                 }
             }
             return
-        } 
+        }
         #endif
         //TODO: Implement vector - hermitian matrix multiply (default implementation)
         _dot(matrix, multiplied: multiplied, into: &into)
@@ -218,17 +229,22 @@ public extension Vector<Complex<Float>> {
             return
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if matrix.rows &* matrix.columns > 400, let chemv = BLAS.chemv {
+        if matrix.rows &* matrix.columns > 400 {
             // We use column major since we want the tranpose of the matrix here
-            let order = BLAS.Layout.columnMajor.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let n = cblas_int(matrix.rows)
+            let order = CblasColMajor
+            let uplo = CblasUpper
+            let n = blasint(matrix.rows)
             let lda = n
             let beta: T = .one
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    chemv(order, uplo, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+                    matrix.elements.withUnsafeBufferPointer { matrix in 
+                        components.withUnsafeBufferPointer { components in 
+                            into.components.withUnsafeMutableBufferPointer { intoComponents in
+                                cblas_chemv(order, uplo, n, .init(alpha), .init(matrix.baseAddress), lda, .init(components.baseAddress), 1, .init(beta), .init(intoComponents.baseAddress), 1)
+                            }
+                        }
+                    }
                 }
             }
             return
@@ -260,18 +276,17 @@ public func vecHermitianMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
         return
     }
     #elseif canImport(Accelerate)
-    #error("TODO: Implement")
-    if let zhemv = BLAS.zhemv, matrixRows &* matrixColumns > 1000 {
-        let order = BLAS.Order.columnMajor.rawValue
-        let uplo = BLAS.UpperLower.upper.rawValue
-        let n = cblas_int(matrixRows)
+    if matrixRows &* matrixColumns > 1000 {
+        let order = CblasColMajor
+        let uplo = CblasUpper
+        let n = blasint(matrixRows)
         withUnsafePointer(to: multiplier) { alpha in
             withUnsafePointer(to: resultMultiplier) { beta in
-                zhemv(order, uplo, n, alpha, matrix, n, vector, 1, beta, resultVector, 1)
+                cblas_zhemv(order, uplo, n, .init(alpha), .init(matrix), n, .init(vector), 1, .init(beta), .init(resultVector), 1)
             }
         }
         return
-    } 
+    }
     #endif
     var result: Complex<Double> = .zero
     for i in 0..<matrixRows {
@@ -307,18 +322,17 @@ public func vecHermitianMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
         return
     }
     #elseif canImport(Accelerate)
-    #error("TODO: Implement")
-    if let chemv = BLAS.chemv, matrixRows &* matrixColumns > 1000 {
-        let order = BLAS.Order.columnMajor.rawValue
-        let uplo = BLAS.UpperLower.upper.rawValue
-        let n = cblas_int(matrixRows)
+    if matrixRows &* matrixColumns > 1000 {
+        let order = CblasColMajor
+        let uplo = CblasUpper
+        let n = blasint(matrixRows)
         withUnsafePointer(to: multiplier) { alpha in
             withUnsafePointer(to: resultMultiplier) { beta in
-                chemv(order, uplo, n, alpha, matrix, n, vector, 1, beta, resultVector, 1)
+                cblas_chemv(order, uplo, n, .init(alpha), .init(matrix), n, .init(vector), 1, .init(beta), .init(resultVector), 1)
             }
         }
         return
-    } 
+    }
     #endif
     var result: Complex<Float> = .zero
     for i in 0..<matrixRows {

@@ -100,15 +100,9 @@ public extension Vector<Double> {
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
         precondition(count == other.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         let N = blasint(count)
         cblas_daxpy(N, multiplied, other.components, 1, &components, 1)
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let daxpy = BLAS.daxpy {
-            let N = cblas_int(count)
-            daxpy(N, multiplied, other.components, 1, &components, 1)
-        }
         #else
         _add(other, multiplied: multiplied)
         #endif
@@ -140,15 +134,9 @@ public extension Vector<Float> {
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
         precondition(count == other.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         let N = blasint(count)
         cblas_saxpy(N, multiplied, other.components, 1, &components, 1)
-        #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if let saxpy = BLAS.saxpy {
-            let N = cblas_int(count)
-            saxpy(N, multiplied, other.components, 1, &components, 1)
-        }
         #else
         _add(other, multiplied: multiplied)
         #endif
@@ -185,11 +173,12 @@ public extension Vector<Complex<Double>> {
             cblas_zaxpy(N, alpha, other.components, 1, &components, 1)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if let zaxpy = BLAS.zaxpy {
-            let N = cblas_int(count)
-            withUnsafePointer(to: multiplied) { alpha in
-                zaxpy(N, alpha, other.components, 1, &components, 1)
+        let N = blasint(count)
+        withUnsafePointer(to: multiplied) { alpha in
+            other.components.withUnsafeBufferPointer { otherComponents in 
+                components.withUnsafeMutableBufferPointer { components in 
+                    cblas_zaxpy(N, .init(alpha), .init(otherComponents.baseAddress), 1, .init(components.baseAddress), 1)
+                }
             }
         }
         #else
@@ -234,11 +223,12 @@ public extension Vector<Complex<Float>> {
             cblas_caxpy(N, alpha, other.components, 1, &components, 1)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if let caxpy = BLAS.caxpy {
-            let N = cblas_int(count)
-            withUnsafePointer(to: multiplied) { alpha in
-                caxpy(N, alpha, other.components, 1, &components, 1)
+        let N = blasint(count)
+        withUnsafePointer(to: multiplied) { alpha in
+            other.components.withUnsafeBufferPointer { otherComponents in 
+                components.withUnsafeMutableBufferPointer { components in 
+                    cblas_caxpy(N, .init(alpha), .init(otherComponents.baseAddress), 1, .init(components.baseAddress), 1)
+                }
             }
         }
         #else

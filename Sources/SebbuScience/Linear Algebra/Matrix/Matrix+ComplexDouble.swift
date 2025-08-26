@@ -93,11 +93,12 @@ public extension Matrix<Complex<Double>> {
         let N = blasint(elements.count)
         cblas_zcopy(N, other.elements, 1, &elements, 1)
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let zcopy = BLAS.zcopy {
-            let N = cblas_int(elements.count)
-            zcopy(N, other.elements, 1, &elements, 1)
-        } 
+        let N = blasint(elements.count)
+        other.elements.withUnsafeBufferPointer { otherElements in 
+            elements.withUnsafeMutableBufferPointer { elements in 
+                cblas_zcopy(N, .init(otherElements.baseAddress), 1, .init(elements.baseAddress), 1)
+            }
+        }
         #else
         for i in 0..<elements.count {
             elements[i] = other.elements[i]

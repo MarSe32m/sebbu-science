@@ -87,17 +87,17 @@ public extension Matrix<Complex<Double>> {
             _dot(vector, multiplied: multiplied, into: into)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        //TODO: Benchmark when it is worth calling blas functions for this
-        if rows * columns > 400, let zhemv = BLAS.zhemv {
-            let order = BLAS.Order.rowMajor.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let N = cblas_int(rows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
             let lda = N
             let beta: T = .zero
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    zhemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_zhemv(order, uplo, N, .init(alpha), .init(elements.baseAddress), lda, .init(vector), 1, .init(beta), .init(into), 1)
+                    }
                 }
             }
         } else {
@@ -129,18 +129,18 @@ public extension Matrix<Complex<Double>> {
             _dot(vector, into: into)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        //TODO: Benchmark when it is worth calling blas functions for this
-        if rows * columns > 400, let zhemv = BLAS.zhemv {
-            let order = BLAS.Order.rowMajor.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let N = cblas_int(rows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
             let lda = N
             let alpha: T = .one
             let beta: T = .zero
             withUnsafePointer(to: alpha) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    zhemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_zhemv(order, uplo, N, .init(alpha), .init(elements.baseAddress), lda, .init(vector), 1, .init(beta), .init(into), 1)
+                    }
                 }
             }
         } else {
@@ -171,16 +171,17 @@ public extension Matrix<Complex<Double>> {
             _dot(vector, multiplied: multiplied, addingInto: into)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400, let zhemv = BLAS.zhemv {
-            let order = BLAS.Order.rowMajor.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let N = cblas_int(rows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
             let lda = N
             let beta: T = .one
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    zhemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_zhemv(order, uplo, N, .init(alpha), .init(elements.baseAddress), lda, .init(vector), 1, .init(beta), .init(into), 1)
+                    }
                 }
             }
         } else {
@@ -213,17 +214,18 @@ public extension Matrix<Complex<Double>> {
             _dot(vector, addingInto: into)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400, let zhemv = BLAS.zhemv {
-            let order = BLAS.Order.rowMajor.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let N = cblas_int(rows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
             let lda = N
             let alpha: T = .one
             let beta: T = .one
             withUnsafePointer(to: alpha) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    zhemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_zhemv(order, uplo, N, .init(alpha), .init(elements.baseAddress), lda, .init(vector), 1, .init(beta), .init(into), 1)
+                    }
                 }
             }
         } else {
@@ -309,17 +311,17 @@ public extension Matrix<Complex<Float>> {
             _dot(vector, multiplied: multiplied, into: into)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        //TODO: Benchmark when it is worth calling blas functions for this
-        if rows * columns > 400, let chemv = BLAS.chemv {
-            let order = BLAS.Order.rowMajor.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let N = cblas_int(rows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
             let lda = N
             let beta: T = .zero
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    chemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_chemv(order, uplo, N, .init(alpha), .init(elements.baseAddress), lda, .init(vector), 1, .init(beta), .init(into), 1)
+                    }
                 }
             }
         } else {
@@ -353,18 +355,18 @@ public extension Matrix<Complex<Float>> {
             _dot(vector, into: into)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        //TODO: Benchmark when it is worth calling blas functions for this
-        if rows * columns > 400, let chemv = BLAS.chemv {
-            let order = BLAS.Order.rowMajor.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let N = cblas_int(rows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
             let lda = N
             let alpha: T = .one
             let beta: T = .zero
             withUnsafePointer(to: alpha) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    chemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_chemv(order, uplo, N, .init(alpha), .init(elements.baseAddress), lda, .init(vector), 1, .init(beta), .init(into), 1)
+                    }
                 }
             }
         } else {
@@ -397,16 +399,17 @@ public extension Matrix<Complex<Float>> {
             _dot(vector, multiplied: multiplied, addingInto: into)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400, let chemv = BLAS.chemv {
-            let order = BLAS.Order.rowMajor.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let N = cblas_int(rows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
             let lda = N
             let beta: T = .one
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    chemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_chemv(order, uplo, N, .init(alpha), .init(elements.baseAddress), lda, .init(vector), 1, .init(beta), .init(into), 1)
+                    }
                 }
             }
         } else {
@@ -439,17 +442,18 @@ public extension Matrix<Complex<Float>> {
             _dot(vector, addingInto: into)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400, let chemv = BLAS.chemv {
-            let order = BLAS.Order.rowMajor.rawValue
-            let uplo = BLAS.UpperLower.upper.rawValue
-            let N = cblas_int(rows)
+        if rows * columns > 400 {
+            let order = CblasRowMajor
+            let uplo = CblasUpper
+            let N = blasint(rows)
             let lda = N
             let alpha: T = .one
             let beta: T = .one
             withUnsafePointer(to: alpha) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    chemv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_chemv(order, uplo, N, .init(alpha), .init(elements.baseAddress), lda, .init(vector), 1, .init(beta), .init(into), 1)
+                    }
                 }
             }
         } else {
@@ -484,14 +488,13 @@ public func hermitianMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
         return
     }
     #elseif canImport(Accelerate)
-    #error("TODO: Reimplement")
-    if let zhemv = BLAS.zhemv, matrixRows &* matrixColumns > 1000 {
-        let order = BLAS.Order.rowMajor.rawValue
-        let uplo = BLAS.UpperLower.upper.rawValue
-        let n = cblas_int(matrixRows)
+    if matrixRows &* matrixColumns > 1000 {
+        let order = CblasRowMajor
+        let uplo = CblasUpper
+        let n = blasint(matrixRows)
         withUnsafePointer(to: multiplier) { alpha in
             withUnsafePointer(to: resultMultiplier) { beta in
-                zhemv(order, uplo, n, alpha, matrix, n, vector, 1, beta, resultVector, 1)
+                cblas_zhemv(order, uplo, n, .init(alpha), .init(matrix), n, .init(vector), 1, .init(beta), .init(resultVector), 1)
             }
         }
         return
@@ -529,14 +532,13 @@ public func hermitianMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vector
         return
     }
     #elseif canImport(Accelerate)
-    #error("TODO: Reimplement")
-    if let chemv = BLAS.chemv, matrixRows &* matrixColumns > 1000 {
-        let order = BLAS.Order.rowMajor.rawValue
-        let uplo = BLAS.UpperLower.upper.rawValue
-        let n = cblas_int(matrixRows)
+    if matrixRows &* matrixColumns > 1000 {
+        let order = CblasRowMajor
+        let uplo = CblasUpper
+        let n = blasint(matrixRows)
         withUnsafePointer(to: multiplier) { alpha in
             withUnsafePointer(to: resultMultiplier) { beta in
-                chemv(order, uplo, n, alpha, matrix, n, vector, 1, beta, resultVector, 1)
+                cblas_chemv(order, uplo, n, .init(alpha), .init(matrix), n, .init(vector), 1, .init(beta), .init(resultVector), 1)
             }
         }
         return

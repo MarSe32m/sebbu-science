@@ -213,25 +213,14 @@ public extension Matrix<Double> {
     @inlinable
     @_transparent
     func dot(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
             let lda = n
             let alpha: T = 1.0
             cblas_dgemv(layout, trans, m, n, alpha, elements, lda, vector, 1, .zero, into, 1)
-            return
-        } 
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400 {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
-            let lda = n
-            let alpha: T = 1.0
-            dgemv(layout, trans, m, n, alpha, elements, lda, vector, 1, .zero, into, 1)
             return
         } 
         #endif
@@ -241,23 +230,13 @@ public extension Matrix<Double> {
     @inlinable
     @_transparent
     func dot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
             let lda = n
             cblas_dgemv(layout, trans, m, n, multiplied, elements, lda, vector, 1, .zero, into, 1)
-            return
-        }
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400 {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
-            let lda = n
-            dgemv(layout, trans, m, n, multiplied, elements, lda, vector, 1, .zero, into, 1)
             return
         }
         #endif
@@ -267,25 +246,14 @@ public extension Matrix<Double> {
     @inlinable
     @_transparent
     func dot(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
             let lda = n
             let alpha: T = 1.0
             cblas_dgemv(layout, trans, m, n, alpha, elements, lda, vector, 1, 1.0, into, 1)
-            return
-        }
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400 {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
-            let lda = n
-            let alpha: T = 1.0
-            dgemv(layout, trans, m, n, alpha, elements, lda, vector, 1, 1.0, into, 1)
             return
         }
         #endif
@@ -295,23 +263,13 @@ public extension Matrix<Double> {
     @inlinable
     @_transparent
     func dot(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
             let lda = n
             cblas_dgemv(layout, trans, m, n, multiplied, elements, lda, vector, 1, 1.0, into, 1)
-            return
-        }
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400 {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
-            let lda = n
-            dgemv(layout, trans, m, n, multiplied, elements, lda, vector, 1, 1.0, into, 1)
             return
         }
         #endif
@@ -369,8 +327,8 @@ public extension Matrix<Float> {
     
     @inlinable
     func dot(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
@@ -379,40 +337,19 @@ public extension Matrix<Float> {
             cblas_sgemv(layout, trans, m, n, alpha, elements, lda, vector, 1, .zero, into, 1)
             return
         }
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400 {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
-            let lda = n
-            let alpha: T = 1.0
-            sgemv(layout, trans, m, n, alpha, elements, lda, vector, 1, .zero, into, 1)
-            return
-        }
         #endif
         _dot(vector, into: into)
     }
     
     @inlinable
     func dot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
             let lda = n
             cblas_sgemv(layout, trans, m, n, multiplied, elements, lda, vector, 1, .zero, into, 1)
-            return
-        }
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400 {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
-            let lda = n
-            sgemv(layout, trans, m, n, multiplied, elements, lda, vector, 1, .zero, into, 1)
             return
         }
         #endif
@@ -421,8 +358,8 @@ public extension Matrix<Float> {
     
     @inlinable
     func dot(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
@@ -431,40 +368,19 @@ public extension Matrix<Float> {
             cblas_sgemv(layout, trans, m, n, alpha, elements, lda, vector, 1, 1.0, into, 1)
             return
         }
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400, let sgemv = BLAS.sgemv {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
-            let lda = n
-            let alpha: T = 1.0
-            sgemv(layout, trans, m, n, alpha, elements, lda, vector, 1, 1.0, into, 1)
-            return
-        }
         #endif
         _dot(vector, addingInto: into)
     }
     
     @inlinable
     func dot(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
             let lda = n
             cblas_sgemv(layout, trans, m, n, multiplied, elements, lda, vector, 1, 1.0, into, 1)
-            return
-        }
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400, let sgemv = BLAS.sgemv {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
-            let lda = n
-            sgemv(layout, trans, m, n, multiplied, elements, lda, vector, 1, 1.0, into, 1)
             return
         }
         #endif
@@ -523,7 +439,7 @@ public extension Matrix<Complex<Double>> {
     @inlinable
     func dot(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
         #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
@@ -539,18 +455,19 @@ public extension Matrix<Complex<Double>> {
             return
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400, let zgemv = BLAS.zgemv {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
+        if rows &* columns > 400 {
+            let layout = CblasRowMajor
+            let trans = CblasNoTrans
+            let m = blasint(rows), n = blasint(columns)
             let lda = n
             let alpha: T = .one
             let beta: T = .zero
-            let incx = cblas_int(1), incy = cblas_int(1)
+            let incx = blasint(1), incy = blasint(1)
             withUnsafePointer(to: alpha) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    zgemv(layout, trans, m, n, alpha, elements, lda, vector, incx, beta, into, incy)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_zgemv(layout, trans, m, n, .init(alpha), .init(elements.baseAddress), lda, .init(vector), incx, .init(beta), .init(into), incy)
+                    }
                 }
             }
             return
@@ -562,7 +479,7 @@ public extension Matrix<Complex<Double>> {
     @inlinable
     func dot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
         #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
@@ -577,17 +494,18 @@ public extension Matrix<Complex<Double>> {
             return
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400, let zgemv = BLAS.zgemv {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
+        if rows &* columns > 400 {
+            let layout = CblasRowMajor
+            let trans = CblasNoTrans
+            let m = blasint(rows), n = blasint(columns)
             let lda = n
             let beta: T = .zero
-            let incx = cblas_int(1), incy = cblas_int(1)
+            let incx = blasint(1), incy = blasint(1)
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    zgemv(layout, trans, m, n, alpha, elements, lda, vector, incx, beta, into, incy)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_zgemv(layout, trans, m, n, .init(alpha), .init(elements.baseAddress), lda, .init(vector), incx, .init(beta), .init(into), incy)
+                    }
                 }
             }
             return
@@ -599,7 +517,7 @@ public extension Matrix<Complex<Double>> {
     @inlinable
     func dot(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
         #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
@@ -615,18 +533,19 @@ public extension Matrix<Complex<Double>> {
             return
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400, let zgemv = BLAS.zgemv {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
+        if rows &* columns > 400 {
+            let layout = CblasRowMajor
+            let trans = CblasNoTrans
+            let m = blasint(rows), n = blasint(columns)
             let lda = n
             let alpha: T = .one
             let beta: T = .one
-            let incx = cblas_int(1), incy = cblas_int(1)
+            let incx = blasint(1), incy = blasint(1)
             withUnsafePointer(to: alpha) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    zgemv(layout, trans, m, n, alpha, elements, lda, vector, incx, beta, into, incy)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_zgemv(layout, trans, m, n, .init(alpha), .init(elements.baseAddress), lda, .init(vector), incx, .init(beta), .init(into), incy)
+                    }
                 }
             }
             return
@@ -638,7 +557,7 @@ public extension Matrix<Complex<Double>> {
     @inlinable
     func dot(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
         #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
@@ -653,17 +572,18 @@ public extension Matrix<Complex<Double>> {
             return
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400, let zgemv = BLAS.zgemv {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
+        if rows &* columns > 400 {
+            let layout = CblasRowMajor
+            let trans = CblasNoTrans
+            let m = blasint(rows), n = blasint(columns)
             let lda = n
             let beta: T = .one
-            let incx = cblas_int(1), incy = cblas_int(1)
+            let incx = blasint(1), incy = blasint(1)
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    zgemv(layout, trans, m, n, alpha, elements, lda, vector, incx, beta, into, incy)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_zgemv(layout, trans, m, n, .init(alpha), .init(elements.baseAddress), lda, .init(vector), incx, .init(beta), .init(into), incy)
+                    }
                 }
             }
             return
@@ -724,7 +644,7 @@ public extension Matrix<Complex<Float>> {
     @inlinable
     func dot(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
         #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
@@ -740,18 +660,19 @@ public extension Matrix<Complex<Float>> {
             return
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400, let cgemv = BLAS.cgemv {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
+        if rows &* columns > 400 {
+            let layout = CblasRowMajor
+            let trans = CblasNoTrans
+            let m = blasint(rows), n = blasint(columns)
             let lda = n
             let alpha: T = .one
             let beta: T = .zero
-            let incx = cblas_int(1), incy = cblas_int(1)
+            let incx = blasint(1), incy = blasint(1)
             withUnsafePointer(to: alpha) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    cgemv(layout, trans, m, n, alpha, elements, lda, vector, incx, beta, into, incy)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_cgemv(layout, trans, m, n, .init(alpha), .init(elements.baseAddress), lda, .init(vector), incx, .init(beta), .init(into), incy)
+                    }
                 }
             }
             return
@@ -763,7 +684,7 @@ public extension Matrix<Complex<Float>> {
     @inlinable
     func dot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
         #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
@@ -778,17 +699,18 @@ public extension Matrix<Complex<Float>> {
             return
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400, let cgemv = BLAS.cgemv {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
+        if rows &* columns > 400 {
+            let layout = CblasRowMajor
+            let trans = CblasNoTrans
+            let m = blasint(rows), n = blasint(columns)
             let lda = n
             let beta: T = .zero
-            let incx = cblas_int(1), incy = cblas_int(1)
+            let incx = blasint(1), incy = blasint(1)
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    cgemv(layout, trans, m, n, alpha, elements, lda, vector, incx, beta, into, incy)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_cgemv(layout, trans, m, n, .init(alpha), .init(elements.baseAddress), lda, .init(vector), incx, .init(beta), .init(into), incy)
+                    }
                 }
             }
             return
@@ -800,7 +722,7 @@ public extension Matrix<Complex<Float>> {
     @inlinable
     func dot(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
         #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
@@ -816,18 +738,19 @@ public extension Matrix<Complex<Float>> {
             return
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400, let cgemv = BLAS.cgemv {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
+        if rows &* columns > 400 {
+            let layout = CblasRowMajor
+            let trans = CblasNoTrans
+            let m = blasint(rows), n = blasint(columns)
             let lda = n
             let alpha: T = .one
             let beta: T = .one
-            let incx = cblas_int(1), incy = cblas_int(1)
+            let incx = blasint(1), incy = blasint(1)
             withUnsafePointer(to: alpha) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    cgemv(layout, trans, m, n, alpha, elements, lda, vector, incx, beta, into, incy)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_cgemv(layout, trans, m, n, .init(alpha), .init(elements.baseAddress), lda, .init(vector), incx, .init(beta), .init(into), incy)
+                    }
                 }
             }
             return
@@ -839,7 +762,7 @@ public extension Matrix<Complex<Float>> {
     @inlinable
     func dot(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
         #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if rows * columns > 400 {
+        if rows &* columns > 400 {
             let layout = CblasRowMajor
             let trans = CblasNoTrans
             let m = blasint(rows), n = blasint(columns)
@@ -854,17 +777,18 @@ public extension Matrix<Complex<Float>> {
             return
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if rows * columns > 400, let cgemv = BLAS.cgemv {
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let trans = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(columns)
+        if rows &* columns > 400 {
+            let layout = CblasRowMajor
+            let trans = CblasNoTrans
+            let m = blasint(rows), n = blasint(columns)
             let lda = n
             let beta: T = .one
-            let incx = cblas_int(1), incy = cblas_int(1)
+            let incx = blasint(1), incy = blasint(1)
             withUnsafePointer(to: multiplied) { alpha in
                 withUnsafePointer(to: beta) { beta in
-                    cgemv(layout, trans, m, n, alpha, elements, lda, vector, incx, beta, into, incy)
+                    elements.withUnsafeBufferPointer { elements in 
+                        cblas_cgemv(layout, trans, m, n, .init(alpha), .init(elements.baseAddress), lda, .init(vector), incx, .init(beta), .init(into), incy)
+                    }
                 }
             }
             return
@@ -883,23 +807,13 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
         return
     }
-    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
     if matrixRows &* matrixColumns > 1000 {
         let order = CblasRowMajor
         let transA = CblasNoTrans
         let m = blasint(matrixRows)
         let n = blasint(matrixColumns)
         cblas_dgemv(order, transA, m, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
-        return
-    }
-    #elseif canImport(Accelerate)
-    #error("TODO: Reimplement")
-    if let dgemv = BLAS.dgemv, matrixRows &* matrixColumns > 1000 {
-        let order = BLAS.Order.rowMajor.rawValue
-        let transA = BLAS.Transpose.noTranspose.rawValue
-        let m = cblas_int(matrixRows)
-        let n = cblas_int(matrixColumns)
-        dgemv(order, transA, m, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
         return
     }
     #endif
@@ -921,23 +835,13 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
         resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
         return
     }
-    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
     if matrixRows &* matrixColumns > 1000 {
         let order = CblasRowMajor
         let transA = CblasNoTrans
         let m = blasint(matrixRows)
         let n = blasint(matrixColumns)
         cblas_sgemv(order, transA, m, n, multiplier, matrix, n, vector, 1, .zero, resultVector, 1)
-        return
-    }
-    #elseif canImport(Accelerate)
-    #error("TODO: Reimplement")
-    if let sgemv = BLAS.sgemv, matrixRows &* matrixColumns > 1000 {
-        let order = BLAS.Order.rowMajor.rawValue
-        let transA = BLAS.Transpose.noTranspose.rawValue
-        let m = cblas_int(matrixRows)
-        let n = cblas_int(matrixColumns)
-        sgemv(order, transA, m, n, multiplier, matrix, n, vector, 1, .zero, resultVector, 1)
         return
     }
     #endif
@@ -973,15 +877,14 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
         return
     } 
     #elseif canImport(Accelerate)
-    #error("TODO: Reimplement")
-    if let zgemv = BLAS.zgemv, matrixRows &* matrixColumns > 1000 {
-        let order = BLAS.Order.rowMajor.rawValue
-        let transA = BLAS.Transpose.noTranspose.rawValue
-        let m = cblas_int(matrixRows)
-        let n = cblas_int(matrixColumns)
+    if matrixRows &* matrixColumns > 1000 {
+        let order = CblasRowMajor
+        let transA = CblasNoTrans
+        let m = blasint(matrixRows)
+        let n = blasint(matrixColumns)
         withUnsafePointer(to: multiplier) { alpha in
             withUnsafePointer(to: resultMultiplier) { beta in
-                zgemv(order, transA, m, n, alpha, matrix, n, vector, 1, beta, resultVector, 1)
+                cblas_zgemv(order, transA, m, n, .init(alpha), .init(matrix), n, .init(vector), 1, .init(beta), .init(resultVector), 1)
             }
         }
         return
@@ -1019,15 +922,14 @@ public func matVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponent
         return
     }
     #elseif canImport(Accelerate)
-    #error("TODO: Reimplement")
-    if let cgemv = BLAS.cgemv, matrixRows &* matrixColumns > 1000 {
-        let order = BLAS.Order.rowMajor.rawValue
-        let transA = BLAS.Transpose.noTranspose.rawValue
-        let m = cblas_int(matrixRows)
-        let n = cblas_int(matrixColumns)
+    if matrixRows &* matrixColumns > 1000 {
+        let order = CblasRowMajor
+        let transA = CblasNoTrans
+        let m = blasint(matrixRows)
+        let n = blasint(matrixColumns)
         withUnsafePointer(to: multiplier) { alpha in
             withUnsafePointer(to: resultMultiplier) { beta in
-                cgemv(order, transA, m, n, alpha, matrix, n, vector, 1, beta, resultVector, 1)
+                cblas_cgemv(order, transA, m, n, .init(alpha), .init(matrix), n, .init(vector), 1, .init(beta), .init(resultVector), 1)
             }
         }
         return

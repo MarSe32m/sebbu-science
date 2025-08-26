@@ -5,14 +5,6 @@
 //  Created by Sebastian Toivonen on 11.5.2025.
 //
 
-#if canImport(COpenBLAS)
-import COpenBLAS
-#elseif canImport(_COpenBLASWindows)
-import _COpenBLASWindows
-#elseif canImport(Accelerate)
-import Accelerate
-#endif
-
 import NumericsExtensions
 
 //MARK: Subtraction for AlgebraicField

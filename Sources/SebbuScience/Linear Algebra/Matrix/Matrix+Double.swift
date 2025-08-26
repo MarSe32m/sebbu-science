@@ -76,14 +76,9 @@ public extension Matrix<Double> {
     @inlinable
     mutating func copyElements(from other: Self) {
         precondition(elements.count == other.elements.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         let N = blasint(elements.count)
         cblas_dcopy(N, other.elements, 1, &elements, 1)
-        #elseif canImport(Accelerate)
-        if let dcopy = BLAS.dcopy {
-        let N = cblas_int(elements.count)
-        cblas_dcopy(N, other.elements, 1, &elements, 1)
-        } 
         #else
         for i in 0..<elements.count {
             elements[i] = other.elements[i]

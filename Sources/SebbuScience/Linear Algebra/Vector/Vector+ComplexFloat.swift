@@ -38,11 +38,12 @@ public extension Vector<Complex<Float>> {
         let N = blasint(count)
         cblas_ccopy(N, other.components, 1, &components, 1)
         #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if let ccopy = BLAS.ccopy {
-            let N = cblas_int(count)
-            ccopy(N, other.components, 1, &components, 1)
-        } 
+        let N = blasint(count)
+        other.components.withUnsafeBufferPointer { otherComponents in 
+            components.withUnsafeMutableBufferPointer { components in 
+                cblas_ccopy(N, .init(otherComponents.baseAddress), 1, .init(components.baseAddress), 1)
+            }
+        }
         #else
         for i in 0..<count {
             components[i] = other.components[i]

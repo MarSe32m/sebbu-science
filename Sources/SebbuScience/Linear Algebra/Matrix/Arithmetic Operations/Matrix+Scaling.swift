@@ -95,17 +95,9 @@ public extension Matrix<Double> {
     
     @inlinable
     mutating func multiply(by: T) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         let N = blasint(elements.count)
         cblas_dscal(N, by, &elements, 1)
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let dscal = BLAS.dscal {
-            let N = cblas_int(elements.count)
-            dscal(N, by, &elements, 1)
-        } else {
-            _multiply(by: by)
-        }
         #else
         _multiply(by: by)
         #endif
@@ -135,17 +127,9 @@ public extension Matrix<Float> {
     
     @inlinable
     mutating func multiply(by: T) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         let N = blasint(elements.count)
         cblas_sscal(N, by, &elements, 1)
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let sscal = BLAS.sscal {
-            let N = cblas_int(elements.count)
-            sscal(N, by, &elements, 1)
-        } else {
-            _multiply(by: by)
-        }
         #else
         _multiply(by: by)
         #endif
@@ -194,15 +178,12 @@ public extension Matrix<Complex<Double>> {
             cblas_zscal(N, alpha, &elements, 1)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-            if let zscal = BLAS.zscal {
-                let N = cblas_int(elements.count)
-                withUnsafePointer(to: by) { alpha in
-                    zscal(N, alpha, &elements, 1)
-                }
-            } else {
-                _multiply(by: by)
+        let N = blasint(elements.count)
+        withUnsafePointer(to: by) { alpha in 
+            elements.withUnsafeMutableBufferPointer { elements in 
+                cblas_zscal(N, .init(alpha), .init(elements.baseAddress), 1)
             }
+        }
         #else
         _multiply(by: by)
         #endif
@@ -214,15 +195,9 @@ public extension Matrix<Complex<Double>> {
         let N = blasint(elements.count)
         cblas_zdscal(N, by, &elements, 1)
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let zdscal = BLAS.zdscal {
-            let N = cblas_int(elements.count)
-            zdscal(N, by, &elements, 1)
-        } else {
-            for i in 0..<elements.count {
-                elements[i].real = Relaxed.product(elements[i].real, by)
-                elements[i].imaginary = Relaxed.product(elements[i].imaginary, by)
-            }
+        let N = blasint(elements.count)
+        elements.withUnsafeMutableBufferPointer { elements in 
+            cblas_zdscal(N, by, .init(elements.baseAddress), 1)
         }
         #else
         var span = elements.mutableSpan
@@ -302,14 +277,11 @@ public extension Matrix<Complex<Float>> {
             cblas_cscal(N, alpha, &elements, 1)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let cscal = BLAS.cscal {
-            let N = cblas_int(elements.count)
-            withUnsafePointer(to: by) { alpha in
-                cscal(N, alpha, &elements, 1)
+        let N = blasint(elements.count)
+        withUnsafePointer(to: by) { alpha in 
+            elements.withUnsafeMutableBufferPointer { elements in 
+                cblas_cscal(N, .init(alpha), .init(elements.baseAddress), 1)
             }
-        } else {
-            _multiply(by: by)
         }
         #else
         _multiply(by: by)
@@ -321,15 +293,9 @@ public extension Matrix<Complex<Float>> {
         let N = blasint(elements.count)
         cblas_csscal(N, by, &elements, 1)
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let csscal = BLAS.csscal {
-            let N = cblas_int(elements.count)
-            csscal(N, by, &elements, 1)
-        } else {
-            for i in 0..<elements.count {
-                elements[i].real = Relaxed.product(elements[i].real, by)
-                elements[i].imaginary = Relaxed.product(elements[i].imaginary, by)
-            }
+        let N = blasint(elements.count)
+        elements.withUnsafeMutableBufferPointer { elements in 
+            cblas_csscal(N, by, .init(elements.baseAddress), 1)
         }
         #else
         var span = elements.mutableSpan

@@ -74,15 +74,9 @@ public extension Vector<Double> {
     
     @inlinable
     mutating func multiply(by: T) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         let N = blasint(count)
         cblas_dscal(N, by, &components, 1)
-        #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if let dscal = BLAS.dscal {
-            let N = cblas_int(count)
-            dscal(N, by, &components, 1)
-        }
         #else
         _multiply(by: by)
         #endif
@@ -106,15 +100,9 @@ public extension Vector<Float> {
     
     @inlinable
     mutating func multiply(by: T) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         let N = blasint(count)
         cblas_sscal(N, by, &components, 1)
-        #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if let sscal = BLAS.sscal {
-            let N = cblas_int(count)
-            sscal(N, by, &components, 1)
-        } 
         #else
         _multiply(by: by)
         #endif
@@ -158,11 +146,10 @@ public extension Vector<Complex<Double>> {
             cblas_zscal(N, alpha, &components, 1)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if let zscal = BLAS.zscal {
-            let N = cblas_int(count)
-            withUnsafePointer(to: by) { alpha in
-                zscal(N, alpha, &components, 1)
+        let N = blasint(count)
+        withUnsafePointer(to: by) { alpha in
+            components.withUnsafeMutableBufferPointer { components in 
+                cblas_zscal(N, .init(alpha), .init(components.baseAddress), 1)
             }
         }
         #else
@@ -176,10 +163,9 @@ public extension Vector<Complex<Double>> {
         let N = blasint(count)
         cblas_zdscal(N, by, &components, 1)
         #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if let zdscal = BLAS.zdscal {
-            let N = cblas_int(count)
-            zdscal(N, by, &components, 1)
+        let N = blasint(count)
+        components.withUnsafeBufferPointer { components in 
+            cblas_zdscal(N, by, .init(components.baseAddress), 1)
         }
         #else
         for i in 0..<components.count {
@@ -225,11 +211,10 @@ public extension Vector<Complex<Float>> {
             cblas_cscal(N, alpha, &components, 1)
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if let cscal = BLAS.cscal {
-            let N = cblas_int(count)
-            withUnsafePointer(to: by) { alpha in
-                cscal(N, alpha, &components, 1)
+        let N = blasint(count)
+        withUnsafePointer(to: by) { alpha in
+            components.withUnsafeMutableBufferPointer { components in 
+                cblas_cscal(N, .init(alpha), .init(components.baseAddress), 1)
             }
         }
         #else
@@ -243,10 +228,9 @@ public extension Vector<Complex<Float>> {
         let N = blasint(count)
         cblas_csscal(N, by, &components, 1)
         #elseif canImport(Accelerate)
-        #error("TODO: Implement")
-        if let csscal = BLAS.csscal {
-            let N = cblas_int(count)
-            csscal(N, by, &components, 1)
+        let N = blasint(count)
+        components.withUnsafeBufferPointer { components in 
+            cblas_csscal(N, by, .init(components.baseAddress), 1)
         }
         #else
         for i in 0..<count {

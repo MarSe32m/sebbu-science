@@ -144,7 +144,7 @@ public extension Matrix<Double> {
     
     @inlinable
     func dot(_ other: Self, multiplied: T, into: inout Self) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
@@ -154,21 +154,6 @@ public extension Matrix<Double> {
         let m = blasint(rows), n = blasint(other.columns), k = blasint(columns)
         let lda = k, ldb = n, ldc = n
         cblas_dgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 0.0, &into.elements, ldc)
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let dgemm = BLAS.dgemm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let transA = BLAS.Transpose.noTranspose.rawValue
-            let transB = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(other.columns), k = cblas_int(columns)
-            let lda = k, ldb = n, ldc = n
-            dgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 0.0, &into.elements, ldc)
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
-        }
         #else
         _dot(other, multiplied: multiplied, into: &into)
         #endif
@@ -182,7 +167,7 @@ public extension Matrix<Double> {
     
     @inlinable
     func dot(_ other: Self, multiplied: T, addingInto into: inout Self) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
@@ -192,21 +177,6 @@ public extension Matrix<Double> {
         let m = blasint(rows), n = blasint(other.columns), k = blasint(columns)
         let lda = k, ldb = n, ldc = n
         cblas_dgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 1.0, &into.elements, ldc)
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let dgemm = BLAS.dgemm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let transA = BLAS.Transpose.noTranspose.rawValue
-            let transB = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(other.columns), k = cblas_int(columns)
-            let lda = k, ldb = n, ldc = n
-            dgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 1.0, &into.elements, ldc)
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
-        }
         #else
         _dot(other, multiplied: multiplied, into: &into)
         #endif
@@ -237,7 +207,7 @@ public extension Matrix<Float> {
     
     @inlinable
     func dot(_ other: Self, multiplied: T, into: inout Self) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
@@ -247,21 +217,6 @@ public extension Matrix<Float> {
         let m = blasint(rows), n = blasint(other.columns), k = blasint(columns)
         let lda = k, ldb = n, ldc = n
         cblas_sgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 0.0, &into.elements, ldc)
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let sgemm = BLAS.sgemm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let transA = BLAS.Transpose.noTranspose.rawValue
-            let transB = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(other.columns), k = cblas_int(columns)
-            let lda = k, ldb = n, ldc = n
-            sgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 0.0, &into.elements, ldc)
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
-        }
         #else
         _dot(other, multiplied: multiplied, into: &into)
         #endif
@@ -275,7 +230,7 @@ public extension Matrix<Float> {
     
     @inlinable
     func dot(_ other: Self, multiplied: T, addingInto into: inout Self) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
@@ -285,21 +240,6 @@ public extension Matrix<Float> {
         let m = blasint(rows), n = blasint(other.columns), k = blasint(columns)
         let lda = k, ldb = n, ldc = n
         cblas_sgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 1.0, &into.elements, ldc)
-        #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let sgemm = BLAS.sgemm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let transA = BLAS.Transpose.noTranspose.rawValue
-            let transB = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(other.columns), k = cblas_int(columns)
-            let lda = k, ldb = n, ldc = n
-            sgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 1.0, &into.elements, ldc)
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
-        }
         #else
         _dot(other, multiplied: multiplied, into: &into)
         #endif
@@ -331,7 +271,7 @@ public extension Matrix<Complex<Double>> {
     @inlinable
     func dot(_ other: Self, multiplied: T, into: inout Self) {
         #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-         precondition(columns == other.rows)
+        precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
         let layout = CblasRowMajor
@@ -346,24 +286,25 @@ public extension Matrix<Complex<Double>> {
             }
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let zgemm = BLAS.zgemm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let transA = BLAS.Transpose.noTranspose.rawValue
-            let transB = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(other.columns), k = cblas_int(columns)
-            let lda = k, ldb = n, ldc = n
-            let beta: T = .zero
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    zgemm(layout, transA, transB, m, n, k, alpha, elements, lda, other.elements, ldb, beta, &into.elements, ldc)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        let layout = CblasRowMajor
+        let transA = CblasNoTrans
+        let transB = CblasNoTrans
+        let m = blasint(rows), n = blasint(other.columns), k = blasint(columns)
+        let lda = k, ldb = n, ldc = n
+        let beta: T = .zero
+        withUnsafePointer(to: multiplied) { alpha in
+            withUnsafePointer(to: beta) { beta in
+                elements.withUnsafeBufferPointer { elements in 
+                    other.elements.withUnsafeBufferPointer { otherElements in 
+                        into.elements.withUnsafeMutableBufferPointer { intoElements in 
+                            cblas_zgemm(layout, transA, transB, m, n, k, .init(alpha), .init(elements.baseAddress), lda, .init(otherElements.baseAddress), ldb, .init(beta), .init(intoElements.baseAddress), ldc)
+                        }
+                    }
                 }
             }
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
         }
         #else
         _dot(other, multiplied: multiplied, into: &into)
@@ -394,24 +335,25 @@ public extension Matrix<Complex<Double>> {
             }
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let zgemm = BLAS.zgemm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let transA = BLAS.Transpose.noTranspose.rawValue
-            let transB = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(other.columns), k = cblas_int(columns)
-            let lda = k, ldb = n, ldc = n
-            let beta: T = .one
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    zgemm(layout, transA, transB, m, n, k, alpha, elements, lda, other.elements, ldb, beta, &into.elements, ldc)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        let layout = CblasRowMajor
+        let transA = CblasNoTrans
+        let transB = CblasNoTrans
+        let m = blasint(rows), n = blasint(other.columns), k = blasint(columns)
+        let lda = k, ldb = n, ldc = n
+        let beta: T = .one
+        withUnsafePointer(to: multiplied) { alpha in
+            withUnsafePointer(to: beta) { beta in
+                elements.withUnsafeBufferPointer { elements in 
+                    other.elements.withUnsafeBufferPointer { otherElements in 
+                        into.elements.withUnsafeMutableBufferPointer { intoElements in 
+                            cblas_zgemm(layout, transA, transB, m, n, k, .init(alpha), .init(elements.baseAddress), lda, .init(otherElements.baseAddress), ldb, .init(beta), .init(intoElements.baseAddress), ldc)
+                        }
+                    }
                 }
             }
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
         }
         #else
         _dot(other, multiplied: multiplied, into: &into)
@@ -460,24 +402,25 @@ public extension Matrix<Complex<Float>> {
             }
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let cgemm = BLAS.cgemm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let transA = BLAS.Transpose.noTranspose.rawValue
-            let transB = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(other.columns), k = cblas_int(columns)
-            let lda = k, ldb = n, ldc = n
-            let beta: T = .zero
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    cgemm(layout, transA, transB, m, n, k, alpha, elements, lda, other.elements, ldb, beta, &into.elements, ldc)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        let layout = CblasRowMajor
+        let transA = CblasNoTrans
+        let transB = CblasNoTrans
+        let m = blasint(rows), n = blasint(other.columns), k = blasint(columns)
+        let lda = k, ldb = n, ldc = n
+        let beta: T = .zero
+        withUnsafePointer(to: multiplied) { alpha in
+            withUnsafePointer(to: beta) { beta in
+                elements.withUnsafeBufferPointer { elements in 
+                    other.elements.withUnsafeBufferPointer { otherElements in 
+                        into.elements.withUnsafeMutableBufferPointer { intoElements in 
+                            cblas_cgemm(layout, transA, transB, m, n, k, .init(alpha), .init(elements.baseAddress), lda, .init(otherElements.baseAddress), ldb, .init(beta), .init(intoElements.baseAddress), ldc)
+                        }
+                    }
                 }
             }
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
         }
         #else
         _dot(other, multiplied: multiplied, into: &into)
@@ -509,24 +452,25 @@ public extension Matrix<Complex<Float>> {
             }
         }
         #elseif canImport(Accelerate)
-        #error("TODO: Reimplement")
-        if let cgemm = BLAS.cgemm {
-            precondition(columns == other.rows)
-            precondition(into.rows == rows)
-            precondition(into.columns == other.columns)
-            let layout = BLAS.Layout.rowMajor.rawValue
-            let transA = BLAS.Transpose.noTranspose.rawValue
-            let transB = BLAS.Transpose.noTranspose.rawValue
-            let m = cblas_int(rows), n = cblas_int(other.columns), k = cblas_int(columns)
-            let lda = k, ldb = n, ldc = n
-            let beta: T = .one
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    cgemm(layout, transA, transB, m, n, k, alpha, elements, lda, other.elements, ldb, beta, &into.elements, ldc)
+        precondition(columns == other.rows)
+        precondition(into.rows == rows)
+        precondition(into.columns == other.columns)
+        let layout = CblasRowMajor
+        let transA = CblasNoTrans
+        let transB = CblasNoTrans
+        let m = blasint(rows), n = blasint(other.columns), k = blasint(columns)
+        let lda = k, ldb = n, ldc = n
+        let beta: T = .one
+        withUnsafePointer(to: multiplied) { alpha in
+            withUnsafePointer(to: beta) { beta in
+                elements.withUnsafeBufferPointer { elements in 
+                    other.elements.withUnsafeBufferPointer { otherElements in 
+                        into.elements.withUnsafeMutableBufferPointer { intoElements in 
+                            cblas_cgemm(layout, transA, transB, m, n, k, .init(alpha), .init(elements.baseAddress), lda, .init(otherElements.baseAddress), ldb, .init(beta), .init(intoElements.baseAddress), ldc)
+                        }
+                    }
                 }
             }
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
         }
         #else
         _dot(other, multiplied: multiplied, into: &into)
@@ -538,7 +482,7 @@ public extension Matrix<Complex<Float>> {
 @inlinable
 public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Double, _ leftMatrix: UnsafePointer<Double>, _ rightMatrix: UnsafePointer<Double>, _ resultMultiplier: Double, _ resultMatrix: UnsafeMutablePointer<Double>) {
     assert(leftColumns == rightRows)
-    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
     let order = CblasRowMajor
     let transA = CblasNoTrans
     let transB = CblasNoTrans
@@ -549,23 +493,15 @@ public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ righ
                 rightMatrix, blasint(rightColumns), 
                 resultMultiplier, 
                 resultMatrix, blasint(leftColumns))
-    #elseif canImport(Accelerate)
-    #error("TODO: Reimplement")
-    if let dgemm = BLAS.dgemm {
-        let order = BLAS.Order.rowMajor.rawValue
-        let transA = BLAS.Transpose.noTranspose.rawValue
-        let transB = BLAS.Transpose.noTranspose.rawValue
-        dgemm(order, transA, transB, cblas_int(leftRows), cblas_int(rightColumns), cblas_int(leftColumns), multiplier, leftMatrix, cblas_int(leftColumns), rightMatrix, cblas_int(rightColumns), resultMultiplier, resultMatrix, cblas_int(leftColumns))
-    }
     #else
-    fatalError("Not implemented")
+    fatalError("Not yet implemented")
     #endif
 }
 
 @inlinable
 public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Float, _ leftMatrix: UnsafePointer<Float>, _ rightMatrix: UnsafePointer<Float>, _ resultMultiplier: Float, _ resultMatrix: UnsafeMutablePointer<Float>) {
     assert(leftColumns == rightRows)
-    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
     let order = CblasRowMajor
     let transA = CblasNoTrans
     let transB = CblasNoTrans
@@ -576,16 +512,8 @@ public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ righ
                 rightMatrix, blasint(rightColumns), 
                 resultMultiplier, 
                 resultMatrix, blasint(leftColumns))
-    #elseif canImport(Accelerate)
-    #error("TODO: Reimplement")
-    if let sgemm = BLAS.sgemm {
-        let order = BLAS.Order.rowMajor.rawValue
-        let transA = BLAS.Transpose.noTranspose.rawValue
-        let transB = BLAS.Transpose.noTranspose.rawValue
-        sgemm(order, transA, transB, cblas_int(leftRows), cblas_int(rightColumns), cblas_int(leftColumns), multiplier, leftMatrix, cblas_int(leftColumns), rightMatrix, cblas_int(rightColumns), resultMultiplier, resultMatrix, cblas_int(leftColumns))
-    }
     #else
-    fatalError("Not implemented")
+    fatalError("Not yet implemented")
     #endif
 }
 
@@ -608,15 +536,18 @@ public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ righ
         }
     }
     #elseif canImport(Accelerate)
-    #error("TODO: Reimplement")
-    if let zgemm = BLAS.zgemm {
-        let order = BLAS.Order.rowMajor.rawValue
-        let transA = BLAS.Transpose.noTranspose.rawValue
-        let transB = BLAS.Transpose.noTranspose.rawValue
-        withUnsafePointer(to: multiplier) { alpha in
-            withUnsafePointer(to: resultMultiplier) { beta in
-                zgemm(order, transA, transB, cblas_int(leftRows), cblas_int(rightColumns), cblas_int(leftColumns), alpha, leftMatrix, cblas_int(leftColumns), rightMatrix, cblas_int(rightColumns), beta, resultMatrix, cblas_int(leftColumns))
-            }
+    let order = CblasRowMajor
+    let transA = CblasNoTrans
+    let transB = CblasNoTrans
+    withUnsafePointer(to: multiplier) { alpha in
+        withUnsafePointer(to: resultMultiplier) { beta in
+            cblas_zgemm(order, transA, transB, 
+                        blasint(leftRows), blasint(rightColumns), blasint(leftColumns), 
+                        .init(alpha), 
+                        .init(leftMatrix), blasint(leftColumns), 
+                        .init(rightMatrix), blasint(rightColumns), 
+                        .init(beta), 
+                        .init(resultMatrix), blasint(leftColumns))
         }
     }
     #else
@@ -643,15 +574,18 @@ public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ righ
         }
     }
     #elseif canImport(Accelerate)
-    #error("TODO: Reimplement")
-    if let cgemm = BLAS.cgemm {
-        let order = BLAS.Order.rowMajor.rawValue
-        let transA = BLAS.Transpose.noTranspose.rawValue
-        let transB = BLAS.Transpose.noTranspose.rawValue
-        withUnsafePointer(to: multiplier) { alpha in
-            withUnsafePointer(to: resultMultiplier) { beta in
-                cgemm(order, transA, transB, cblas_int(leftRows), cblas_int(rightColumns), cblas_int(leftColumns), alpha, leftMatrix, cblas_int(leftColumns), rightMatrix, cblas_int(rightColumns), beta, resultMatrix, cblas_int(leftColumns))
-            }
+    let order = CblasRowMajor
+    let transA = CblasNoTrans
+    let transB = CblasNoTrans
+    withUnsafePointer(to: multiplier) { alpha in
+        withUnsafePointer(to: resultMultiplier) { beta in
+            cblas_cgemm(order, transA, transB, 
+                        blasint(leftRows), blasint(rightColumns), blasint(leftColumns), 
+                        .init(alpha), 
+                        .init(leftMatrix), blasint(leftColumns), 
+                        .init(rightMatrix), blasint(rightColumns), 
+                        .init(beta), 
+                        .init(resultMatrix), blasint(leftColumns))
         }
     }
     #else
