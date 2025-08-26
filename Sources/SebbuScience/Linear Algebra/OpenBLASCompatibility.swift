@@ -6,3 +6,8 @@ import Accelerate
 public typealias blasint = __LAPACK_int
 public typealias lapack_int = __LAPACK_int
 #endif
+
+#if canImport(CGFortran)
+// Import CGFortran so that we link against the static library
+import CGFortran
+#endif

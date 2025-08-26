@@ -1,0 +1,4 @@
+module CGFortran {
+    header "include.h"
+    export *
+}

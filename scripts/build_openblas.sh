@@ -20,6 +20,9 @@ tar xf $MUSL_CROSS_TOOLS_X86_64_TARBALL -C $TOOLS_DIR
 tar xf $MUSL_CROSS_TOOLS_AARCH64_TARBALL -C $TOOLS_DIR
 
 export PATH=$TOOLS_DIR/x86_64-linux-musl-cross/bin:$TOOLS_DIR/aarch64-linux-musl-cross/bin:$PATH
+#export LD_LIBRARY_PATH=$TOOLS_DIR/x86_64-linux-musl-cross/x86_64-linux-musl/LIBRARY_PATH
+#export LIBRARY_PATH=$TOOLS_DIR/x86_64-linux-musl-cross/x86_64-linux-musl/lib
+#export LD_LIBRARY_PATH=$TOOLS_DIR/aarch64-linux-musl-cross/x86_64-linux-musl/lib
 
 echo "X86 MUSL GCC VERSION"
 x86_64-linux-musl-gcc --version
@@ -45,10 +48,9 @@ build_openblas() {
     
     git clone --depth=1 --branch $OPENBLAS_TAG $OPENBLAS_REPO OpenBLAS
     pushd OpenBLAS
-    make clean
+    #make clean
 
-#    make CC=$target_cc \
-#         FC=$target_fc \
+   ##         FC=$target_fc \
     make CC=$target_cc \
          NO_SHARED=1 \
          USE_OPENMP=0 \
@@ -56,14 +58,12 @@ build_openblas() {
          DYNAMIC_ARCH=1 \
          NUM_THREADS=16 \
          NO_TEST=1 \
-         CFLAGS="-O2 -fno-lto" \
-         FFLAGS="-O2 -fno-lto" \
-         LDFLAGS="-fno-lto" \
+         CFLAGS="-O2 -fno-lto -static" \
+         FFLAGS="-O2 -fno-lto -static" \
+         LDFLAGS="-fno-lto -static" \
          -j$JOBS
 
-#    make PREFIX="$install_prefix" \
-#         CC=$target_cc \
-#         FC=$target_fc \
+    # FC=$target_fc \
     make PREFIX="$install_prefix" \
          CC=$target_cc \
          NO_SHARED=1 \
@@ -72,15 +72,17 @@ build_openblas() {
          DYNAMIC_ARCH=1 \
          NUM_THREADS=16 \
          NO_TEST=1 \
-         CFLAGS="-O2 -fno-lto" \
-         FFLAGS="-O2 -fno-lto" \
-         LDFLAGS="-fno-lto" \
+         CFLAGS="-O2 -fno-lto -static" \
+         FFLAGS="-O2 -fno-lto -static" \
+         LDFLAGS="-fno-lto -static" \
          INSTALL_STATIC=1 \
          INSTALL_SHARED=0 \
          install
     popd
     rm -rf OpenBLAS
 }
+
+
 
 echo "=== Building OpenBLAS for x86_64 (musl) ==="
 build_openblas x86_64-linux-musl-gcc x86_64-linux-musl-gfortran "$PREFIX/x86_64/musl"
@@ -96,12 +98,15 @@ build_openblas x86_64-linux-gnu-gcc x86_64-linux-gnu-gfortran "$PREFIX/x86_64/gn
 
 cd ..
 
+
+#cp "$PREFIX/aarch64/musl/lib/libopenblasp-r$OPENBLAS_VERSION.a" "libopenblasp-r$OPENBLAS_VERSION-aarch64-musl.a"
+#cp "$PREFIX/aarch64/gnu/lib/libopenblasp-r$OPENBLAS_VERSION.a" "libopenblasp-r$OPENBLAS_VERSION-aarch64-gnu.a"
+
 # Copy artifacts
 cp "$PREFIX/x86_64/musl/lib/libopenblasp-r$OPENBLAS_VERSION.a" "libopenblasp-r$OPENBLAS_VERSION-x86_64-musl.a"
+# Copy artifacts
 cp "$PREFIX/x86_64/gnu/lib/libopenblasp-r$OPENBLAS_VERSION.a" "libopenblasp-r$OPENBLAS_VERSION-x86_64-gnu.a"
-#cp "$PREFIX/aarch64/musl/lib/libopenblasp-r$OPENBLAS_VERSION.a" "libopenblasp-r$OPENBLAS_VERSION-aarch64-musl.a"
-##cp "$PREFIX/aarch64/gnu/lib/libopenblasp-r$OPENBLAS_VERSION.a" "libopenblasp-r$OPENBLAS_VERSION-aarch64-gnu.a"
-
 cp -r "$PREFIX/x86_64/musl/include" include
+
 rm -fr .build
 echo "Build complete!"

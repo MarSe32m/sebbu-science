@@ -35,6 +35,10 @@ let package = Package(
             name: "COpenBLAS", 
             path: "COpenBLAS.artifactbundle"
         ),
+        .binaryTarget(
+            name: "CGFortran", 
+            path: "CGFortran.artifactbundle"
+        ),
         .target(
             name: "FFT",
             dependencies: [
@@ -67,6 +71,7 @@ let package = Package(
                 .target(name: "CFFTW", condition: .when(platforms: [.linux])),
                 .target(name: "_CFFTWWindows", condition: .when(platforms: [.windows])),
                 .target(name: "COpenBLAS", condition: .when(platforms: [.linux])),
+                .target(name: "CGFortran", condition: .when(platforms: [.linux])),
                 .target(name: "_COpenBLASWindows", condition: .when(platforms: [.windows])),
                 .target(name: "NumericsExtensions"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
