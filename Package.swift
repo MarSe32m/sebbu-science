@@ -39,6 +39,10 @@ let package = Package(
             name: "CGFortran", 
             path: "CGFortran.artifactbundle"
         ),
+        .binaryTarget(
+            name: "CQuadmath", 
+            path: "CQuadmath.artifactbundle"
+        ),
         .target(
             name: "FFT",
             dependencies: [
@@ -72,6 +76,7 @@ let package = Package(
                 .target(name: "_CFFTWWindows", condition: .when(platforms: [.windows])),
                 .target(name: "COpenBLAS", condition: .when(platforms: [.linux])),
                 .target(name: "CGFortran", condition: .when(platforms: [.linux])),
+                .target(name: "CQuadmath", condition: .when(platforms: [.linux])),
                 .target(name: "_COpenBLASWindows", condition: .when(platforms: [.windows])),
                 .target(name: "NumericsExtensions"),
                 .product(name: "Algorithms", package: "swift-algorithms"),

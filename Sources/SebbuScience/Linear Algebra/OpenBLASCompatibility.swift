@@ -10,4 +10,6 @@ public typealias lapack_int = __LAPACK_int
 #if canImport(CGFortran)
 // Import CGFortran so that we link against the static library
 import CGFortran
+// Import CQuadmath so the we link against the static library
+import CQuadmath
 #endif

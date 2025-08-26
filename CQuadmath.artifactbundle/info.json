@@ -1,0 +1,27 @@
+{
+    "schemaVersion": "1.0",
+    "artifacts": {
+        "CQuadmath": {
+            "type": "staticLibrary",
+            "version": "1.0.0",
+            "variants": [
+                {
+                    "path": "lib/libquadmath-x86_64-gnu.a",
+                    "supportedTriples": ["x86_64-unknown-linux-gnu"],
+                    "staticLibraryMetadata": {
+                        "headerPaths": ["include"],
+                        "moduleMapPath": "include/module.modulemap"
+                    }
+                },
+                {
+                    "path": "lib/libquadmath-x86_64-musl.a",
+                    "supportedTriples": ["x86_64-swift-linux-musl"],
+                    "staticLibraryMetadata": {
+                        "headerPaths": ["include"],
+                        "moduleMapPath": "include/module.modulemap"
+                    }
+                }
+            ]
+        }
+    }
+}
