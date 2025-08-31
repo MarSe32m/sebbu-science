@@ -1,4 +1,0 @@
-module CQuadmath {
-    header "include.h"
-    export *
-}

@@ -27,8 +27,8 @@ export PATH=$TOOLS_DIR/x86_64-linux-musl-cross/bin:$TOOLS_DIR/aarch64-linux-musl
 echo "X86 MUSL GCC VERSION"
 x86_64-linux-musl-gcc --version
 
-echo "AARCH64 MUSL GCC VERSION"
-aarch64-linux-musl-gcc --version
+#echo "AARCH64 MUSL GCC VERSION"
+#aarch64-linux-musl-gcc --version
 
 # Clone OpenBLAS
 OPENBLAS_VERSION="0.3.30"
@@ -48,40 +48,37 @@ build_openblas() {
     
     git clone --depth=1 --branch $OPENBLAS_TAG $OPENBLAS_REPO OpenBLAS
     pushd OpenBLAS
-    #make clean
 
-   ##         FC=$target_fc \
     make CC=$target_cc \
+         FC=$target_fc \
          NO_SHARED=1 \
          USE_OPENMP=0 \
          NO_AFFINITY=1 \
          DYNAMIC_ARCH=1 \
          NUM_THREADS=16 \
          NO_TEST=1 \
-         CFLAGS="-O2 -fno-lto -static" \
+         CFLAGS="-O2 -fno-lto -static -fPIC" \
          FFLAGS="-O2 -fno-lto -static" \
          LDFLAGS="-fno-lto -static" \
          -j$JOBS
 
-    # FC=$target_fc \
     make PREFIX="$install_prefix" \
          CC=$target_cc \
+         FC=$target_fc \
          NO_SHARED=1 \
          USE_OPENMP=0 \
          NO_AFFINITY=1 \
          DYNAMIC_ARCH=1 \
          NUM_THREADS=16 \
          NO_TEST=1 \
-         CFLAGS="-O2 -fno-lto -static" \
+         CFLAGS="-O2 -fno-lto -static -fPIC" \
          FFLAGS="-O2 -fno-lto -static" \
          LDFLAGS="-fno-lto -static" \
          INSTALL_STATIC=1 \
-         INSTALL_SHARED=0 \
          install
     popd
     rm -rf OpenBLAS
 }
-
 
 
 echo "=== Building OpenBLAS for x86_64 (musl) ==="
@@ -96,17 +93,28 @@ build_openblas x86_64-linux-gnu-gcc x86_64-linux-gnu-gfortran "$PREFIX/x86_64/gn
 #echo "=== Building OpenBLAS for aarch64 (gnu) ==="
 #build_openblas aarch64-linux-gnu-gcc aarch64-linux-gnu-gfortran "$PREFIX/aarch64/gnu"
 
+echo "Build complete!"
+
 cd ..
 
+merge_libraries() {
+    local output=$1
+    local openblas=$2
+    local gfortran=$3
+    local quadmath=$4
+    
+     ar cqT $output $openblas $gfortran $quadmath
+     echo -e "'create $output\naddlib $output\nsave\nend'" | ar -M
+}
 
-#cp "$PREFIX/aarch64/musl/lib/libopenblasp-r$OPENBLAS_VERSION.a" "libopenblasp-r$OPENBLAS_VERSION-aarch64-musl.a"
-#cp "$PREFIX/aarch64/gnu/lib/libopenblasp-r$OPENBLAS_VERSION.a" "libopenblasp-r$OPENBLAS_VERSION-aarch64-gnu.a"
+echo "Merging libraries"
 
-# Copy artifacts
-cp "$PREFIX/x86_64/musl/lib/libopenblasp-r$OPENBLAS_VERSION.a" "libopenblasp-r$OPENBLAS_VERSION-x86_64-musl.a"
-# Copy artifacts
-cp "$PREFIX/x86_64/gnu/lib/libopenblasp-r$OPENBLAS_VERSION.a" "libopenblasp-r$OPENBLAS_VERSION-x86_64-gnu.a"
-cp -r "$PREFIX/x86_64/musl/include" include
+# Merge openblas, gfortran and quadmath
+merge_libraries libopenblas-x86_64-musl.a "$PREFIX/x86_64/musl/lib/libopenblasp-r$OPENBLAS_VERSION.a" "$TOOLS_DIR/x86_64-linux-musl-cross/x86_64-linux-musl/lib/libgfortran.a" "$TOOLS_DIR/x86_64-linux-musl-cross/x86_64-linux-musl/lib/libquadmath.a" 
+merge_libraries libopenblas-x86_64-gnu.a "$PREFIX/x86_64/gnu/lib/libopenblasp-r$OPENBLAS_VERSION.a" "/usr/lib/gcc/x86_64-linux-gnu/13/libgfortran.a" "/usr/lib/gcc/x86_64-linux-gnu/13/libquadmath.a" 
+
+
+# Copy headers
+cp -r "$PREFIX/x86_64/musl/include" "include"
 
 rm -fr .build
-echo "Build complete!"

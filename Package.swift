@@ -32,14 +32,6 @@ let package = Package(
             path: "CFFTW.artifactbundle"
         ),
         .binaryTarget(
-            name: "CGFortran",
-            path: "CGFortran.artifactbundle"
-        ),
-        .binaryTarget(
-            name: "CQuadmath",
-            path: "CQuadmath.artifactbundle"
-        ),
-        .binaryTarget(
             name: "COpenBLAS", 
             path: "COpenBLAS.artifactbundle"
         ),
@@ -74,8 +66,6 @@ let package = Package(
                 .target(name: "FFT"),
                 .target(name: "CFFTW", condition: .when(platforms: [.linux])),
                 .target(name: "_CFFTWWindows", condition: .when(platforms: [.windows])),
-                .target(name: "CGFortran", condition: .when(platforms: [.linux])),
-                .target(name: "CQuadmath", condition: .when(platforms: [.linux])),
                 .target(name: "COpenBLAS", condition: .when(platforms: [.linux])),
                 .target(name: "_COpenBLASWindows", condition: .when(platforms: [.windows])),
                 .target(name: "NumericsExtensions"),
