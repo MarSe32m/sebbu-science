@@ -13,7 +13,7 @@ let package = Package(
         .library(name: "PythonKitUtilities", targets: ["PythonKitUtilities"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-numerics", from: "1.1.0-prerelease"),
+        .package(url: "https://github.com/apple/swift-numerics", from: "1.1.0"),
         .package(url: "https://github.com/apple/swift-algorithms", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
         .package(url: "https://github.com/MarSe32m/sebbu-collections", branch: "main"),
@@ -32,16 +32,16 @@ let package = Package(
             path: "CFFTW.artifactbundle"
         ),
         .binaryTarget(
-            name: "COpenBLAS", 
-            path: "COpenBLAS.artifactbundle"
-        ),
-        .binaryTarget(
-            name: "CGFortran", 
+            name: "CGFortran",
             path: "CGFortran.artifactbundle"
         ),
         .binaryTarget(
-            name: "CQuadmath", 
+            name: "CQuadmath",
             path: "CQuadmath.artifactbundle"
+        ),
+        .binaryTarget(
+            name: "COpenBLAS", 
+            path: "COpenBLAS.artifactbundle"
         ),
         .target(
             name: "FFT",
