@@ -34,46 +34,8 @@ public extension Matrix where T: AlgebraicField {
             multiply(by: reciprocal)
         } else {
             var span = elements.mutableSpan
-            var i = 0
-            while i &+ 4 <= span.count {
+            for i in span.indices {
                 span[unchecked: i] /= by
-                span[unchecked: i &+ 1] /= by
-                span[unchecked: i &+ 2] /= by
-                span[unchecked: i &+ 3] /= by
-                i &+= 4
-            }
-            while i < span.count {
-                span[unchecked: i] /= by
-                i &+= 1
-            }
-        }
-    }
-    
-    @inlinable
-    @_transparent
-    func divide(by: T, into: inout Self) {
-        _divide(by: by, into: &into)
-    }
-
-    @inlinable
-    func _divide(by: T, into: inout Self) {
-        precondition(elements.count == into.elements.count)
-        if let reciprocal = by.reciprocal {
-            multiply(by: reciprocal, into: &into)
-        } else {
-            let elementsSpan = elements.span
-            var intoSpan = into.elements.mutableSpan
-            var i = 0
-            while i &+ 4 <= elementsSpan.count {
-                intoSpan[unchecked: i] = elementsSpan[unchecked: i] / by
-                intoSpan[unchecked: i &+ 1] = elementsSpan[unchecked: i &+ 1] / by
-                intoSpan[unchecked: i &+ 2] = elementsSpan[unchecked: i &+ 2] / by
-                intoSpan[unchecked: i &+ 3] = elementsSpan[unchecked: i &+ 3] / by
-                i &+= 4
-            }
-            while i < elementsSpan.count {
-                intoSpan[unchecked: i] = elementsSpan[unchecked: i] / by
-                i &+= 1
             }
         }
     }
@@ -101,25 +63,10 @@ public extension Matrix<Double> {
             multiply(by: recip)
         } else {
             var span = elements.mutableSpan
-            var i = 0
-            while i &+ 4 <= span.count {
+            for i in span.indices {
                 span[unchecked: i] /= by
-                span[unchecked: i &+ 1] /= by
-                span[unchecked: i &+ 2] /= by
-                span[unchecked: i &+ 3] /= by
-                i &+= 4
-            }
-            while i < span.count {
-                span[unchecked: i] /= by
-                i &+= 1
             }
         }
-    }
-    
-    @inlinable
-    @_transparent
-    func divide(by: T, into: inout Self) {
-        _divide(by: by, into: &into)
     }
 }
 
@@ -145,25 +92,10 @@ public extension Matrix<Float> {
             multiply(by: recip)
         } else {
             var span = elements.mutableSpan
-            var i = 0
-            while i &+ 4 <= span.count {
+            for i in span.indices {
                 span[unchecked: i] /= by
-                span[unchecked: i &+ 1] /= by
-                span[unchecked: i &+ 2] /= by
-                span[unchecked: i &+ 3] /= by
-                i &+= 4
-            }
-            while i < span.count {
-                span[unchecked: i] /= by
-                i &+= 1
             }
         }
-    }
-    
-    @inlinable
-    @_transparent
-    func divide(by: T, into: inout Self) {
-        _divide(by: by, into: &into)
     }
 }
 
@@ -201,17 +133,8 @@ public extension Matrix<Complex<Double>> {
             multiply(by: recip)
         } else {
             var span = elements.mutableSpan
-            var i = 0
-            while i &+ 4 <= span.count {
+            for i in span.indices {
                 span[unchecked: i] /= by
-                span[unchecked: i &+ 1] /= by
-                span[unchecked: i &+ 2] /= by
-                span[unchecked: i &+ 3] /= by
-                i &+= 4
-            }
-            while i < span.count {
-                span[unchecked: i] /= by
-                i &+= 1
             }
         }
     }
@@ -222,51 +145,12 @@ public extension Matrix<Complex<Double>> {
             multiply(by: recip)
         } else {
             var span = elements.mutableSpan
-            var i = 0
-            while i &+ 4 <= span.count {
+            for i in span.indices {
                 span[unchecked: i] /= by
-                span[unchecked: i &+ 1] /= by
-                span[unchecked: i &+ 2] /= by
-                span[unchecked: i &+ 3] /= by
-                i &+= 4
-            }
-            while i < span.count {
-                span[unchecked: i] /= by
-                i &+= 1
-            }
-        }
-    }
-    
-    @inlinable
-    @_transparent
-    func divide(by: T, into: inout Self) {
-        _divide(by: by, into: &into)
-    }
-    
-    @inlinable
-    func divide(by: Double, into: inout Self) {
-        if let reciprocal = by.reciprocal {
-            multiply(by: reciprocal, into: &into)
-        } else {
-            precondition(elements.count == into.elements.count)
-            let elementsSpan = elements.span
-            var intoSpan = into.elements.mutableSpan
-            var i = 0
-            while i &+ 4 <= elementsSpan.count {
-                intoSpan[unchecked: i] = elementsSpan[unchecked: i] / by
-                intoSpan[unchecked: i] = elementsSpan[unchecked: i &+ 1] / by
-                intoSpan[unchecked: i] = elementsSpan[unchecked: i &+ 2] / by
-                intoSpan[unchecked: i] = elementsSpan[unchecked: i &+ 3] / by
-                i &+= 4
-            }
-            while i < elementsSpan.count {
-                intoSpan[unchecked: i] = elementsSpan[unchecked: i] / by
-                i &+= 1
             }
         }
     }
 }
-
 
 //MARK: Division for Complex<Float>
 public extension Matrix<Complex<Float>> {
@@ -303,17 +187,8 @@ public extension Matrix<Complex<Float>> {
             multiply(by: recip)
         } else {
             var span = elements.mutableSpan
-            var i = 0
-            while i &+ 4 <= span.count {
+            for i in span.indices {
                 span[unchecked: i] /= by
-                span[unchecked: i &+ 1] /= by
-                span[unchecked: i &+ 2] /= by
-                span[unchecked: i &+ 3] /= by
-                i &+= 4
-            }
-            while i < span.count {
-                span[unchecked: i] /= by
-                i &+= 1
             }
         }
     }
@@ -325,46 +200,8 @@ public extension Matrix<Complex<Float>> {
             multiply(by: recip)
         } else {
             var span = elements.mutableSpan
-            var i = 0
-            while i &+ 4 <= span.count {
+            for i in span.indices {
                 span[unchecked: i] /= by
-                span[unchecked: i &+ 1] /= by
-                span[unchecked: i &+ 2] /= by
-                span[unchecked: i &+ 3] /= by
-                i &+= 4
-            }
-            while i < span.count {
-                span[unchecked: i] /= by
-                i &+= 1
-            }
-        }
-    }
-    
-    @inlinable
-    @_transparent
-    func divide(by: T, into: inout Self) {
-        _divide(by: by, into: &into)
-    }
-    
-    @inlinable
-    func divide(by: Float, into: inout Self) {
-        if let reciprocal = by.reciprocal {
-            multiply(by: reciprocal, into: &into)
-        } else {
-            precondition(elements.count == into.elements.count)
-            let elementsSpan = elements.span
-            var intoSpan = into.elements.mutableSpan
-            var i = 0
-            while i &+ 4 <= elementsSpan.count {
-                intoSpan[unchecked: i] = elementsSpan[unchecked: i] / by
-                intoSpan[unchecked: i] = elementsSpan[unchecked: i &+ 1] / by
-                intoSpan[unchecked: i] = elementsSpan[unchecked: i &+ 2] / by
-                intoSpan[unchecked: i] = elementsSpan[unchecked: i &+ 3] / by
-                i &+= 4
-            }
-            while i < elementsSpan.count {
-                intoSpan[unchecked: i] = elementsSpan[unchecked: i] / by
-                i &+= 1
             }
         }
     }

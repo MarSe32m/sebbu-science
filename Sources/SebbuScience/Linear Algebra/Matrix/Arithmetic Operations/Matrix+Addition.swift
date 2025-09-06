@@ -5,15 +5,6 @@
 //  Created by Sebastian Toivonen on 10.5.2025.
 //
 
-//import BLAS
-#if canImport(COpenBLAS)
-import COpenBLAS
-#elseif canImport(_COpenBLASWindows)
-import _COpenBLASWindows
-#elseif canImport(Accelerate)
-import Accelerate
-#endif
-
 import NumericsExtensions
 
 //MARK: Addition for AlgebraicField
@@ -34,55 +25,32 @@ public extension Matrix where T: AlgebraicField {
     @inlinable
     @_transparent
     mutating func add(_ other: Self, multiplied: T) {
+        precondition(self.rows == other.rows && self.columns == other.columns, "The dimensions of the matrices do not match")
         _add(other, multiplied: multiplied)
     }
 
     @inlinable
     mutating func _add(_ other: Self, multiplied: T) {
-        precondition(self.rows == other.rows)
-        precondition(self.columns == other.columns)
-        
         var elementsSpan = elements.mutableSpan
         let otherSpan = other.elements.span
-
-        var i = 0
-        while i &+ 4 <= elementsSpan.count {
+        for i in elementsSpan.indices {
             elementsSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i], elementsSpan[unchecked: i])
-            elementsSpan[unchecked: i &+ 1] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i &+ 1], elementsSpan[unchecked: i &+ 1])
-            elementsSpan[unchecked: i &+ 2] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i &+ 2], elementsSpan[unchecked: i &+ 2])
-            elementsSpan[unchecked: i &+ 3] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i &+ 3], elementsSpan[unchecked: i &+ 3])
-            i &+= 4
-        }
-        while i < elementsSpan.count {
-            elementsSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i], elementsSpan[unchecked: i])
-            i &+= 1
         }
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
+        precondition(self.rows == other.rows && self.columns == other.columns, "The dimensions of the matrices do not match")
         _add(other)
     }
 
     @inlinable
     mutating func _add(_ other: Self) {
-        precondition(self.rows == other.rows)
-        precondition(self.columns == other.columns)
         var elementsSpan = elements.mutableSpan
         let otherSpan = other.elements.span
-
-        var i = 0
-        while i &+ 4 <= elementsSpan.count {
+        for i in elementsSpan.indices {
             elementsSpan[unchecked: i] = Relaxed.sum(otherSpan[unchecked: i], elementsSpan[unchecked: i])
-            elementsSpan[unchecked: i &+ 1] = Relaxed.sum(otherSpan[unchecked: i &+ 1], elementsSpan[unchecked: i &+ 1])
-            elementsSpan[unchecked: i &+ 2] = Relaxed.sum(otherSpan[unchecked: i &+ 2], elementsSpan[unchecked: i &+ 2])
-            elementsSpan[unchecked: i &+ 3] = Relaxed.sum(otherSpan[unchecked: i &+ 3], elementsSpan[unchecked: i &+ 3])
-            i &+= 4
-        }
-        while i < elementsSpan.count {
-            elementsSpan[unchecked: i] = Relaxed.sum(otherSpan[unchecked: i], elementsSpan[unchecked: i])
-            i &+= 1
         }
     }
 }
@@ -104,20 +72,37 @@ public extension Matrix<Double> {
 
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
-        precondition(rows == other.rows)
-        precondition(columns == other.columns)
-        #if canImport(COpenBlas) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        let N = blasint(elements.count)
-        cblas_daxpy(N, multiplied, other.elements, 1, &elements, 1)
-        #else
-        _add(other, multiplied: multiplied)
-        #endif
+        precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold after which we dispatch to BLAS
+            _addBLAS(other, multiplied: multiplied)
+        } else {
+            _add(other, multiplied: multiplied)
+        }
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
-        add(other, multiplied: 1.0)
+        precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold after which we dispatch to BLAS
+            _addBLAS(other)
+        } else {
+            _add(other)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self, multiplied: T) {
+        BLAS.daxpy(elements.count, multiplied, other.elements, 1, &elements, 1)
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self) {
+        BLAS.daxpy(elements.count, 1, other.elements, 1, &elements, 1)
     }
 }
 
@@ -138,20 +123,37 @@ public extension Matrix<Float> {
 
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
-        precondition(rows == other.rows)
-        precondition(columns == other.columns)
-        #if canImport(COpenBlas) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        let N = blasint(elements.count)
-        cblas_saxpy(N, multiplied, other.elements, 1, &elements, 1)
-        #else
-        _add(other, multiplied: multiplied)
-        #endif
+        precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold after which we dispatch to BLAS
+            _addBLAS(other, multiplied: multiplied)
+        } else {
+            _add(other, multiplied: multiplied)
+        }
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
-        add(other, multiplied: 1.0)
+        precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold after which we dispatch to BLAS
+            _addBLAS(other)
+        } else {
+            _add(other)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self, multiplied: T) {
+        BLAS.saxpy(elements.count, multiplied, other.elements, 1, &elements, 1)
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self) {
+        BLAS.saxpy(elements.count, 1, other.elements, 1, &elements, 1)
     }
 }
 
@@ -172,39 +174,65 @@ public extension Matrix<Complex<Double>> {
 
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
-        #if canImport(COpenBlas) || canImport(_COpenBLASWindows)
-        precondition(rows == other.rows)
-        precondition(columns == other.columns)
-        let N = blasint(elements.count)
-        withUnsafePointer(to: multiplied) { alpha in 
-            cblas_zaxpy(N, alpha, other.elements, 1, &elements, 1)
+        precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold after which we dispatch to BLAS
+            _addBLAS(other, multiplied: multiplied)
+        } else {
+            _add(other, multiplied: multiplied)
         }
-        #elseif canImport(Accelerate)
-        precondition(rows == other.rows)
-        precondition(columns == other.columns)
-        let N = blasint(elements.count)
-        withUnsafePointer(to: multiplied) { alpha in 
-            other.elements.withUnsafeBufferPointer { otherElements in 
-                elements.withUnsafeMutableBytes { elements in 
-                    cblas_zaxpy(N, .init(alpha), .init(otherElements.baseAddress), 1, .init(elements.baseAddress), 1)
-                }
-            }
-        }
-        #else
-        _add(other, multiplied: multiplied)
-        #endif
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
-        add(other, multiplied: .one)
+        precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold after which we dispatch to BLAS
+            _addBLAS(other)
+        } else {
+            _add(other)
+        }
     }
-    
+
     @inlinable
     @_transparent
     mutating func add(_ other: Self, multiplied: Double) {
-        add(other, multiplied: Complex(multiplied))
+        precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold after which we dispatch to BLAS
+            _addBLAS(other, multiplied: multiplied)
+        } else {
+            _add(other, multiplied: multiplied)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _add(_ other: Self, multiplied: Double) {
+        var elementsSpan = elements.mutableSpan
+        let otherSpan = other.elements.span
+        for i in elementsSpan.indices {
+            elementsSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i], elementsSpan[unchecked: i])
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self, multiplied: T) {
+        BLAS.zaxpy(elements.count, multiplied, other.elements, 1, &elements, 1)
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self) {
+        _addBLAS(other, multiplied: Double(1))
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self, multiplied: Double) {
+        BLAS.zaxpy(elements.count, multiplied, other.elements, 1, &elements, 1)
     }
 }
 
@@ -224,39 +252,65 @@ public extension Matrix<Complex<Float>> {
     }
 
     @inlinable
-    @_transparent
     mutating func add(_ other: Self, multiplied: T) {
-        #if canImport(COpenBlas) || canImport(_COpenBLASWindows)
-        precondition(rows == other.rows)
-        precondition(columns == other.columns)
-        let N = blasint(elements.count)
-        withUnsafePointer(to: multiplied) { alpha in 
-            cblas_caxpy(N, alpha, other.elements, 1, &elements, 1)
+        precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold after which we dispatch to BLAS
+            _addBLAS(other, multiplied: multiplied)
+        } else {
+            _add(other, multiplied: multiplied)
         }
-        #elseif canImport(Accelerate)
-        precondition(rows == other.rows)
-        precondition(columns == other.columns)
-        let N = blasint(elements.count)
-        withUnsafePointer(to: multiplied) { alpha in 
-            other.elements.withUnsafeBufferPointer { otherElements in 
-                elements.withUnsafeMutableBytes { elements in 
-                    cblas_caxpy(N, .init(alpha), .init(otherElements.baseAddress), 1, .init(elements.baseAddress), 1)
-                }
-            }
-        }
-        #else
-        _add(other, multiplied: multiplied)
-        #endif
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
-        add(other, multiplied: .one)
+        precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold after which we dispatch to BLAS
+            _addBLAS(other)
+        } else {
+            _add(other)
+        }
     }
-    
+
     @inlinable
+    @_transparent
     mutating func add(_ other: Self, multiplied: Float) {
-        add(other, multiplied: Complex(multiplied))
+        precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold after which we dispatch to BLAS
+            _addBLAS(other, multiplied: multiplied)
+        } else {
+            _add(other, multiplied: multiplied)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _add(_ other: Self, multiplied: Float) {
+        var elementsSpan = elements.mutableSpan
+        let otherSpan = other.elements.span
+        for i in elementsSpan.indices {
+            elementsSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i], elementsSpan[unchecked: i])
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self, multiplied: T) {
+        BLAS.caxpy(elements.count, multiplied, other.elements, 1, &elements, 1)
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self) {
+        _addBLAS(other, multiplied: Float(1))
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self, multiplied: Float) {
+        BLAS.caxpy(elements.count, multiplied, other.elements, 1, &elements, 1)
     }
 }
