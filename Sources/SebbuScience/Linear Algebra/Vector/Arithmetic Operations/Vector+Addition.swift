@@ -5,14 +5,6 @@
 //  Created by Sebastian Toivonen on 11.5.2025.
 //
 
-#if canImport(COpenBLAS)
-import COpenBLAS
-#elseif canImport(_COpenBLASWindows)
-import _COpenBLASWindows
-#elseif canImport(Accelerate)
-import Accelerate
-#endif
-
 import NumericsExtensions
 
 //MARK: Addition for AlgebraicField
@@ -33,51 +25,32 @@ public extension Vector where T: AlgebraicField {
     @inlinable
     @_transparent
     mutating func add(_ other: Self, multiplied: T) {
+        precondition(other.components.count == self.components.count)
         _add(other, multiplied: multiplied)
     }
     
     @inlinable
     mutating func _add(_ other: Self, multiplied: T) {
-        precondition(other.components.count == self.components.count)
         var componentSpan = components.mutableSpan
         let otherSpan = other.components.span
-        var i = 0
-        while i &+ 4 <= componentSpan.count {
+        for i in componentSpan.indices {
             componentSpan[i] = Relaxed.multiplyAdd(multiplied, otherSpan[i], componentSpan[i])
-            componentSpan[unchecked: i &+ 1] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i &+ 1], componentSpan[unchecked: i &+ 1])
-            componentSpan[unchecked: i &+ 2] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i &+ 2], componentSpan[unchecked: i &+ 2])
-            componentSpan[unchecked: i &+ 3] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i &+ 3], componentSpan[unchecked: i &+ 3])
-            i &+= 4
-            
-        }
-        while i < componentSpan.count {
-            componentSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i], componentSpan[unchecked: i])
-            i &+= 1
         }
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
+        precondition(other.components.count == self.components.count)
         _add(other)
     }
 
     @inlinable
     mutating func _add(_ other: Self) {
-        precondition(other.components.count == self.components.count)
         var componentSpan = components.mutableSpan
         let otherSpan = other.components.span
-        var i = 0
-        while i &+ 4 <= componentSpan.count {
+        for i in componentSpan.indices {
             componentSpan[unchecked: i] = Relaxed.sum(componentSpan[unchecked: i], otherSpan[unchecked: i])
-            componentSpan[unchecked: i &+ 1] = Relaxed.sum(componentSpan[unchecked: i &+ 1], otherSpan[unchecked: i &+ 1])
-            componentSpan[unchecked: i &+ 2] = Relaxed.sum(componentSpan[unchecked: i &+ 2], otherSpan[unchecked: i &+ 2])
-            componentSpan[unchecked: i &+ 3] = Relaxed.sum(componentSpan[unchecked: i &+ 3], otherSpan[unchecked: i &+ 3])
-            i &+= 4
-        }
-        while i < componentSpan.count {
-            componentSpan[unchecked: i] = Relaxed.sum(componentSpan[unchecked: i], otherSpan[unchecked: i])
-            i &+= 1
         }
     }
 }
@@ -99,19 +72,35 @@ public extension Vector<Double> {
     
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
-        precondition(count == other.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        let N = blasint(count)
-        cblas_daxpy(N, multiplied, other.components, 1, &components, 1)
-        #else
-        _add(other, multiplied: multiplied)
-        #endif
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _addBLAS(other, multiplied: multiplied)
+        } else {
+            _add(other, multiplied: multiplied)
+        }
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
-        add(other, multiplied: 1.0)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _addBLAS(other)
+        } else {
+            _add(other)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self, multiplied: T) {
+        BLAS.daxpy(components.count, multiplied, other.components, 1, &components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self) {
+        BLAS.daxpy(components.count, 1.0, other.components, 1, &components, 1)
     }
 }
 
@@ -124,7 +113,6 @@ public extension Vector<Float> {
         return result
     }
     
-    
     @inlinable
     @_transparent
     static func +=(lhs: inout Self, rhs: Self) {
@@ -133,19 +121,35 @@ public extension Vector<Float> {
     
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
-        precondition(count == other.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        let N = blasint(count)
-        cblas_saxpy(N, multiplied, other.components, 1, &components, 1)
-        #else
-        _add(other, multiplied: multiplied)
-        #endif
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _addBLAS(other, multiplied: multiplied)
+        } else {
+            _add(other, multiplied: multiplied)
+        }
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
-        add(other, multiplied: 1.0)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _addBLAS(other)
+        } else {
+            _add(other)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self, multiplied: T) {
+        BLAS.saxpy(components.count, multiplied, other.components, 1, &components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self) {
+        BLAS.saxpy(components.count, 1.0, other.components, 1, &components, 1)
     }
 }
 
@@ -166,36 +170,62 @@ public extension Vector<Complex<Double>> {
     
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
-        precondition(count == other.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        let N = blasint(count)
-        withUnsafePointer(to: multiplied) { alpha in
-            cblas_zaxpy(N, alpha, other.components, 1, &components, 1)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _addBLAS(other, multiplied: multiplied)
+        } else {
+            _add(other, multiplied: multiplied)
         }
-        #elseif canImport(Accelerate)
-        let N = blasint(count)
-        withUnsafePointer(to: multiplied) { alpha in
-            other.components.withUnsafeBufferPointer { otherComponents in 
-                components.withUnsafeMutableBufferPointer { components in 
-                    cblas_zaxpy(N, .init(alpha), .init(otherComponents.baseAddress), 1, .init(components.baseAddress), 1)
-                }
-            }
-        }
-        #else
-        _add(other, multiplied: multiplied)
-        #endif
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
-        add(other, multiplied: .one)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _addBLAS(other)
+        } else {
+            _add(other)
+        }
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self, multiplied: Double) {
-        add(other, multiplied: Complex(multiplied))
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _addBLAS(other, multiplied: multiplied)
+        } else {
+            _add(other, multiplied: multiplied)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _add(_ other: Self, multiplied: Double) {
+        var componentSpan = components.mutableSpan
+        let otherSpan = other.components.span
+        for i in componentSpan.indices {
+            componentSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i], componentSpan[unchecked: i])
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self, multiplied: T) {
+        BLAS.zaxpy(components.count, multiplied, other.components, 1, &components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self, multiplied: Double) {
+        BLAS.zaxpy(components.count, multiplied, other.components, 1, &components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self) {
+        BLAS.zaxpy(components.count, 1.0, other.components, 1, &components, 1)
     }
 }
 
@@ -216,35 +246,61 @@ public extension Vector<Complex<Float>> {
     
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
-        precondition(count == other.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        let N = blasint(count)
-        withUnsafePointer(to: multiplied) { alpha in
-            cblas_caxpy(N, alpha, other.components, 1, &components, 1)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _addBLAS(other, multiplied: multiplied)
+        } else {
+            _add(other, multiplied: multiplied)
         }
-        #elseif canImport(Accelerate)
-        let N = blasint(count)
-        withUnsafePointer(to: multiplied) { alpha in
-            other.components.withUnsafeBufferPointer { otherComponents in 
-                components.withUnsafeMutableBufferPointer { components in 
-                    cblas_caxpy(N, .init(alpha), .init(otherComponents.baseAddress), 1, .init(components.baseAddress), 1)
-                }
-            }
-        }
-        #else
-        _add(other, multiplied: multiplied)
-        #endif
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
-        add(other, multiplied: .one)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _addBLAS(other)
+        } else {
+            _add(other)
+        }
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self, multiplied: Float) {
-        add(other, multiplied: Complex(multiplied))
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _addBLAS(other, multiplied: multiplied)
+        } else {
+            _add(other, multiplied: multiplied)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _add(_ other: Self, multiplied: Float) {
+        var componentSpan = components.mutableSpan
+        let otherSpan = other.components.span
+        for i in componentSpan.indices {
+            componentSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i], componentSpan[unchecked: i])
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self, multiplied: T) {
+        BLAS.caxpy(components.count, multiplied, other.components, 1, &components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self, multiplied: Float) {
+        BLAS.caxpy(components.count, multiplied, other.components, 1, &components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _addBLAS(_ other: Self) {
+        BLAS.caxpy(components.count, 1.0, other.components, 1, &components, 1)
     }
 }

@@ -5,14 +5,6 @@
 //  Created by Sebastian Toivonen on 11.5.2025.
 //
 
-#if canImport(COpenBLAS)
-import COpenBLAS
-#elseif canImport(_COpenBLASWindows)
-import _COpenBLASWindows
-#elseif canImport(Accelerate)
-import Accelerate
-#endif
-
 import NumericsExtensions
 
 //MARK: Symmetric Vector-Matrix multiplication for Double
@@ -34,53 +26,97 @@ public extension Vector<Double> {
     @inlinable
     @_transparent
     func dotSymmetric(_ matrix: Matrix<T>, into: inout Self) {
-        dotSymmetric(matrix, multiplied: 1.0, into: &into)
-    }
-    
-    @inlinable
-    @_transparent
-    func dotSymmetric(_ matrix: Matrix<T>, addingInto into: inout Self) {
-        dotSymmetric(matrix, multiplied: 1.0, addingInto: &into)
+        precondition(matrix.rows == count)
+        precondition(matrix.columns == into.count)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotSymmetricBLAS(matrix, into: &into)
+        } else {
+            _dot(matrix, into: &into)
+        }
     }
     
     @inlinable
     func dotSymmetric(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            // Use lower since we want X*A
-            let uplo = CblasLower
-            let n = blasint(matrix.rows)
-            let lda = n
-            let beta: T = .zero
-            cblas_dsymv(layout, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
-            return
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotSymmetricBLAS(matrix, multiplied: multiplied, into: &into)
+        } else {
+            _dot(matrix, multiplied: multiplied, into: &into)
         }
-        #endif
-        //TODO: Implement vector - hermitian matrix multiply (default implementation)
-        _dot(matrix, multiplied: multiplied, into: &into)
     }
-   
+
+    @inlinable
+    @_transparent
+    func dotSymmetric(_ matrix: Matrix<T>, addingInto into: inout Self) {
+        precondition(matrix.rows == count)
+        precondition(matrix.columns == into.count)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotSymmetricBLAS(matrix, addingInto: &into)
+        } else {
+            _dot(matrix, addingInto: &into)
+        }
+    }
+    
     @inlinable
     func dotSymmetric(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            // Use lower since we want X*A
-            let uplo = CblasLower
-            let n = blasint(matrix.rows)
-            let lda = n
-            let beta: T = 1.0
-            cblas_dsymv(layout, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
-            return
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotSymmetricBLAS(matrix, multiplied: multiplied, addingInto: &into)
+        } else {
+            _dot(matrix, multiplied: multiplied, addingInto: &into)
         }
-        #endif
-        //TODO: Implement vector - hermitian matrix multiply (default implementation)
-        _dot(matrix, multiplied: multiplied, addingInto: &into)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotSymmetricBLAS(_ matrix: Matrix<T>, into: inout Self) {
+        let order: BLAS.Order = .columnMajor
+        let uplo: BLAS.UpLo = .upper
+        let n = matrix.rows
+        let lda = n
+        let alpha: T = 1.0
+        let beta: T = .zero
+        BLAS.dsymv(order, uplo, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotSymmetricBLAS(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+        let order: BLAS.Order = .columnMajor
+        let uplo: BLAS.UpLo = .upper
+        let n = matrix.rows
+        let lda = n
+        let beta: T = .zero
+        BLAS.dsymv(order, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotSymmetricBLAS(_ matrix: Matrix<T>, addingInto into: inout Self) {
+        let order: BLAS.Order = .columnMajor
+        let uplo: BLAS.UpLo = .upper
+        let n = matrix.rows
+        let lda = n
+        let alpha: T = 1.0
+        let beta: T = 1.0
+        BLAS.dsymv(order, uplo, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotSymmetricBLAS(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
+        let order: BLAS.Order = .columnMajor
+        let uplo: BLAS.UpLo = .upper
+        let n = matrix.rows
+        let lda = n
+        let beta: T = 1.0
+        BLAS.dsymv(order, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
     }
 }
 
@@ -103,105 +139,108 @@ public extension Vector<Float> {
     @inlinable
     @_transparent
     func dotSymmetric(_ matrix: Matrix<T>, into: inout Self) {
-        dotSymmetric(matrix, multiplied: 1.0, into: &into)
-    }
-    
-    @inlinable
-    @_transparent
-    func dotSymmetric(_ matrix: Matrix<T>, addingInto into: inout Self) {
-        dotSymmetric(matrix, multiplied: 1.0, addingInto: &into)
+        precondition(matrix.rows == count)
+        precondition(matrix.columns == into.count)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotSymmetricBLAS(matrix, into: &into)
+        } else {
+            _dot(matrix, into: &into)
+        }
     }
     
     @inlinable
     func dotSymmetric(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            // Use lower since we want X*A
-            let uplo = CblasLower
-            let n = blasint(matrix.rows)
-            let lda = n
-            let beta: T = .zero
-            cblas_ssymv(layout, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
-            return
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotSymmetricBLAS(matrix, multiplied: multiplied, into: &into)
+        } else {
+            _dot(matrix, multiplied: multiplied, into: &into)
         }
-        #endif
-        //TODO: Implement vector - hermitian matrix multiply (default implementation)
-        _dot(matrix, multiplied: multiplied, into: &into)
+    }
+
+    @inlinable
+    @_transparent
+    func dotSymmetric(_ matrix: Matrix<T>, addingInto into: inout Self) {
+        precondition(matrix.rows == count)
+        precondition(matrix.columns == into.count)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotSymmetricBLAS(matrix, addingInto: &into)
+        } else {
+            _dot(matrix, addingInto: &into)
+        }
     }
     
     @inlinable
     func dotSymmetric(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            // Use lower since we want X*A
-            let uplo = CblasLower
-            let n = blasint(matrix.rows)
-            let lda = n
-            let beta: T = 1.0
-            cblas_ssymv(layout, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
-            return
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotSymmetricBLAS(matrix, multiplied: multiplied, addingInto: &into)
+        } else {
+            _dot(matrix, multiplied: multiplied, addingInto: &into)
         }
-        #endif
-        //TODO: Implement vector - hermitian matrix multiply (default implementation)
-        _dot(matrix, multiplied: multiplied, addingInto: &into)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotSymmetricBLAS(_ matrix: Matrix<T>, into: inout Self) {
+        let order: BLAS.Order = .columnMajor
+        let uplo: BLAS.UpLo = .upper
+        let n = matrix.rows
+        let lda = n
+        let alpha: T = 1.0
+        let beta: T = .zero
+        BLAS.ssymv(order, uplo, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotSymmetricBLAS(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+        let order: BLAS.Order = .columnMajor
+        let uplo: BLAS.UpLo = .upper
+        let n = matrix.rows
+        let lda = n
+        let beta: T = .zero
+        BLAS.ssymv(order, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotSymmetricBLAS(_ matrix: Matrix<T>, addingInto into: inout Self) {
+        let order: BLAS.Order = .columnMajor
+        let uplo: BLAS.UpLo = .upper
+        let n = matrix.rows
+        let lda = n
+        let alpha: T = 1.0
+        let beta: T = 1.0
+        BLAS.ssymv(order, uplo, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotSymmetricBLAS(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
+        let order: BLAS.Order = .columnMajor
+        let uplo: BLAS.UpLo = .upper
+        let n = matrix.rows
+        let lda = n
+        let beta: T = 1.0
+        BLAS.ssymv(order, uplo, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
     }
 }
 
 @inlinable
 public func vecSymmetricMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Double, _ matrix: UnsafePointer<Double>, _ vector: UnsafePointer<Double>, _ resultMultiplier: Double, _ resultVector: UnsafeMutablePointer<Double>) {
     precondition(matrixColumns == vectorComponents)
-    if matrixRows == 2 && matrixColumns == 2 {
-        resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-        return
-    }
-    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-    if matrixRows &* matrixColumns > 1000 {
-        let order = CblasColMajor
-        let uplo = CblasUpper
-        let n = blasint(matrixRows)
-        cblas_dsymv(order, uplo, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
-        return
-    } 
-    #endif
-    var result: Double = .zero
-    for i in 0..<matrixRows {
-        result = .zero
-        for j in 0..<matrixColumns {
-            result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
-        }
-        resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
-    }
+    BLAS.dsymv(.columnMajor, .upper, matrixRows, multiplier, matrix, matrixRows, vector, 1, resultMultiplier, resultVector, 1)
 }
 
 @inlinable
 public func vecSymmetricMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Float, _ matrix: UnsafePointer<Float>, _ vector: UnsafePointer<Float>, _ resultMultiplier: Float, _ resultVector: UnsafeMutablePointer<Float>) {
     precondition(matrixColumns == vectorComponents)
-    if matrixRows == 2 && matrixColumns == 2 {
-        resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-    }
-    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-    if matrixRows &* matrixColumns > 1000 {
-        let order = CblasColMajor
-        let uplo = CblasUpper
-        let n = blasint(matrixRows)
-        cblas_ssymv(order, uplo, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
-        return
-    }
-    #endif
-    var result: Float = .zero
-    for i in 0..<matrixRows {
-        result = .zero
-        for j in 0..<matrixColumns {
-            result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
-        }
-        resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
-    }
+    BLAS.ssymv(.columnMajor, .upper, matrixRows, multiplier, matrix, matrixRows, vector, 1, resultMultiplier, resultVector, 1)
 }

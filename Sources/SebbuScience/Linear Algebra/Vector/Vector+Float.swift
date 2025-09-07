@@ -5,14 +5,6 @@
 //  Created by Sebastian Toivonen on 11.4.2025.
 //
 
-#if canImport(COpenBLAS)
-import COpenBLAS
-#elseif canImport(_COpenBLASWindows)
-import _COpenBLASWindows
-#elseif canImport(Accelerate)
-import Accelerate
-#endif
-
 import RealModule
 
 public extension Vector<Float> {
@@ -29,20 +21,24 @@ public extension Vector<Float> {
     @inlinable
     mutating func copyComponents(from other: Self) {
         precondition(count == other.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        let N = blasint(count)
-        cblas_scopy(N, other.components, 1, &components, 1)
-        #else
-        for i in 0..<count {
-            components[i] = other.components[i]
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            BLAS.scopy(count, other.components, 1, &components, 1)
+        } else {
+            var span = components.mutableSpan
+            let otherSpan = other.components.span
+            for i in span.indices {
+                span[unchecked: i] = otherSpan[unchecked: i]
+            }
         }
-        #endif
     }
     
     @inlinable
+    @_transparent
     mutating func zeroComponents() {
-        for i in 0..<components.count {
-            components[i] = .zero
+        var span = components.mutableSpan
+        for i in span.indices {
+            span[unchecked: i] = .zero
         }
     }
 }

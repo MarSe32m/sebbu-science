@@ -5,14 +5,6 @@
 //  Created by Sebastian Toivonen on 11.5.2025.
 //
 
-#if canImport(COpenBLAS)
-import COpenBLAS
-#elseif canImport(_COpenBLASWindows)
-import _COpenBLASWindows
-#elseif canImport(Accelerate)
-import Accelerate
-#endif
-
 import NumericsExtensions
 
 //MARK: Scaling for AlgebraicField
@@ -74,12 +66,18 @@ public extension Vector<Double> {
     
     @inlinable
     mutating func multiply(by: T) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        let N = blasint(count)
-        cblas_dscal(N, by, &components, 1)
-        #else
-        _multiply(by: by)
-        #endif
+        if BLAS.isAvailable {
+            //TODO: Bechmark threshold
+            _multiplyBLAS(by: by)
+        } else {
+            _multiply(by: by)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _multiplyBLAS(by: T) {
+        BLAS.dscal(components.count, by, &components, 1)
     }
 }
 
@@ -100,12 +98,18 @@ public extension Vector<Float> {
     
     @inlinable
     mutating func multiply(by: T) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        let N = blasint(count)
-        cblas_sscal(N, by, &components, 1)
-        #else
-        _multiply(by: by)
-        #endif
+        if BLAS.isAvailable {
+            //TODO: Bechmark threshold
+            _multiplyBLAS(by: by)
+        } else {
+            _multiply(by: by)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _multiplyBLAS(by: T) {
+        BLAS.sscal(components.count, by, &components, 1)
     }
 }
 
@@ -117,21 +121,20 @@ public extension Vector<Complex<Double>> {
         result.multiply(by: lhs)
         return result
     }
+
+    @inlinable
+    static func *(lhs: Double, rhs: Self) -> Self {
+        var result = Vector(rhs.components)
+        result.multiply(by: lhs)
+        return result
+    }
     
     @inlinable
     @_transparent
     static func *=(lhs: inout Self, rhs: T) {
         lhs.multiply(by: rhs)
     }
-    
-    
-    @inlinable
-    static func *(lhs: Double, rhs: Self) -> Self {
-        var result = Vector(Array(rhs.components))
-        result.multiply(by: lhs)
-        return result
-    }
-    
+
     @inlinable
     @_transparent
     static func *=(lhs: inout Self, rhs: Double) {
@@ -140,38 +143,43 @@ public extension Vector<Complex<Double>> {
     
     @inlinable
     mutating func multiply(by: T) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        let N = blasint(count)
-        withUnsafePointer(to: by) { alpha in
-            cblas_zscal(N, alpha, &components, 1)
+        if BLAS.isAvailable {
+            //TODO: Bechmark threshold
+            _multiplyBLAS(by: by)
+        } else {
+            _multiply(by: by)
         }
-        #elseif canImport(Accelerate)
-        let N = blasint(count)
-        withUnsafePointer(to: by) { alpha in
-            components.withUnsafeMutableBufferPointer { components in 
-                cblas_zscal(N, .init(alpha), .init(components.baseAddress), 1)
-            }
+    }
+
+    @inlinable
+    mutating func multiply(by: Double) {
+        if BLAS.isAvailable {
+            //TODO: Bechmark threshold
+            _multiplyBLAS(by: by)
+        } else {
+            _multiply(by: by)
         }
-        #else
-        _multiply(by: by)
-        #endif
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _multiply(by: Double) {
+        var componentSpan = components.mutableSpan
+        for i in componentSpan.indices {
+            componentSpan[unchecked: i] = Relaxed.product(componentSpan[unchecked: i], by)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _multiplyBLAS(by: T) {
+        BLAS.zscal(components.count, by, &components, 1)
     }
     
     @inlinable
-    mutating func multiply(by: Double) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        let N = blasint(count)
-        cblas_zdscal(N, by, &components, 1)
-        #elseif canImport(Accelerate)
-        let N = blasint(count)
-        components.withUnsafeBufferPointer { components in 
-            cblas_zdscal(N, by, .init(components.baseAddress), 1)
-        }
-        #else
-        for i in 0..<components.count {
-            components[i] = Relaxed.product(components[i], by)
-        }
-        #endif
+    @_transparent
+    mutating func _multiplyBLAS(by: Double) {
+        BLAS.zdscal(components.count, by, &components, 1)
     }
 }
 
@@ -183,20 +191,20 @@ public extension Vector<Complex<Float>> {
         result.multiply(by: lhs)
         return result
     }
+
+    @inlinable
+    static func *(lhs: Float, rhs: Self) -> Self {
+        var result = Vector(rhs.components)
+        result.multiply(by: lhs)
+        return result
+    }
     
     @inlinable
     @_transparent
     static func *=(lhs: inout Self, rhs: T) {
         lhs.multiply(by: rhs)
     }
-    
-    @inlinable
-    static func *(lhs: Float, rhs: Self) -> Self {
-        var result = Vector(Array(rhs.components))
-        result.multiply(by: lhs)
-        return result
-    }
-    
+
     @inlinable
     @_transparent
     static func *=(lhs: inout Self, rhs: Float) {
@@ -205,37 +213,42 @@ public extension Vector<Complex<Float>> {
     
     @inlinable
     mutating func multiply(by: T) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        let N = blasint(count)
-        withUnsafePointer(to: by) { alpha in
-            cblas_cscal(N, alpha, &components, 1)
+        if BLAS.isAvailable {
+            //TODO: Bechmark threshold
+            _multiplyBLAS(by: by)
+        } else {
+            _multiply(by: by)
         }
-        #elseif canImport(Accelerate)
-        let N = blasint(count)
-        withUnsafePointer(to: by) { alpha in
-            components.withUnsafeMutableBufferPointer { components in 
-                cblas_cscal(N, .init(alpha), .init(components.baseAddress), 1)
-            }
+    }
+
+    @inlinable
+    mutating func multiply(by: Float) {
+        if BLAS.isAvailable {
+            //TODO: Bechmark threshold
+            _multiplyBLAS(by: by)
+        } else {
+            _multiply(by: by)
         }
-        #else
-        _multiply(by: by)
-        #endif
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _multiply(by: Float) {
+        var componentSpan = components.mutableSpan
+        for i in componentSpan.indices {
+            componentSpan[unchecked: i] = Relaxed.product(componentSpan[unchecked: i], by)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _multiplyBLAS(by: T) {
+        BLAS.cscal(components.count, by, &components, 1)
     }
     
     @inlinable
-    mutating func multiply(by: Float) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        let N = blasint(count)
-        cblas_csscal(N, by, &components, 1)
-        #elseif canImport(Accelerate)
-        let N = blasint(count)
-        components.withUnsafeBufferPointer { components in 
-            cblas_csscal(N, by, .init(components.baseAddress), 1)
-        }
-        #else
-        for i in 0..<count {
-            components[i] = Relaxed.product(components[i], by)
-        }
-        #endif
+    @_transparent
+    mutating func _multiplyBLAS(by: Float) {
+        BLAS.csscal(components.count, by, &components, 1)
     }
 }

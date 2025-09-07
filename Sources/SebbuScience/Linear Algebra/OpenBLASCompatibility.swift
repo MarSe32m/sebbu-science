@@ -129,7 +129,7 @@ public extension BLAS {
             }
         }
     }
-    typealias CBLASLayout = Order
+    typealias Layout = Order
 }
 
 public extension BLAS {
@@ -452,5 +452,153 @@ public extension BLAS {
         #else
         fatalError("Not available on this platform")
         #endif
+    }
+
+    @inlinable
+    @_transparent
+    static func dsymv(_ order: Order, _ uplo: UpLo, _ n: Int, _ alpha: Double, _ A: UnsafePointer<Double>, _ lda: Int, _ x: UnsafePointer<Double>, _ incx: Int, _ beta: Double, _ y: UnsafeMutablePointer<Double>, _ incy: Int) {
+       #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        cblas_dsymv(order.rawValue, uplo.rawValue, blasint(n), alpha, A, blasint(lda), x, blasint(incx), beta, y, blasint(incy))
+        #else
+        fatalError("Not available on this platform")
+        #endif
+    }
+
+    @inlinable
+    @_transparent
+    static func ssymv(_ order: Order, _ uplo: UpLo, _ n: Int, _ alpha: Float, _ A: UnsafePointer<Float>, _ lda: Int, _ x: UnsafePointer<Float>, _ incx: Int, _ beta: Float, _ y: UnsafeMutablePointer<Float>, _ incy: Int) {
+       #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        cblas_ssymv(order.rawValue, uplo.rawValue, blasint(n), alpha, A, blasint(lda), x, blasint(incx), beta, y, blasint(incy))
+        #else
+        fatalError("Not available on this platform")
+        #endif
+    }
+
+    @inlinable
+    @_transparent
+    static func zhemv(_ order: Order, _ uplo: UpLo, _ n: Int, _ alpha: Complex<Double>, _ A: UnsafePointer<Complex<Double>>, _ lda: Int, _ x: UnsafePointer<Complex<Double>>, _ incx: Int, _ beta: Complex<Double>, _ y: UnsafeMutablePointer<Complex<Double>>, _ incy: Int) {
+       #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        withUnsafePointer(to: alpha) { alpha in 
+            withUnsafePointer(to: beta) { beta in 
+                cblas_zhemv(order.rawValue, uplo.rawValue, blasint(n), .init(alpha), .init(A), blasint(lda), .init(x), blasint(incx), .init(beta), .init(y), blasint(incy))
+            }
+        }
+        #else
+        fatalError("Not available on this platform")
+        #endif
+    }
+
+    @inlinable
+    @_transparent
+    static func chemv(_ order: Order, _ uplo: UpLo, _ n: Int, _ alpha: Complex<Float>, _ A: UnsafePointer<Complex<Float>>, _ lda: Int, _ x: UnsafePointer<Complex<Float>>, _ incx: Int, _ beta: Complex<Float>, _ y: UnsafeMutablePointer<Complex<Float>>, _ incy: Int) {
+       #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        withUnsafePointer(to: alpha) { alpha in 
+            withUnsafePointer(to: beta) { beta in 
+                cblas_chemv(order.rawValue, uplo.rawValue, blasint(n), .init(alpha), .init(A), blasint(lda), .init(x), blasint(incx), .init(beta), .init(y), blasint(incy))
+            }
+        }
+        #else
+        fatalError("Not available on this platform")
+        #endif
+    }
+
+    @inlinable
+    @_transparent
+    static func dsymm(_ order: Order, _ side: Side, _ uplo: UpLo, _ m: Int, _ n: Int, _ alpha: Double, _ A: UnsafePointer<Double>, _ lda: Int, _ B: UnsafePointer<Double>, _ ldb: Int, _ beta: Double, _ C: UnsafeMutablePointer<Double>, _ ldc: Int) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        cblas_dsymm(order.rawValue, side.rawValue, uplo.rawValue, blasint(m), blasint(n), alpha, A, blasint(lda), B, blasint(ldb), beta, C, blasint(ldc))
+        #else
+        fatalError("Not available on this platform")
+        #endif
+    }
+
+    @inlinable
+    @_transparent
+    static func ssymm(_ order: Order, _ side: Side, _ uplo: UpLo, _ m: Int, _ n: Int, _ alpha: Float, _ A: UnsafePointer<Float>, _ lda: Int, _ B: UnsafePointer<Float>, _ ldb: Int, _ beta: Float, _ C: UnsafeMutablePointer<Float>, _ ldc: Int) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        cblas_ssymm(order.rawValue, side.rawValue, uplo.rawValue, blasint(m), blasint(n), alpha, A, blasint(lda), B, blasint(ldb), beta, C, blasint(ldc))
+        #else
+        fatalError("Not available on this platform")
+        #endif
+    }
+
+    @inlinable
+    @_transparent
+    static func zsymm(_ order: Order, _ side: Side, _ uplo: UpLo, _ m: Int, _ n: Int, _ alpha: Complex<Double>, _ A: UnsafePointer<Complex<Double>>, _ lda: Int, _ B: UnsafePointer<Complex<Double>>, _ ldb: Int, _ beta: Complex<Double>, _ C: UnsafeMutablePointer<Complex<Double>>, _ ldc: Int) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        withUnsafePointer(to: alpha) { alpha in 
+            withUnsafePointer(to: beta) { beta in 
+                cblas_zsymm(order.rawValue, side.rawValue, uplo.rawValue, blasint(m), blasint(n), .init(alpha), .init(A), blasint(lda), .init(B), blasint(ldb), .init(beta), .init(C), blasint(ldc))
+            }
+        }
+        #else
+        fatalError("Not available on this platform")
+        #endif
+    }
+
+    @inlinable
+    @_transparent
+    static func csymm(_ order: Order, _ side: Side, _ uplo: UpLo, _ m: Int, _ n: Int, _ alpha: Complex<Float>, _ A: UnsafePointer<Complex<Float>>, _ lda: Int, _ B: UnsafePointer<Complex<Float>>, _ ldb: Int, _ beta: Complex<Float>, _ C: UnsafeMutablePointer<Complex<Float>>, _ ldc: Int) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        withUnsafePointer(to: alpha) { alpha in 
+            withUnsafePointer(to: beta) { beta in 
+                cblas_csymm(order.rawValue, side.rawValue, uplo.rawValue, blasint(m), blasint(n), .init(alpha), .init(A), blasint(lda), .init(B), blasint(ldb), .init(beta), .init(C), blasint(ldc))
+            }
+        }
+        #else
+        fatalError("Not available on this platform")
+        #endif
+    }
+
+    @inlinable
+    @_transparent
+    static func zhemm(_ order: Order, _ side: Side, _ uplo: UpLo, _ m: Int, _ n: Int, _ alpha: Complex<Double>, _ A: UnsafePointer<Complex<Double>>, _ lda: Int, _ B: UnsafePointer<Complex<Double>>, _ ldb: Int, _ beta: Complex<Double>, _ C: UnsafeMutablePointer<Complex<Double>>, _ ldc: Int) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        withUnsafePointer(to: alpha) { alpha in 
+            withUnsafePointer(to: beta) { beta in 
+                cblas_zhemm(order.rawValue, side.rawValue, uplo.rawValue, blasint(m), blasint(n), .init(alpha), .init(A), blasint(lda), .init(B), blasint(ldb), .init(beta), .init(C), blasint(ldc))
+            }
+        }
+        #else
+        fatalError("Not available on this platform")
+        #endif
+    }
+
+    @inlinable
+    @_transparent
+    static func chemm(_ order: Order, _ side: Side, _ uplo: UpLo, _ m: Int, _ n: Int, _ alpha: Complex<Float>, _ A: UnsafePointer<Complex<Float>>, _ lda: Int, _ B: UnsafePointer<Complex<Float>>, _ ldb: Int, _ beta: Complex<Float>, _ C: UnsafeMutablePointer<Complex<Float>>, _ ldc: Int) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        withUnsafePointer(to: alpha) { alpha in 
+            withUnsafePointer(to: beta) { beta in 
+                cblas_chemm(order.rawValue, side.rawValue, uplo.rawValue, blasint(m), blasint(n), .init(alpha), .init(A), blasint(lda), .init(B), blasint(ldb), .init(beta), .init(C), blasint(ldc))
+            }
+        }
+        #else
+        fatalError("Not available on this platform")
+        #endif
+    }
+
+    @inlinable
+    @_transparent
+    static func dcopy(_ n: Int, _ x: UnsafePointer<Double>, _ incx: Int, _ y: UnsafeMutablePointer<Double>, _ incy: Int) {
+        cblas_dcopy(blasint(n), x, blasint(incx), y, blasint(incy))
+    }
+
+    @inlinable
+    @_transparent
+    static func scopy(_ n: Int, _ x: UnsafePointer<Float>, _ incx: Int, _ y: UnsafeMutablePointer<Float>, _ incy: Int) {
+        cblas_scopy(blasint(n), x, blasint(incx), y, blasint(incy))
+    }
+
+    @inlinable
+    @_transparent
+    static func zcopy(_ n: Int, _ x: UnsafePointer<Complex<Double>>, _ incx: Int, _ y: UnsafeMutablePointer<Complex<Double>>, _ incy: Int) {
+        cblas_zcopy(blasint(n), .init(x), blasint(incx), .init(y), blasint(incy))
+    }
+
+    @inlinable
+    @_transparent
+    static func ccopy(_ n: Int, _ x: UnsafePointer<Complex<Float>>, _ incx: Int, _ y: UnsafeMutablePointer<Complex<Float>>, _ incy: Int) {
+        cblas_ccopy(blasint(n), .init(x), blasint(incx), .init(y), blasint(incy))
     }
 }

@@ -20,7 +20,7 @@ public extension Matrix<Complex<Double>> {
     /// The inverse of the matrix, if invertible.
     /// - Note: This operation is very expensive and will be calculated each time this variable is accessed.
     /// Thus you should store the inverse if you need it later again.
-    //@inlinable
+    @inlinable
     var inverse: Self? {
         if rows != columns { return nil }
         #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
@@ -84,26 +84,30 @@ public extension Matrix<Complex<Double>> {
     }
 }
 
-//MARK: Copying elements
+//MARK: Copying and zeroing elements
 public extension Matrix<Complex<Double>> {
     @inlinable
     mutating func copyElements(from other: Self) {
         precondition(elements.count == other.elements.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        let N = blasint(elements.count)
-        cblas_zcopy(N, other.elements, 1, &elements, 1)
-        #elseif canImport(Accelerate)
-        let N = blasint(elements.count)
-        other.elements.withUnsafeBufferPointer { otherElements in 
-            elements.withUnsafeMutableBufferPointer { elements in 
-                cblas_zcopy(N, .init(otherElements.baseAddress), 1, .init(elements.baseAddress), 1)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            BLAS.zcopy(elements.count, other.elements, 1, &elements, 1)
+        } else {
+            var span = elements.mutableSpan
+            let otherSpan = other.elements.span
+            for i in span.indices {
+                span[unchecked: i] = otherSpan[unchecked: i]
             }
         }
-        #else
-        for i in 0..<elements.count {
-            elements[i] = other.elements[i]
+    }
+
+    @inlinable
+    @_transparent
+    mutating func zeroElements() {
+        var span = elements.mutableSpan
+        for i in span.indices {
+            span[unchecked: i] = .zero
         }
-        #endif
     }
 }
 

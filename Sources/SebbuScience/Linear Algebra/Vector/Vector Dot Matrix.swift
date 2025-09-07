@@ -5,14 +5,6 @@
 //  Created by Sebastian Toivonen on 11.5.2025.
 //
 
-#if canImport(COpenBLAS)
-import COpenBLAS
-#elseif canImport(_COpenBLASWindows)
-import _COpenBLASWindows
-#elseif canImport(Accelerate)
-import Accelerate
-#endif
-
 import NumericsExtensions
 
 //MARK: Vector-Matrix multiplication for AlgebraicField
@@ -139,51 +131,101 @@ public extension Vector<Double> {
     @inlinable
     @_transparent
     func dot(_ matrix: Matrix<T>, into: inout Self) {
-        dot(matrix, multiplied: 1.0, into: &into)
+        precondition(matrix.rows == count)
+        precondition(matrix.columns == into.count)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, into: &into)
+        } else {
+            _dot(matrix, into: &into)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+        precondition(matrix.rows == count)
+        precondition(matrix.columns == into.count)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, multiplied: multiplied, into: &into)
+        } else {
+            _dot(matrix, multiplied: multiplied, into: &into)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    func dot(_ matrix: Matrix<T>, addingInto into: inout Self) {
+        precondition(matrix.rows == count)
+        precondition(matrix.columns == into.count)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, addingInto: &into)
+        } else {
+            _dot(matrix, addingInto: &into)
+        }
     }
     
     @inlinable
     @_transparent
-    func dot(_ matrix: Matrix<T>, addingInto: inout Self) {
-        dot(matrix, multiplied: 1.0, addingInto: &addingInto)
-    }
-    
-    @inlinable
-    func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
-        precondition(matrix.rows == count)
-        precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            let trans = CblasTrans
-            let m = blasint(matrix.rows)
-            let n = blasint(matrix.columns)
-            let lda = n
-            let beta: T = .zero
-            cblas_dgemv(layout, trans, m, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
-            return
-        } 
-        #endif
-        _dot(matrix, multiplied: multiplied, into: &into)
-    }
-    
-    @inlinable
     func dot(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            let trans = CblasTrans
-            let m = blasint(matrix.rows)
-            let n = blasint(matrix.columns)
-            let lda = n
-            let beta: T = 1.0
-            cblas_dgemv(layout, trans, m, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
-            return
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, multiplied: multiplied, addingInto: &into)
+        } else {
+            _dot(matrix, multiplied: multiplied, addingInto: &into)
         }
-        #endif
-        _dot(matrix, multiplied: multiplied, addingInto: &into)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = 1.0
+        let beta: T = .zero
+        BLAS.dgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = multiplied
+        let beta: T = .zero
+        BLAS.dgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, addingInto into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = 1.0
+        let beta: T = 1.0
+        BLAS.dgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = multiplied
+        let beta: T = 1.0
+        BLAS.dgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
     }
 }
 
@@ -206,51 +248,101 @@ public extension Vector<Float> {
     @inlinable
     @_transparent
     func dot(_ matrix: Matrix<T>, into: inout Self) {
-        dot(matrix, multiplied: 1.0, into: &into)
+        precondition(matrix.rows == count)
+        precondition(matrix.columns == into.count)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, into: &into)
+        } else {
+            _dot(matrix, into: &into)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+        precondition(matrix.rows == count)
+        precondition(matrix.columns == into.count)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, multiplied: multiplied, into: &into)
+        } else {
+            _dot(matrix, multiplied: multiplied, into: &into)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    func dot(_ matrix: Matrix<T>, addingInto into: inout Self) {
+        precondition(matrix.rows == count)
+        precondition(matrix.columns == into.count)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, addingInto: &into)
+        } else {
+            _dot(matrix, addingInto: &into)
+        }
     }
     
     @inlinable
     @_transparent
-    func dot(_ matrix: Matrix<T>, addingInto: inout Self) {
-        dot(matrix, multiplied: 1.0, addingInto: &addingInto)
-    }
-    
-    @inlinable
-    func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
-        precondition(matrix.rows == count)
-        precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            let trans = CblasTrans
-            let m = blasint(matrix.rows)
-            let n = blasint(matrix.columns)
-            let lda = n
-            let beta: T = .zero
-            cblas_sgemv(layout, trans, m, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
-            return
-        }
-        #endif
-        _dot(matrix, multiplied: multiplied, into: &into)
-    }
-    
-    @inlinable
     func dot(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            let trans = CblasTrans
-            let m = blasint(matrix.rows)
-            let n = blasint(matrix.columns)
-            let lda = n
-            let beta: T = 1.0
-            cblas_sgemv(layout, trans, m, n, multiplied, matrix.elements, lda, components, 1, beta, &into.components, 1)
-            return
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, multiplied: multiplied, addingInto: &into)
+        } else {
+            _dot(matrix, multiplied: multiplied, addingInto: &into)
         }
-        #endif
-        _dot(matrix, multiplied: multiplied, addingInto: &into)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = 1.0
+        let beta: T = .zero
+        BLAS.sgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = multiplied
+        let beta: T = .zero
+        BLAS.sgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, addingInto into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = 1.0
+        let beta: T = 1.0
+        BLAS.sgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = multiplied
+        let beta: T = 1.0
+        BLAS.sgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
     }
 }
 
@@ -271,101 +363,103 @@ public extension Vector<Complex<Double>> {
     }
     
     @inlinable
+    @_transparent
     func dot(_ matrix: Matrix<T>, into: inout Self) {
-        dot(matrix, multiplied: .one, into: &into)
+        precondition(matrix.rows == count)
+        precondition(matrix.columns == into.count)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, into: &into)
+        } else {
+            _dot(matrix, into: &into)
+        }
     }
-    
+
     @inlinable
-    func dot(_ matrix: Matrix<T>, addingInto: inout Self) {
-        dot(matrix, multiplied: .one, addingInto: &addingInto)
-    }
-    
-    @inlinable
+    @_transparent
     func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            let trans = CblasTrans
-            let m = blasint(matrix.rows)
-            let n = blasint(matrix.columns)
-            let lda = n
-            let beta: T = .zero
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    cblas_zgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
-                }
-            }
-            return
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, multiplied: multiplied, into: &into)
+        } else {
+            _dot(matrix, multiplied: multiplied, into: &into)
         }
-        #elseif canImport(Accelerate)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            let trans = CblasTrans
-            let m = blasint(matrix.rows)
-            let n = blasint(matrix.columns)
-            let lda = n
-            let beta: T = .zero
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    matrix.elements.withUnsafeBufferPointer { matrix in
-                        components.withUnsafeBufferPointer { components in 
-                            into.components.withUnsafeMutableBufferPointer { intoComponents in 
-                                cblas_zgemv(layout, trans, m, n, .init(alpha), .init(matrix.baseAddress), lda, .init(components.baseAddress), 1, .init(beta), .init(intoComponents.baseAddress), 1)
-                            }
-                        }
-                    }
-                }
-            }
-            return
+    }
+
+    @inlinable
+    @_transparent
+    func dot(_ matrix: Matrix<T>, addingInto into: inout Self) {
+        precondition(matrix.rows == count)
+        precondition(matrix.columns == into.count)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, addingInto: &into)
+        } else {
+            _dot(matrix, addingInto: &into)
         }
-        #endif
-        _dot(matrix, multiplied: multiplied, into: &into)
     }
     
     @inlinable
+    @_transparent
     func dot(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            let trans = CblasTrans
-            let m = blasint(matrix.rows)
-            let n = blasint(matrix.columns)
-            let lda = n
-            let beta: T = .one
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    cblas_zgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
-                }
-            }
-            return
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, multiplied: multiplied, addingInto: &into)
+        } else {
+            _dot(matrix, multiplied: multiplied, addingInto: &into)
         }
-        #elseif canImport(Accelerate)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            let trans = CblasTrans
-            let m = blasint(matrix.rows)
-            let n = blasint(matrix.columns)
-            let lda = n
-            let beta: T = .one
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    matrix.elements.withUnsafeBufferPointer { matrix in
-                        components.withUnsafeBufferPointer { components in 
-                            into.components.withUnsafeMutableBufferPointer { intoComponents in 
-                                cblas_zgemv(layout, trans, m, n, .init(alpha), .init(matrix.baseAddress), lda, .init(components.baseAddress), 1, .init(beta), .init(intoComponents.baseAddress), 1)
-                            }
-                        }
-                    }
-                }
-            }
-            return
-        }
-        #endif
-        _dot(matrix, multiplied: multiplied, addingInto: &into)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = .one
+        let beta: T = .zero
+        BLAS.zgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = multiplied
+        let beta: T = .zero
+        BLAS.zgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, addingInto into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = .one
+        let beta: T = .one
+        BLAS.zgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = multiplied
+        let beta: T = .one
+        BLAS.zgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
     }
 }
 
@@ -388,246 +482,124 @@ public extension Vector<Complex<Float>> {
     @inlinable
     @_transparent
     func dot(_ matrix: Matrix<T>, into: inout Self) {
-        dot(matrix, multiplied: .one, into: &into)
+        precondition(matrix.rows == count)
+        precondition(matrix.columns == into.count)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, into: &into)
+        } else {
+            _dot(matrix, into: &into)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+        precondition(matrix.rows == count)
+        precondition(matrix.columns == into.count)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, multiplied: multiplied, into: &into)
+        } else {
+            _dot(matrix, multiplied: multiplied, into: &into)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    func dot(_ matrix: Matrix<T>, addingInto into: inout Self) {
+        precondition(matrix.rows == count)
+        precondition(matrix.columns == into.count)
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, addingInto: &into)
+        } else {
+            _dot(matrix, addingInto: &into)
+        }
     }
     
     @inlinable
     @_transparent
-    func dot(_ matrix: Matrix<T>, addingInto: inout Self) {
-        dot(matrix, multiplied: .one, addingInto: &addingInto)
-    }
-    
-    @inlinable
-    func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
-        precondition(matrix.rows == count)
-        precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            let trans = CblasTrans
-            let m = blasint(matrix.rows)
-            let n = blasint(matrix.columns)
-            let lda = n
-            let beta: T = .zero
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    cblas_cgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
-                }
-            }
-            return
-        }
-        #elseif canImport(Accelerate)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            let trans = CblasTrans
-            let m = blasint(matrix.rows)
-            let n = blasint(matrix.columns)
-            let lda = n
-            let beta: T = .zero
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    matrix.elements.withUnsafeBufferPointer { matrix in
-                        components.withUnsafeBufferPointer { components in 
-                            into.components.withUnsafeMutableBufferPointer { intoComponents in 
-                                cblas_cgemv(layout, trans, m, n, .init(alpha), .init(matrix.baseAddress), lda, .init(components.baseAddress), 1, .init(beta), .init(intoComponents.baseAddress), 1)
-                            }
-                        }
-                    }
-                }
-            }
-            return
-        }
-        #endif
-        _dot(matrix, multiplied: multiplied, into: &into)
-    }
-    
-    @inlinable
     func dot(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            let trans = CblasTrans
-            let m = blasint(matrix.rows)
-            let n = blasint(matrix.columns)
-            let lda = n
-            let beta: T = .one
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    cblas_cgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
-                }
-            }
-            return
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            _dotBLAS(matrix, multiplied: multiplied, addingInto: &into)
+        } else {
+            _dot(matrix, multiplied: multiplied, addingInto: &into)
         }
-        #elseif canImport(Accelerate)
-        if matrix.rows &* matrix.columns > 400 {
-            let layout = CblasRowMajor
-            let trans = CblasTrans
-            let m = blasint(matrix.rows)
-            let n = blasint(matrix.columns)
-            let lda = n
-            let beta: T = .one
-            withUnsafePointer(to: multiplied) { alpha in
-                withUnsafePointer(to: beta) { beta in
-                    matrix.elements.withUnsafeBufferPointer { matrix in
-                        components.withUnsafeBufferPointer { components in 
-                            into.components.withUnsafeMutableBufferPointer { intoComponents in 
-                                cblas_cgemv(layout, trans, m, n, .init(alpha), .init(matrix.baseAddress), lda, .init(components.baseAddress), 1, .init(beta), .init(intoComponents.baseAddress), 1)
-                            }
-                        }
-                    }
-                }
-            }
-            return
-        }
-        #endif
-        _dot(matrix, multiplied: multiplied, addingInto: &into)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = .one
+        let beta: T = .zero
+        BLAS.cgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = multiplied
+        let beta: T = .zero
+        BLAS.cgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, addingInto into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = .one
+        let beta: T = .one
+        BLAS.cgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = matrix.rows, n = matrix.columns
+        let lda = matrix.columns
+        let alpha: T = multiplied
+        let beta: T = .one
+        BLAS.cgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
     }
 }
 
 @inlinable
 public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Double, _ matrix: UnsafePointer<Double>, _ vector: UnsafePointer<Double>, _ resultMultiplier: Double, _ resultVector: UnsafeMutablePointer<Double>) {
     precondition(matrixColumns == vectorComponents)
-    if matrixRows == 2 && matrixColumns == 2 {
-        resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-        return
-    }
-    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-    if matrixRows &* matrixColumns > 1000 {
-        let order = CblasRowMajor
-        let transA = CblasTrans
-        let m = blasint(matrixRows)
-        let n = blasint(matrixColumns)
-        cblas_dgemv(order, transA, m, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
-        return
-    }
-    #endif
-    var result: Double = .zero
-    for i in 0..<matrixRows {
-        result = .zero
-        for j in 0..<matrixColumns {
-            result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
-        }
-        resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
-    }
+    BLAS.dgemv(.rowMajor, .transpose, matrixRows, matrixColumns, multiplier, matrix, matrixColumns, vector, 1, resultMultiplier, resultVector, 1)
 }
 
 @inlinable
 public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Float, _ matrix: UnsafePointer<Float>, _ vector: UnsafePointer<Float>, _ resultMultiplier: Float, _ resultVector: UnsafeMutablePointer<Float>) {
     precondition(matrixColumns == vectorComponents)
-    if matrixRows == 2 && matrixColumns == 2 {
-        resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-        return
-    }
-    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-    if matrixRows &* matrixColumns > 1000 {
-        let order = CblasRowMajor
-        let transA = CblasTrans
-        let m = blasint(matrixRows)
-        let n = blasint(matrixColumns)
-        cblas_sgemv(order, transA, m, n, multiplier, matrix, n, vector, 1, resultMultiplier, resultVector, 1)
-        return
-    }
-    #endif
-    var result: Float = .zero
-    for i in 0..<matrixRows {
-        result = .zero
-        for j in 0..<matrixColumns {
-            result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
-        }
-        resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
-    }
+    BLAS.sgemv(.rowMajor, .transpose, matrixRows, matrixColumns, multiplier, matrix, matrixColumns, vector, 1, resultMultiplier, resultVector, 1)
 }
 
 @inlinable
 public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Double>, _ matrix: UnsafePointer<Complex<Double>>, _ vector: UnsafePointer<Complex<Double>>, _ resultMultiplier: Complex<Double>, _ resultVector: UnsafeMutablePointer<Complex<Double>>) {
     precondition(matrixColumns == vectorComponents)
-    if matrixRows == 2 && matrixColumns == 2 {
-        resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-        return
-    }
-    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-    if matrixRows &* matrixColumns > 1000 {
-        let order = CblasRowMajor
-        let transA = CblasTrans
-        let m = blasint(matrixRows)
-        let n = blasint(matrixColumns)
-        withUnsafePointer(to: multiplier) { alpha in
-            withUnsafePointer(to: resultMultiplier) { beta in
-                cblas_zgemv(order, transA, m, n, alpha, matrix, n, vector, 1, beta, resultVector, 1)
-            }
-        }
-        return
-    }
-    #elseif canImport(Accelerate)
-    if matrixRows &* matrixColumns > 1000 {
-        let order = CblasRowMajor
-        let transA = CblasTrans
-        let m = blasint(matrixRows)
-        let n = blasint(matrixColumns)
-        withUnsafePointer(to: multiplier) { alpha in
-            withUnsafePointer(to: resultMultiplier) { beta in
-                cblas_zgemv(order, transA, m, n, .init(alpha), .init(matrix), n, .init(vector), 1, .init(beta), .init(resultVector), 1)
-            }
-        }
-        return
-    }
-    #endif
-    var result: Complex<Double> = .zero
-    for i in 0..<matrixRows {
-        result = .zero
-        for j in 0..<matrixColumns {
-            result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
-        }
-        resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
-    }
+    BLAS.zgemv(.rowMajor, .transpose, matrixRows, matrixColumns, multiplier, matrix, matrixColumns, vector, 1, resultMultiplier, resultVector, 1)
 }
 
 @inlinable
 public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Float>, _ matrix: UnsafePointer<Complex<Float>>, _ vector: UnsafePointer<Complex<Float>>, _ resultMultiplier: Complex<Float>, _ resultVector: UnsafeMutablePointer<Complex<Float>>) {
     precondition(matrixColumns == vectorComponents)
-    if matrixRows == 2 && matrixColumns == 2 {
-        resultVector[0] = Relaxed.multiplyAdd(resultMultiplier, resultVector[0], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[0]), Relaxed.product(vector[1], matrix[1]))))
-        resultVector[1] = Relaxed.multiplyAdd(resultMultiplier, resultVector[1], Relaxed.product(multiplier, Relaxed.sum(Relaxed.product(vector[0], matrix[2]), Relaxed.product(vector[1], matrix[3]))))
-        return
-    }
-    #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
-    if matrixRows &* matrixColumns > 1000 {
-        let order = CblasRowMajor
-        let transA = CblasTrans
-        let m = blasint(matrixRows)
-        let n = blasint(matrixColumns)
-        withUnsafePointer(to: multiplier) { alpha in
-            withUnsafePointer(to: resultMultiplier) { beta in
-                cblas_cgemv(order, transA, m, n, alpha, matrix, n, vector, 1, beta, resultVector, 1)
-            }
-        }
-        return
-    }
-    #elseif canImport(Accelerate)
-    if matrixRows &* matrixColumns > 1000 {
-        let order = CblasRowMajor
-        let transA = CblasTrans
-        let m = blasint(matrixRows)
-        let n = blasint(matrixColumns)
-        withUnsafePointer(to: multiplier) { alpha in
-            withUnsafePointer(to: resultMultiplier) { beta in
-                cblas_cgemv(order, transA, m, n, .init(alpha), .init(matrix), n, .init(vector), 1, .init(beta), .init(resultVector), 1)
-            }
-        }
-        return
-    }
-    #endif
-    var result: Complex<Float> = .zero
-    for i in 0..<matrixRows {
-        result = .zero
-        for j in 0..<matrixColumns {
-            result = Relaxed.multiplyAdd(resultVector[j], matrix[i &* matrixColumns &+ j], result)
-        }
-        resultVector[i] = Relaxed.multiplyAdd(resultMultiplier, resultVector[i], Relaxed.product(multiplier, resultVector[i]))
-    }
+    BLAS.cgemv(.rowMajor, .transpose, matrixRows, matrixColumns, multiplier, matrix, matrixColumns, vector, 1, resultMultiplier, resultVector, 1)
 }

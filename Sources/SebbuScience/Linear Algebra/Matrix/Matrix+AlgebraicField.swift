@@ -48,17 +48,9 @@ public extension Matrix where T: AlgebraicField {
     @inlinable
     @_transparent
     mutating func zeroElements() {
-        var i = 0
-        while i &+ 4 <= elements.count {
-            elements[i] = .zero
-            elements[i &+ 1] = .zero
-            elements[i &+ 2] = .zero
-            elements[i &+ 3] = .zero
-            i &+= 4
-        }
-        while i < elements.count {
-            elements[i] = .zero
-            i &+= 1
+        var span = elements.mutableSpan
+        for i in span.indices {
+            span[unchecked: i] = .zero
         }
     }
 }

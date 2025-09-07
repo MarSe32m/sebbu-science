@@ -75,19 +75,30 @@ public extension Matrix<Float> {
     }
 }
 
-//MARK: Copying elements
+//MARK: Copying elements and zeroing elements
 public extension Matrix<Float> {
-    //@inlinable
+    @inlinable
     mutating func copyElements(from other: Self) {
         precondition(elements.count == other.elements.count)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
-        let N = blasint(elements.count)
-        cblas_scopy(N, other.elements, 1, &elements, 1)
-        #else
-        for i in 0..<elements.count {
-            elements[i] = other.elements[i]
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            BLAS.scopy(elements.count, other.elements, 1, &elements, 1)
+        } else {
+            var span = elements.mutableSpan
+            let otherSpan = other.elements.span
+            for i in span.indices {
+                span[unchecked: i] = otherSpan[unchecked: i]
+            }
         }
-        #endif
+    }
+
+    @inlinable
+    @_transparent
+    mutating func zeroElements() {
+        var span = elements.mutableSpan
+        for i in span.indices {
+            span[unchecked: i] = .zero
+        }
     }
 }
 

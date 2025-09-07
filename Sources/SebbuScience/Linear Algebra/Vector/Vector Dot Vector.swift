@@ -5,14 +5,6 @@
 //  Created by Sebastian Toivonen on 11.5.2025.
 //
 
-#if canImport(COpenBLAS)
-import COpenBLAS
-#elseif canImport(_COpenBLASWindows)
-import _COpenBLASWindows
-#elseif canImport(Accelerate)
-import Accelerate
-#endif
-
 import NumericsExtensions
 
 //MARK: Dot, inner and outer product for AlgebraicField
@@ -110,13 +102,13 @@ public extension Vector where T: AlgebraicField {
 public extension Vector<Double> {
     @inlinable
     func dot(_ other: Self) -> T {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         precondition(count == other.count)
-        let N = blasint(count)
-        return cblas_ddot(N, components, 1, other.components, 1)
-        #else
-        return _dot(other)
-        #endif
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            return BLAS.ddot(count, components, 1, other.components, 1)
+        } else {
+            return _dot(other)
+        }
     }
     
     @inlinable
@@ -130,13 +122,13 @@ public extension Vector<Double> {
 public extension Vector<Float> {
     @inlinable
     func dot(_ other: Self) -> T {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
         precondition(count == other.count)
-        let N = blasint(count)
-        return cblas_sdot(N, components, 1, other.components, 1)
-        #else
-        return _dot(other)
-        #endif
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            return BLAS.sdot(count, components, 1, other.components, 1)
+        } else {
+            return _dot(other)
+        }
     }
     
     @inlinable
@@ -150,52 +142,24 @@ public extension Vector<Float> {
 public extension Vector<Complex<Double>> {
     @inlinable
     func dot(_ other: Self) -> T {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
         precondition(count == other.count)
-        let N = blasint(count)
-        var result: T = .zero
-        cblas_zdotu_sub(N, components, 1, other.components, 1, &result)
-        return result
-        #elseif canImport(Accelerate)
-        precondition(count == other.count)
-        let N = blasint(count)
-        var result: T = .zero
-        withUnsafeMutablePointer(to: &result) { result in
-            components.withUnsafeBufferPointer { components in 
-                other.components.withUnsafeBufferPointer { otherComponents in 
-                    cblas_zdotu_sub(N, .init(components.baseAddress), 1, .init(otherComponents.baseAddress), 1, .init(result))
-                }
-            }
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            return BLAS.zdotu(count, components, 1, other.components, 1)
+        } else {
+            return _dot(other)
         }
-        return result
-        #else
-        return _dot(other)
-        #endif
     }
     
     @inlinable
     func inner(_ other: Self) -> T {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
         precondition(count == other.count)
-        let N = blasint(count)
-        var result: T = .zero
-        cblas_zdotc_sub(N, components, 1, other.components, 1, &result)
-        return result
-        #elseif canImport(Accelerate)
-        precondition(count == other.count)
-        let N = blasint(count)
-        var result: T = .zero
-        withUnsafeMutablePointer(to: &result) { result in
-            components.withUnsafeBufferPointer { components in 
-                other.components.withUnsafeBufferPointer { otherComponents in 
-                    cblas_zdotc_sub(N, .init(components.baseAddress), 1, .init(otherComponents.baseAddress), 1, .init(result))
-                }
-            }
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            return BLAS.zdotc(count, components, 1, other.components, 1)
+        } else {
+            return _inner(other)
         }
-        return result
-        #else
-        return _inner(other)
-        #endif
     }
 
     @inlinable
@@ -226,52 +190,24 @@ public extension Vector<Complex<Double>> {
 public extension Vector<Complex<Float>> {
     @inlinable
     func dot(_ other: Self) -> T {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
         precondition(count == other.count)
-        let N = blasint(count)
-        var result: T = .zero
-        cblas_cdotu_sub(N, components, 1, other.components, 1, &result)
-        return result
-        #elseif canImport(Accelerate)
-        precondition(count == other.count)
-        let N = blasint(count)
-        var result: T = .zero
-        withUnsafeMutablePointer(to: &result) { result in
-            components.withUnsafeBufferPointer { components in 
-                other.components.withUnsafeBufferPointer { otherComponents in 
-                    cblas_cdotu_sub(N, .init(components.baseAddress), 1, .init(otherComponents.baseAddress), 1, .init(result))
-                }
-            }
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            return BLAS.cdotu(count, components, 1, other.components, 1)
+        } else {
+            return _dot(other)
         }
-        return result
-        #else
-        return _dot(other)
-        #endif
     }
     
     @inlinable
     func inner(_ other: Self) -> T {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
         precondition(count == other.count)
-        let N = blasint(count)
-        var result: T = .zero
-        cblas_cdotc_sub(N, components, 1, other.components, 1, &result)
-        return result
-        #elseif canImport(Accelerate)
-        precondition(count == other.count)
-        let N = blasint(count)
-        var result: T = .zero
-        withUnsafeMutablePointer(to: &result) { result in
-            components.withUnsafeBufferPointer { components in 
-                other.components.withUnsafeBufferPointer { otherComponents in 
-                    cblas_cdotc_sub(N, .init(components.baseAddress), 1, .init(otherComponents.baseAddress), 1, .init(result))
-                }
-            }
+        if BLAS.isAvailable {
+            //TODO: Benchmark threshold
+            return BLAS.cdotc(count, components, 1, other.components, 1)
+        } else {
+            return _inner(other)
         }
-        return result
-        #else
-        return _inner(other)
-        #endif
     }
 
     @inlinable

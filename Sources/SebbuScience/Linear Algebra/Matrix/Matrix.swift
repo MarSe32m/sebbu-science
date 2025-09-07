@@ -60,8 +60,10 @@ public struct Matrix<T> {
     @inlinable
     public mutating func copyElements(from other: Self) {
         precondition(elements.count == other.elements.count)
-        for i in 0..<elements.count {
-            elements[i] = other.elements[i]
+        var mutableSpan = elements.mutableSpan
+        let otherSpan = other.elements.span
+        for i in mutableSpan.indices {
+            mutableSpan[unchecked: i] = otherSpan[unchecked: i]
         }
     }
 }

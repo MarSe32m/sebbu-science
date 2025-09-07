@@ -138,7 +138,7 @@ public extension Vector<Complex<Double>> {
     @inlinable
     @_transparent
     mutating func subtract(_ other: Self, multiplied: Double) {
-        add(other, multiplied: Complex(-multiplied))
+        add(other, multiplied: -multiplied)
     }
 }
 
@@ -173,6 +173,6 @@ public extension Vector<Complex<Float>> {
     @inlinable
     @_transparent
     mutating func subtract(_ other: Self, multiplied: Float) {
-        add(other, multiplied: Complex(-multiplied))
+        add(other, multiplied: -multiplied)
     }
 }

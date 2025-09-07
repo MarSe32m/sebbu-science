@@ -21,9 +21,11 @@ public extension Vector where T: AlgebraicField {
     }
     
     @inlinable
+    @_transparent
     mutating func zeroComponents() {
-        for i in 0..<components.count {
-            components[i] = .zero
+        var span = components.mutableSpan
+        for i in span.indices {
+            span[unchecked: i] = .zero
         }
     }
 }
