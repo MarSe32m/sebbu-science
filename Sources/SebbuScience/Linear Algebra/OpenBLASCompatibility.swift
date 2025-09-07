@@ -55,7 +55,12 @@ public extension BLAS {
                 case .noTranspose: CblasNoTrans
                 case .transpose: CblasTrans
                 case .conjugateTranspose: CblasConjTrans
-                case .conjugateNoTranspose: CblasConjNoTrans
+                case .conjugateNoTranspose: 
+                #if canImport(Accelerate)
+                    AtlasConj
+                #else
+                    CblasConjNoTrans
+                #endif
             }
         }
 
@@ -64,7 +69,11 @@ public extension BLAS {
                 case CblasNoTrans: self = .noTranspose
                 case CblasTrans: self = .transpose
                 case CblasConjTrans: self = .conjugateTranspose
+                #if canImport(Accelerate)
+                case AtlasConj: self = .conjugateNoTranspose
+                #else
                 case CblasConjNoTrans: self = .conjugateNoTranspose
+                #endif
                 default: fatalError("Unreachable")
             }
         }
