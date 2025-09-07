@@ -83,7 +83,10 @@ let package = Package(
         ),
         .executableTarget(
             name: "Executable",
-            dependencies: ["SebbuScience"],
+            dependencies: [
+                "SebbuScience",
+                .target(name: "PythonKitUtilities")
+            ],
             cSettings: [
                 .define("ACCELERATE_NEW_LAPACK", .when(platforms: [.macOS])),
                 .define("ACCELERATE_LAPACK_ILP64", .when(platforms: [.macOS]))
