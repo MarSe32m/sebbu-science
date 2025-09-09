@@ -212,9 +212,24 @@ public extension Matrix<Complex<Double>> {
     mutating func _add(_ other: Self, multiplied: Double) {
         var elementsSpan = elements.mutableSpan
         let otherSpan = other.elements.span
-        for i in elementsSpan.indices {
-            elementsSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i], elementsSpan[unchecked: i])
+        elementsSpan.withUnsafeMutableBufferPointer { components in 
+            otherSpan.withUnsafeBufferPointer { otherComponents in 
+                let count = 2 * components.count
+                components.baseAddress?.withMemoryRebound(to: Double.self, capacity: count) { components in 
+                    otherComponents.baseAddress?.withMemoryRebound(to: Double.self, capacity: count) { otherComponents in 
+                        for i in 0..<count {
+                            components[i] = Relaxed.multiplyAdd(otherComponents[i], multiplied, components[i])
+                        }
+                    }
+                }
+            }
         }
+        // This leads to unoptimal code...
+        //var elementsSpan = elements.mutableSpan
+        //let otherSpan = other.elements.span
+        //for i in elementsSpan.indices {
+        //    elementsSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i], elementsSpan[unchecked: i])
+        //}
     }
 
     @inlinable
@@ -291,9 +306,24 @@ public extension Matrix<Complex<Float>> {
     mutating func _add(_ other: Self, multiplied: Float) {
         var elementsSpan = elements.mutableSpan
         let otherSpan = other.elements.span
-        for i in elementsSpan.indices {
-            elementsSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i], elementsSpan[unchecked: i])
+        elementsSpan.withUnsafeMutableBufferPointer { components in 
+            otherSpan.withUnsafeBufferPointer { otherComponents in 
+                let count = 2 * components.count
+                components.baseAddress?.withMemoryRebound(to: Float.self, capacity: count) { components in 
+                    otherComponents.baseAddress?.withMemoryRebound(to: Float.self, capacity: count) { otherComponents in 
+                        for i in 0..<count {
+                            components[i] = Relaxed.multiplyAdd(otherComponents[i], multiplied, components[i])
+                        }
+                    }
+                }
+            }
         }
+        // This leads to unoptimal code...
+        //var elementsSpan = elements.mutableSpan
+        //let otherSpan = other.elements.span
+        //for i in elementsSpan.indices {
+        //    elementsSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, otherSpan[unchecked: i], elementsSpan[unchecked: i])
+        //}
     }
 
     @inlinable
