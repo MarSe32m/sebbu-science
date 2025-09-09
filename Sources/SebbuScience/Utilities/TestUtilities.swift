@@ -6,6 +6,7 @@
 //
 @_spi(TestUtilities)
 @_optimize(none)
+@inline(never)
 public func blackHole<T>(_ arg: T) {
     _ = arg
 }

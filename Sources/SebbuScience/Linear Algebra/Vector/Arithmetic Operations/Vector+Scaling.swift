@@ -165,9 +165,18 @@ public extension Vector<Complex<Double>> {
     @_transparent
     mutating func _multiply(by: Double) {
         var componentSpan = components.mutableSpan
-        for i in componentSpan.indices {
-            componentSpan[unchecked: i] = Relaxed.product(componentSpan[unchecked: i], by)
+        componentSpan.withUnsafeMutableBufferPointer { components in 
+            let count = 2 * components.count
+            components.baseAddress?.withMemoryRebound(to: Double.self, capacity: count) { components in 
+                for i in 0..<count {
+                    components[i] = Relaxed.product(components[i], by)
+                }
+            }
         }
+        // This leads to unoptimal code...
+        //for i in componentSpan.indices {
+        //    componentSpan[unchecked: i] = Relaxed.product(componentSpan[unchecked: i], by)
+        //}
     }
 
     @inlinable
@@ -235,9 +244,18 @@ public extension Vector<Complex<Float>> {
     @_transparent
     mutating func _multiply(by: Float) {
         var componentSpan = components.mutableSpan
-        for i in componentSpan.indices {
-            componentSpan[unchecked: i] = Relaxed.product(componentSpan[unchecked: i], by)
+        componentSpan.withUnsafeMutableBufferPointer { components in 
+            let count = 2 * components.count
+            components.baseAddress?.withMemoryRebound(to: Float.self, capacity: count) { components in 
+                for i in 0..<count {
+                    components[i] = Relaxed.product(components[i], by)
+                }
+            }
         }
+        // This leads to unoptimal code...
+        //for i in componentSpan.indices {
+        //    componentSpan[unchecked: i] = Relaxed.product(componentSpan[unchecked: i], by)
+        //}
     }
 
     @inlinable

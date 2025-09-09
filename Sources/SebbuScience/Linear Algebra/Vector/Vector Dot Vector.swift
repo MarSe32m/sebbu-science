@@ -105,12 +105,18 @@ public extension Vector<Double> {
         precondition(count == other.count)
         if BLAS.isAvailable {
             //TODO: Benchmark threshold
-            return BLAS.ddot(count, components, 1, other.components, 1)
+            return _dotBLAS(other)
         } else {
             return _dot(other)
         }
     }
     
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ other: Self) -> T {
+        BLAS.ddot(count, components, 1, other.components, 1)
+    }
+
     @inlinable
     @_transparent
     func inner(_ other: Self) -> T {
@@ -125,12 +131,18 @@ public extension Vector<Float> {
         precondition(count == other.count)
         if BLAS.isAvailable {
             //TODO: Benchmark threshold
-            return BLAS.sdot(count, components, 1, other.components, 1)
+            return _dotBLAS(other)
         } else {
             return _dot(other)
         }
     }
     
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ other: Self) -> T {
+        BLAS.sdot(count, components, 1, other.components, 1)
+    }
+
     @inlinable
     @_transparent
     func inner(_ other: Self) -> T {
@@ -145,10 +157,16 @@ public extension Vector<Complex<Double>> {
         precondition(count == other.count)
         if BLAS.isAvailable {
             //TODO: Benchmark threshold
-            return BLAS.zdotu(count, components, 1, other.components, 1)
+            return _dotBLAS(other)
         } else {
             return _dot(other)
         }
+    }
+
+    @inlinable
+    @_transparent
+    func _dotBLAS(_ other: Self) -> T {
+        BLAS.zdotu(count, components, 1, other.components, 1)
     }
     
     @inlinable
@@ -156,10 +174,16 @@ public extension Vector<Complex<Double>> {
         precondition(count == other.count)
         if BLAS.isAvailable {
             //TODO: Benchmark threshold
-            return BLAS.zdotc(count, components, 1, other.components, 1)
+            return _innerBLAS(other)
         } else {
             return _inner(other)
         }
+    }
+
+    @inlinable
+    @_transparent
+    func _innerBLAS(_ other: Self) -> T {
+        BLAS.zdotc(count, components, 1, other.components, 1)
     }
 
     @inlinable
@@ -193,21 +217,33 @@ public extension Vector<Complex<Float>> {
         precondition(count == other.count)
         if BLAS.isAvailable {
             //TODO: Benchmark threshold
-            return BLAS.cdotu(count, components, 1, other.components, 1)
+            return _dotBLAS(other)
         } else {
             return _dot(other)
         }
     }
     
     @inlinable
+    @_transparent
+    func _dotBLAS(_ other: Self) -> T {
+        BLAS.cdotu(count, components, 1, other.components, 1)
+    }
+
+    @inlinable
     func inner(_ other: Self) -> T {
         precondition(count == other.count)
         if BLAS.isAvailable {
             //TODO: Benchmark threshold
-            return BLAS.cdotc(count, components, 1, other.components, 1)
+            return _innerBLAS(other)
         } else {
             return _inner(other)
         }
+    }
+
+    @inlinable
+    @_transparent
+    func _innerBLAS(_ other: Self) -> T {
+        BLAS.cdotc(count, components, 1, other.components, 1)
     }
 
     @inlinable

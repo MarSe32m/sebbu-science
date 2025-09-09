@@ -23,14 +23,26 @@ public extension Vector<Double> {
         precondition(count == other.count)
         if BLAS.isAvailable {
             //TODO: Benchmark threshold
-            BLAS.dcopy(count, other.components, 1, &components, 1)
+            _copyComponentsBLAS(from: other)
         } else {
-            var span = components.mutableSpan
-            let otherSpan = other.components.span
-            for i in span.indices {
-                span[unchecked: i] = otherSpan[unchecked: i]
-            }
+            _copyComponents(from: other)
         }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _copyComponents(from other: Self) {
+        var span = components.mutableSpan
+        let otherSpan = other.components.span
+        for i in span.indices {
+            span[unchecked: i] = otherSpan[unchecked: i]
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _copyComponentsBLAS(from other: Self) {
+        BLAS.dcopy(count, other.components, 1, &components, 1)
     }
     
     @inlinable

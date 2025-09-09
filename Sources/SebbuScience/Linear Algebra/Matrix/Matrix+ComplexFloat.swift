@@ -92,14 +92,26 @@ public extension Matrix<Complex<Float>> {
         precondition(elements.count == other.elements.count)
         if BLAS.isAvailable {
             //TODO: Benchmark threshold
-            BLAS.ccopy(elements.count, other.elements, 1, &elements, 1)
+            _copyElementsBLAS(from: other)
         } else {
-            var span = elements.mutableSpan
-            let otherSpan = other.elements.span
-            for i in span.indices {
-                span[unchecked: i] = otherSpan[unchecked: i]
-            }
+            _copyElements(from: other)
         }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _copyElements(from other: Self) {
+        var span = elements.mutableSpan
+        let otherSpan = other.elements.span
+        for i in span.indices {
+            span[unchecked: i] = otherSpan[unchecked: i]
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _copyElementsBLAS(from other: Self) {
+        BLAS.ccopy(elements.count, other.elements, 1, &elements, 1)
     }
 
     @inlinable
