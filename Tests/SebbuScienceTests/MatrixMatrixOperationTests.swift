@@ -39,8 +39,8 @@ struct ZGEEVTest {
         let (eigenValues, eigenVectors) = try MatrixOperations.diagonalizeHermitian(A)
         for i in 0..<eigenValues.count {
             print(eigenValues[i], "(\(eigenVectors[i][0]),\(eigenVectors[i][1]))")
-            var vector1 = eigenValues[i] * eigenVectors[i]
-            var vector2 = A.dot(eigenVectors[i])
+            let vector1 = eigenValues[i] * eigenVectors[i]
+            let vector2 = A.dot(eigenVectors[i])
             print(vector1)
             print(vector2)
             print()

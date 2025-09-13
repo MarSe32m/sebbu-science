@@ -5,11 +5,9 @@ import Foundation
 import PythonKit
 import PythonKitUtilities
 
-
 @main
 struct Main {
     public static func main() {
-
 #if os(macOS)
 PythonLibrary.useLibrary(at: "/Library/Frameworks/Python.framework/Versions/3.12/Python")
 #elseif os(Linux)

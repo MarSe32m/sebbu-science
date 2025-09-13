@@ -580,4 +580,51 @@ public extension MatrixOperations {
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
+
+    //TODO: TEST
+    //@inlinable
+    static func solve(A: Matrix<Float>, B: Matrix<Float>) throws -> Matrix<Float> {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let N = A.rows
+        let nrhs: lapack_int = numericCast(B.columns)
+        let lda: lapack_int = numericCast(N)
+        let ldb: lapack_int = nrhs
+        var ipiv = [lapack_int](repeating: .zero, count: N)
+        var _A = Array(A.elements)
+        var _B = Array(B.elements)
+        let info = _A.withUnsafeMutableBufferPointer { A in
+            _B.withUnsafeMutableBufferPointer { b in 
+                LAPACKE_sgesv(LAPACK_ROW_MAJOR, .init(N), nrhs, .init(A.baseAddress), lda, &ipiv, .init(b.baseAddress), ldb)
+            }
+        }
+        if info != 0 { throw MatrixOperationError.info(Int(info))}
+        return .init(elements: _B, rows: N, columns: B.columns)
+        #elseif canImport(Accelerate)
+        fatalError("TODO: Implement")
+        var a: [Complex<Double>] = []
+        a.reserveCapacity(A.elements.count)
+        // Convert to columns major order
+        for j in 0..<A.columns {
+            for i in 0..<A.rows {
+                a.append(A[i, j])
+            }
+        }
+        var _B = Array(B.elements)
+        var N = A.rows
+        var nrhs = B.columns
+        var lda = A.columns
+        var ldb = N
+        var ipiv: [Int] = .init(repeating: .zero, count: N)
+        var info = 0
+        a.withUnsafeMutableBufferPointer { A in
+            _B.withUnsafeMutableBufferPointer { b in
+                dgesv_(&N, &nrhs, .init(A.baseAddress), &lda, &ipiv, .init(b.baseAddress), &ldb, &info)
+            }
+        }
+        if info != 0 { throw MatrixOperationError.info(info) }
+        return .init(elements: _B, rows: B.columns, columns: N)
+#else
+        fatalError("TODO: Default implementation not yet implemented")
+#endif
+    }
 }
