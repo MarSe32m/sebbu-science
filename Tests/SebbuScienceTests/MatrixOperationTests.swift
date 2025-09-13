@@ -38,4 +38,40 @@ struct MatrixOperationTests {
         let X = try! MatrixOperations.solve(A: A, B: B)
         #expect(A.dot(X).isApproximatelyEqual(to: B, absoluteTolerance: 1e-4))
     }
+
+    @Test("Matrix<Double>.singularValueDecomposition(A:)")
+    func matrixDoubleSingularValueDecomposition() throws {
+        let dim = 10
+        let A = Matrix<Double>(elements: (0..<dim*dim).map { _ in .random(in: -1...1) }, rows: dim, columns: dim)
+        let (U, singularValues, VT) = try MatrixOperations.singularValueDecomposition(A: A)
+        let sigma = Matrix<Double>.diagonal(from: singularValues.map { .init($0) })
+        #expect(A.isApproximatelyEqual(to: U.dot(sigma).dot(VT), absoluteTolerance: 1e-10))
+    }
+
+    @Test("Matrix<Float>.singularValueDecomposition(A:)")
+    func matrixFloatSingularValueDecomposition() throws {
+        let dim = 10
+        let A = Matrix<Float>(elements: (0..<dim*dim).map { _ in .random(in: -1...1) }, rows: dim, columns: dim)
+        let (U, singularValues, VT) = try MatrixOperations.singularValueDecomposition(A: A)
+        let sigma = Matrix<Float>.diagonal(from: singularValues.map { .init($0) })
+        #expect(A.isApproximatelyEqual(to: U.dot(sigma).dot(VT), absoluteTolerance: 1e-4))
+    }
+
+    @Test("Matrix<Complex<Double>>.singularValueDecomposition(A:)")
+    func matrixComplexDoubleSingularValueDecomposition() throws {
+        let dim = 10
+        let A = Matrix<Complex<Double>>(elements: (0..<dim*dim).map { _ in .random(in: -1...1) }, rows: dim, columns: dim)
+        let (U, singularValues, VT) = try MatrixOperations.singularValueDecomposition(A: A)
+        let sigma = Matrix<Complex<Double>>.diagonal(from: singularValues.map { .init($0) })
+        #expect(A.isApproximatelyEqual(to: U.dot(sigma).dot(VT), absoluteTolerance: 1e-10))
+    }
+
+    @Test("Matrix<Complex<Float>>.singularValueDecomposition(A:)")
+    func matrixComplexFloatSingularValueDecomposition() throws {
+        let dim = 10
+        let A = Matrix<Complex<Float>>(elements: (0..<dim*dim).map { _ in .random(in: -1...1) }, rows: dim, columns: dim)
+        let (U, singularValues, VT) = try MatrixOperations.singularValueDecomposition(A: A)
+        let sigma = Matrix<Complex<Float>>.diagonal(from: singularValues.map { .init($0) })
+        #expect(A.isApproximatelyEqual(to: U.dot(sigma).dot(VT), absoluteTolerance: 1e-4))
+    }
 }

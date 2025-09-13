@@ -733,4 +733,39 @@ public extension MatrixOperations {
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
+
+    //TODO: TEST
+    //@inlinable
+    static func singularValueDecomposition(A: Matrix<Complex<Float>>) throws -> (U: Matrix<Complex<Float>>, singularValues: [Float], VH: Matrix<Complex<Float>>) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let m = lapack_int(A.rows)
+        let n = lapack_int(A.columns)
+        var _A = Array(A.elements)
+        var U: Matrix<Complex<Float>> = .zeros(rows: A.rows, columns: A.rows)
+        var VH: Matrix<Complex<Float>> = .zeros(rows: A.columns, columns: A.columns)
+        var singularValues: [Float] = .init(repeating: 0.0, count: Int(min(m, n)))
+        var superb: [Float] = .init(repeating: 0.0, count: Int(min(m, n)))
+        let AChar = Int8(bitPattern: UInt8(ascii: "A"))
+        let info = _A.withUnsafeMutableBufferPointer { A in
+            U.elements.withUnsafeMutableBufferPointer { U in
+                VH.elements.withUnsafeMutableBufferPointer { VH in
+                    LAPACKE_cgesvd(LAPACK_ROW_MAJOR, 
+                                    AChar, AChar, 
+                                    m, n, 
+                                    .init(A.baseAddress), n, 
+                                    &singularValues, 
+                                    .init(U.baseAddress), m, 
+                                    .init(VH.baseAddress), n, 
+                                    &superb)
+                }
+            }
+        }
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        return (U, singularValues, VH)
+        #elseif canImport(Accelerate)
+        fatalError("TODO: Implement")
+#else
+        fatalError("TODO: Default implementation not yet implemented")
+#endif
+    }
 }

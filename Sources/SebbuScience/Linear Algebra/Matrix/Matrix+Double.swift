@@ -620,4 +620,39 @@ public extension MatrixOperations {
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
+
+    //TODO: TEST
+    //@inlinable
+    static func singularValueDecomposition(A: Matrix<Double>) throws -> (U: Matrix<Double>, singularValues: [Double], VT: Matrix<Double>) {
+        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let m = lapack_int(A.rows)
+        let n = lapack_int(A.columns)
+        var _A = Array(A.elements)
+        var U: Matrix<Double> = .zeros(rows: A.rows, columns: A.rows)
+        var VT: Matrix<Double> = .zeros(rows: A.columns, columns: A.columns)
+        var singularValues: [Double] = .init(repeating: 0.0, count: Int(min(m, n)))
+        var superb: [Double] = .init(repeating: 0.0, count: Int(min(m, n)))
+        let AChar = Int8(bitPattern: UInt8(ascii: "A"))
+        let info = _A.withUnsafeMutableBufferPointer { A in
+            U.elements.withUnsafeMutableBufferPointer { U in
+                VT.elements.withUnsafeMutableBufferPointer { VT in
+                    LAPACKE_dgesvd(LAPACK_ROW_MAJOR, 
+                                    AChar, AChar, 
+                                    m, n, 
+                                    .init(A.baseAddress), n, 
+                                    &singularValues, 
+                                    .init(U.baseAddress), m, 
+                                    .init(VT.baseAddress), n, 
+                                    &superb)
+                }
+            }
+        }
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        return (U, singularValues, VT)
+        #elseif canImport(Accelerate)
+        fatalError("TODO: Implement")
+#else
+        fatalError("TODO: Default implementation not yet implemented")
+#endif
+    }
 }
