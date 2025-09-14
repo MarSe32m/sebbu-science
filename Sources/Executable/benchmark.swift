@@ -25,14 +25,14 @@ public func benchmarkOperationDouble(name: String, runs: Int, iterations: Int, m
     var naiveTimes: [Int] = []
     var blasTimes: [Int] = []
     let dimensions = (2...maxDimension).map { $0 }
-
+    var random = NumPyRandom()
     for dimension in dimensions {
         print("\(name): \((100 * dimension) / maxDimension) %")
-        var x: Vector<Double> = .init((0..<dimension).map { _ in .random(in: -10...10) } )
-        var y: Vector<Double> = .init((0..<dimension).map { _ in .random(in: -10...10) } )
-        var A: Matrix<Double> = generateSymmetricMatrix(dimension: dimension)
-        var B: Matrix<Double> = generateSymmetricMatrix(dimension: dimension)
-        var C: Matrix<Double> = generateSymmetricMatrix(dimension: dimension)
+        var x: Vector<Double> = .init((0..<dimension).map { _ in .random(in: -10...10, using: &random) } )
+        var y: Vector<Double> = .init((0..<dimension).map { _ in .random(in: -10...10, using: &random) } )
+        var A: Matrix<Double> = generateSymmetricMatrix(dimension: dimension, rng: &random)
+        var B: Matrix<Double> = generateSymmetricMatrix(dimension: dimension, rng: &random)
+        var C: Matrix<Double> = generateSymmetricMatrix(dimension: dimension, rng: &random)
         var alpha: Double = .random(in: -5...5)
         var beta: Double = .random(in: -5...5)
         while alpha == .zero { alpha = .random(in: -5...5) }
@@ -70,14 +70,14 @@ public func benchmarkOperationFloat(name: String, runs: Int, iterations: Int, ma
     var naiveTimes: [Int] = []
     var blasTimes: [Int] = []
     let dimensions = (2...maxDimension).map { $0 }
-
+    var random = NumPyRandom()
     for dimension in dimensions {
         print("\(name): \((100 * dimension) / maxDimension) %")
-        var x: Vector<Float> = .init((0..<dimension).map { _ in .random(in: -10...10) } )
-        var y: Vector<Float> = .init((0..<dimension).map { _ in .random(in: -10...10) } )
-        var A: Matrix<Float> = generateSymmetricMatrix(dimension: dimension)
-        var B: Matrix<Float> = generateSymmetricMatrix(dimension: dimension)
-        var C: Matrix<Float> = generateSymmetricMatrix(dimension: dimension)
+        var x: Vector<Float> = .init((0..<dimension).map { _ in .random(in: -10...10, using: &random) } )
+        var y: Vector<Float> = .init((0..<dimension).map { _ in .random(in: -10...10, using: &random) } )
+        var A: Matrix<Float> = generateSymmetricMatrix(dimension: dimension, rng: &random)
+        var B: Matrix<Float> = generateSymmetricMatrix(dimension: dimension, rng: &random)
+        var C: Matrix<Float> = generateSymmetricMatrix(dimension: dimension, rng: &random)
         var alpha: Float = .random(in: -5...5)
         var beta: Float = .random(in: -5...5)
         while alpha == .zero { alpha = .random(in: -5...5) }
@@ -115,14 +115,14 @@ public func benchmarkOperationComplexDouble(name: String, runs: Int, iterations:
     var naiveTimes: [Int] = []
     var blasTimes: [Int] = []
     let dimensions = (2...maxDimension).map { $0 }
-
+    var random = NumPyRandom()
     for dimension in dimensions {
         print("\(name): \((100 * dimension) / maxDimension) %")
-        var x: Vector<Complex<Double>> = .init((0..<dimension).map { _ in .random(in: -10...10) } )
-        var y: Vector<Complex<Double>> = .init((0..<dimension).map { _ in .random(in: -10...10) } )
-        var A: Matrix<Complex<Double>> = generateHermitianMatrix(dimension: dimension)
-        var B: Matrix<Complex<Double>> = generateHermitianMatrix(dimension: dimension)
-        var C: Matrix<Complex<Double>> = generateHermitianMatrix(dimension: dimension)
+        var x: Vector<Complex<Double>> = .init((0..<dimension).map { _ in .random(in: -10...10, using: &random) } )
+        var y: Vector<Complex<Double>> = .init((0..<dimension).map { _ in .random(in: -10...10, using: &random) } )
+        var A: Matrix<Complex<Double>> = generateHermitianMatrix(dimension: dimension, rng: &random)
+        var B: Matrix<Complex<Double>> = generateHermitianMatrix(dimension: dimension, rng: &random)
+        var C: Matrix<Complex<Double>> = generateHermitianMatrix(dimension: dimension, rng: &random)
         var alpha: Complex<Double> = .random(in: -5...5)
         var beta: Complex<Double> = .random(in: -5...5)
         while alpha == .zero { alpha = .random(in: -5...5) }
@@ -160,14 +160,14 @@ public func benchmarkOperationComplexFloat(name: String, runs: Int, iterations: 
     var naiveTimes: [Int] = []
     var blasTimes: [Int] = []
     let dimensions = (2...maxDimension).map { $0 }
-
+    var random = NumPyRandom()
     for dimension in dimensions {
         print("\(name): \((100 * dimension) / maxDimension) %")
-        var x: Vector<Complex<Float>> = .init((0..<dimension).map { _ in .random(in: -10...10) } )
-        var y: Vector<Complex<Float>> = .init((0..<dimension).map { _ in .random(in: -10...10) } )
-        var A: Matrix<Complex<Float>> = generateHermitianMatrix(dimension: dimension)
-        var B: Matrix<Complex<Float>> = generateHermitianMatrix(dimension: dimension)
-        var C: Matrix<Complex<Float>> = generateHermitianMatrix(dimension: dimension)
+        var x: Vector<Complex<Float>> = .init((0..<dimension).map { _ in .random(in: -10...10, using: &random) } )
+        var y: Vector<Complex<Float>> = .init((0..<dimension).map { _ in .random(in: -10...10, using: &random) } )
+        var A: Matrix<Complex<Float>> = generateHermitianMatrix(dimension: dimension, rng: &random)
+        var B: Matrix<Complex<Float>> = generateHermitianMatrix(dimension: dimension, rng: &random)
+        var C: Matrix<Complex<Float>> = generateHermitianMatrix(dimension: dimension, rng: &random)
         var alpha: Complex<Float> = .random(in: -5...5)
         var beta: Complex<Float> = .random(in: -5...5)
         while alpha == .zero { alpha = .random(in: -5...5) }
@@ -210,11 +210,11 @@ public func plot(_ result: BenchmarkResult) {
     plt.close()
 }
 
-public func generateSymmetricMatrix<T: BinaryFloatingPoint & AlgebraicField>(dimension: Int) -> Matrix<T> where T.RawSignificand: FixedWidthInteger {
+public func generateSymmetricMatrix<T: BinaryFloatingPoint & AlgebraicField>(dimension: Int, rng: inout NumPyRandom) -> Matrix<T> where T.RawSignificand: FixedWidthInteger {
     var result: Matrix<T> = .zeros(rows: dimension, columns: dimension)
     for i in 0..<dimension {
         for j in i..<dimension {
-            let value = T.random(in: -5...5)
+            let value = T.random(in: -5...5, using: &rng)
             result[i, j] = value
             result[j, i] = value
         }
@@ -222,12 +222,12 @@ public func generateSymmetricMatrix<T: BinaryFloatingPoint & AlgebraicField>(dim
     return result
 }
 
-public func generateHermitianMatrix<R: Real>(dimension: Int) -> Matrix<Complex<R>> where R: BinaryFloatingPoint, R.RawSignificand: FixedWidthInteger {
+public func generateHermitianMatrix<R: Real>(dimension: Int, rng: inout NumPyRandom) -> Matrix<Complex<R>> where R: BinaryFloatingPoint, R.RawSignificand: FixedWidthInteger {
     var result: Matrix<Complex<R>> = .zeros(rows: dimension, columns: dimension)
     for i in 0..<dimension {
         for j in i..<dimension {
-            let real = R.random(in: -5...5)
-            let imag = R.random(in: -5...5)
+            let real = R.random(in: -5...5, using: &rng)
+            let imag = R.random(in: -5...5, using: &rng)
             if i == j { result[i, j] = Complex(real) }
             else { 
                 result[i, j] = Complex(real, imag)
