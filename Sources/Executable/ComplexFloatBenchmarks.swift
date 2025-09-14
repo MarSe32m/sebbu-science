@@ -4,7 +4,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
     var results: [BenchmarkResult] = []
     //MARK: Vector-Vector operations
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.add(_: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.add(_: Vector<Complex<Float>>)", runs: 10, iterations: 10000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._add(y)
         }, 
@@ -13,7 +13,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.add(_: Vector<Complex<Float>>, multiplied: Complex<Float>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.add(_: Vector<Complex<Float>>, multiplied: Complex<Float>)", runs: 10, iterations: 10000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._add(y, multiplied: alpha)
         }, 
@@ -22,7 +22,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.add(_: Vector<Complex<Float>>, multiplied: Float)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.add(_: Vector<Complex<Float>>, multiplied: Float)", runs: 10, iterations: 10000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._add(y, multiplied: alpha.real)
         }, 
@@ -32,7 +32,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
     )
 
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.multiply(by: Complex<Float>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.multiply(by: Complex<Float>)", runs: 10, iterations: 10000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._multiply(by: alpha)
         }, 
@@ -41,7 +41,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.multiply(by: Float)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.multiply(by: Float)", runs: 10, iterations: 10000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._multiply(by: alpha.real)
         }, 
@@ -51,7 +51,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
     )
 
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dot(_:Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dot(_:Vector<Complex<Float>>)", runs: 10, iterations: 10000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             let d = x._dot(y)
             blackHole(d)
@@ -62,7 +62,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.inner(_:Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.inner(_:Vector<Complex<Float>>)", runs: 10, iterations: 10000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             let d = x._inner(y)
             blackHole(d)
@@ -73,7 +73,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.copyComponents(from: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.copyComponents(from: Vector<Complex<Float>>)", runs: 10, iterations: 10000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._copyComponents(from: y)
         }, 
@@ -84,7 +84,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
 
     //MARK: Matrix-Vector operations
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Vector<Complex<Float>>, into: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Vector<Complex<Float>>, into: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, into: &y)
         }, 
@@ -93,7 +93,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Vector<Complex<Float>>, multiplied: Complex<Float>, into: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Vector<Complex<Float>>, multiplied: Complex<Float>, into: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, multiplied: alpha, into: &y)
         }, 
@@ -102,7 +102,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Vector<Complex<Float>>, addingInto: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Vector<Complex<Float>>, addingInto: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, addingInto: &y)
         }, 
@@ -111,7 +111,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Vector<Complex<Float>>, multiplied: Complex<Float>, addingInto: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Vector<Complex<Float>>, multiplied: Complex<Float>, addingInto: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, multiplied: alpha, addingInto: &y)
         }, 
@@ -121,7 +121,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
     )
     
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.hermitianDot(_: Vector<Complex<Float>>, into: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.hermitianDot(_: Vector<Complex<Float>>, into: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, into: &y)
         }, 
@@ -130,7 +130,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.hermitianDot(_: Vector<Complex<Float>>, multiplied: Complex<Float>, into: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.hermitianDot(_: Vector<Complex<Float>>, multiplied: Complex<Float>, into: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, multiplied: alpha, into: &y)
         }, 
@@ -139,7 +139,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.hermitianDot(_: Vector<Complex<Float>>, addingInto: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.hermitianDot(_: Vector<Complex<Float>>, addingInto: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, addingInto: &y)
         }, 
@@ -148,7 +148,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.hermitianDot(_: Vector<Complex<Float>>, multiplied: Complex<Float>, addingInto: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.hermitianDot(_: Vector<Complex<Float>>, multiplied: Complex<Float>, addingInto: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, multiplied: alpha, addingInto: &y)
         }, 
@@ -159,7 +159,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
 
     //MARK: Vector-Matrix operations
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dot(_: Matrix<Complex<Float>>, into: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dot(_: Matrix<Complex<Float>>, into: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, into: &y)
         }, 
@@ -168,7 +168,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dot(_: Matrix<Complex<Float>>, multiplied: Complex<Float>, into: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dot(_: Matrix<Complex<Float>>, multiplied: Complex<Float>, into: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, multiplied: alpha, into: &y)
         }, 
@@ -177,7 +177,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dot(_: Matrix<Complex<Float>>, addingInto: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dot(_: Matrix<Complex<Float>>, addingInto: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, addingInto: &y)
         }, 
@@ -186,7 +186,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dot(_: Matrix<Complex<Float>>, multiplied: Complex<Float>, addingInto: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dot(_: Matrix<Complex<Float>>, multiplied: Complex<Float>, addingInto: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, multiplied: alpha, addingInto: &y)
         }, 
@@ -196,7 +196,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
     )
     
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dotHermitian(_: Matrix<Complex<Float>>, into: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dotHermitian(_: Matrix<Complex<Float>>, into: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, into: &y)
         }, 
@@ -205,7 +205,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dotHermitian(_: Matrix<Complex<Float>>, multiplied: Complex<Float>, into: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dotHermitian(_: Matrix<Complex<Float>>, multiplied: Complex<Float>, into: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, multiplied: alpha, into: &y)
         }, 
@@ -214,7 +214,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dotHermitian(_: Matrix<Complex<Float>>, addingInto: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dotHermitian(_: Matrix<Complex<Float>>, addingInto: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, addingInto: &y)
         }, 
@@ -223,7 +223,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dotHermitian(_: Matrix<Complex<Float>>, multiplied: Complex<Float>, addingInto: Vector<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Vector<Complex<Float>>.dotHermitian(_: Matrix<Complex<Float>>, multiplied: Complex<Float>, addingInto: Vector<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, multiplied: alpha, addingInto: &y)
         }, 
@@ -234,7 +234,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
 
     //MARK: Matrix-Matrix operations
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.add(_: Matrix<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.add(_: Matrix<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 100, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._add(B)
         }, 
@@ -243,7 +243,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.add(_: Matrix<Complex<Float>>, multiplied: Complex<Float>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.add(_: Matrix<Complex<Float>>, multiplied: Complex<Float>)", runs: 20, iterations: 10000, maxDimension: 100, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._add(B, multiplied: alpha)
         }, 
@@ -252,7 +252,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.add(_: Matrix<Complex<Float>>, multiplied: Float)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.add(_: Matrix<Complex<Float>>, multiplied: Float)", runs: 20, iterations: 10000, maxDimension: 100, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._add(B, multiplied: alpha.real)
         }, 
@@ -262,7 +262,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
     )
 
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.multiply(by: Complex<Float>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.multiply(by: Complex<Float>)", runs: 20, iterations: 10000, maxDimension: 100, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._multiply(by: alpha)
         }, 
@@ -272,7 +272,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
     )
 
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.multiply(by: Float)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.multiply(by: Float)", runs: 20, iterations: 10000, maxDimension: 100, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._multiply(by: alpha.real)
         }, 
@@ -282,7 +282,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
     )
 
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.copyElements(from: Matrix<Complex<Float>>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.copyElements(from: Matrix<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 100, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._copyElements(from: B)
         }, 
@@ -293,7 +293,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
 
 
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Matrix<Complex<Float>>, into: Matrix<Complex<Float>>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Matrix<Complex<Float>>, into: Matrix<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, into: &C)
         }, 
@@ -302,7 +302,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Matrix<Complex<Float>>, multiplied: Complex<Float>, into: Matrix<Complex<Float>>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Matrix<Complex<Float>>, multiplied: Complex<Float>, into: Matrix<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, multiplied: alpha, into: &C)
         }, 
@@ -311,7 +311,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Matrix<Complex<Float>>, addingInto: Matrix<Complex<Float>>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Matrix<Complex<Float>>, addingInto: Matrix<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, addingInto: &C)
         }, 
@@ -320,7 +320,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Matrix<Complex<Float>>, multiplied: Complex<Float>, addingInto: Matrix<Complex<Float>>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(_: Matrix<Complex<Float>>, multiplied: Complex<Float>, addingInto: Matrix<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, multiplied: alpha, addingInto: &C)
         }, 
@@ -330,7 +330,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
     )
     
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(hermitianSide: HermitianSide, _: Matrix<Complex<Float>>, into: Matrix<Complex<Float>>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(hermitianSide: HermitianSide, _: Matrix<Complex<Float>>, into: Matrix<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, into: &C)
         }, 
@@ -339,7 +339,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(hermitianSide: HermitianSide, _: Matrix<Complex<Float>>, multiplied: Complex<Float>, into: Matrix<Complex<Float>>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(hermitianSide: HermitianSide, _: Matrix<Complex<Float>>, multiplied: Complex<Float>, into: Matrix<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, multiplied: alpha, into: &C)
         }, 
@@ -348,7 +348,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(hermitianSide: HermitianSide, _: Matrix<Complex<Float>>, addingInto: Matrix<Complex<Float>>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(hermitianSide: HermitianSide, _: Matrix<Complex<Float>>, addingInto: Matrix<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, addingInto: &C)
         }, 
@@ -357,7 +357,7 @@ public func testComplexFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(hermitianSide: HermitianSide, _: Matrix<Complex<Float>>, multiplied: Complex<Float>, addingInto: Matrix<Complex<Float>>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationComplexFloat(name: "Matrix<Complex<Float>>.dot(hermitianSide: HermitianSide, _: Matrix<Complex<Float>>, multiplied: Complex<Float>, addingInto: Matrix<Complex<Float>>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, multiplied: alpha, addingInto: &C)
         }, 

@@ -4,7 +4,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
     var results: [BenchmarkResult] = []
     //MARK: Vector-Vector operations
     results.append(
-        benchmarkOperationDouble(name: "Vector<Double>.add(_: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Vector<Double>.add(_: Vector<Double>)", runs: 10, iterations: 10000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._add(y)
         }, 
@@ -13,7 +13,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Vector<Double>.add(_: Vector<Double>, multiplied: Double)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Vector<Double>.add(_: Vector<Double>, multiplied: Double)", runs: 10, iterations: 10000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._add(y, multiplied: alpha)
         }, 
@@ -21,9 +21,8 @@ public func testDoubleOperations() -> [BenchmarkResult] {
             x._addBLAS(y, multiplied: alpha)
         })
     )
-
     results.append(
-        benchmarkOperationDouble(name: "Vector<Double>.multiply(by: Double)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Vector<Double>.multiply(by: Double)", runs: 10, iterations: 10000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._multiply(by: alpha)
         }, 
@@ -31,9 +30,8 @@ public func testDoubleOperations() -> [BenchmarkResult] {
             x._multiplyBLAS(by: alpha)
         })
     )
-
     results.append(
-        benchmarkOperationDouble(name: "Vector<Double>.dot(_:Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Vector<Double>.dot(_:Vector<Double>)", runs: 10, iterations: 10000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             let d = x._dot(y)
             blackHole(d)
@@ -44,7 +42,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Vector<Double>.copyComponents(from: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Vector<Double>.copyComponents(from: Vector<Double>)", runs: 10, iterations: 10000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._copyComponents(from: y)
         }, 
@@ -55,7 +53,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
 
     //MARK: Matrix-Vector operations
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Vector<Double>, into: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Vector<Double>, into: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, into: &y)
         }, 
@@ -64,7 +62,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Vector<Double>, multiplied: Double, into: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Vector<Double>, multiplied: Double, into: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, multiplied: alpha, into: &y)
         }, 
@@ -73,7 +71,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Vector<Double>, addingInto: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Vector<Double>, addingInto: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, addingInto: &y)
         }, 
@@ -82,7 +80,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Vector<Double>, multiplied: Double, addingInto: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Vector<Double>, multiplied: Double, addingInto: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, multiplied: alpha, addingInto: &y)
         }, 
@@ -92,7 +90,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
     )
     
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.symmetricDot(_: Vector<Double>, into: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Matrix<Double>.symmetricDot(_: Vector<Double>, into: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, into: &y)
         }, 
@@ -101,7 +99,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.symmetricDot(_: Vector<Double>, multiplied: Double, into: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Matrix<Double>.symmetricDot(_: Vector<Double>, multiplied: Double, into: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, multiplied: alpha, into: &y)
         }, 
@@ -110,7 +108,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.symmetricDot(_: Vector<Double>, addingInto: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Matrix<Double>.symmetricDot(_: Vector<Double>, addingInto: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, addingInto: &y)
         }, 
@@ -119,7 +117,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.symmetricDot(_: Vector<Double>, multiplied: Double, addingInto: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Matrix<Double>.symmetricDot(_: Vector<Double>, multiplied: Double, addingInto: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(x, multiplied: alpha, addingInto: &y)
         }, 
@@ -130,7 +128,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
 
     //MARK: Vector-Matrix operations
     results.append(
-        benchmarkOperationDouble(name: "Vector<Double>.dot(_: Matrix<Double>, into: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Vector<Double>.dot(_: Matrix<Double>, into: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, into: &y)
         }, 
@@ -139,7 +137,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Vector<Double>.dot(_: Matrix<Double>, multiplied: Double, into: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Vector<Double>.dot(_: Matrix<Double>, multiplied: Double, into: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, multiplied: alpha, into: &y)
         }, 
@@ -148,7 +146,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Vector<Double>.dot(_: Matrix<Double>, addingInto: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Vector<Double>.dot(_: Matrix<Double>, addingInto: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, addingInto: &y)
         }, 
@@ -157,7 +155,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Vector<Double>.dot(_: Matrix<Double>, multiplied: Double, addingInto: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Vector<Double>.dot(_: Matrix<Double>, multiplied: Double, addingInto: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, multiplied: alpha, addingInto: &y)
         }, 
@@ -167,7 +165,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
     )
     
     results.append(
-        benchmarkOperationDouble(name: "Vector<Double>.dotSymmetric(_: Matrix<Double>, into: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Vector<Double>.dotSymmetric(_: Matrix<Double>, into: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, into: &y)
         }, 
@@ -176,7 +174,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Vector<Double>.dotSymmetric(_: Matrix<Double>, multiplied: Double, into: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Vector<Double>.dotSymmetric(_: Matrix<Double>, multiplied: Double, into: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, multiplied: alpha, into: &y)
         }, 
@@ -185,7 +183,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Vector<Double>.dotSymmetric(_: Matrix<Double>, addingInto: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Vector<Double>.dotSymmetric(_: Matrix<Double>, addingInto: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, addingInto: &y)
         }, 
@@ -194,7 +192,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Vector<Double>.dotSymmetric(_: Matrix<Double>, multiplied: Double, addingInto: Vector<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Vector<Double>.dotSymmetric(_: Matrix<Double>, multiplied: Double, addingInto: Vector<Double>)", runs: 20, iterations: 10000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._dot(A, multiplied: alpha, addingInto: &y)
         }, 
@@ -205,7 +203,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
 
     //MARK: Matrix-Matrix operations
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.add(_: Matrix<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Matrix<Double>.add(_: Matrix<Double>)", runs: 20, iterations: 10000, maxDimension: 100, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._add(B)
         }, 
@@ -214,7 +212,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.add(_: Matrix<Double>, multiplied: Double)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Matrix<Double>.add(_: Matrix<Double>, multiplied: Double)", runs: 20, iterations: 10000, maxDimension: 100, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._add(B, multiplied: alpha)
         }, 
@@ -222,9 +220,8 @@ public func testDoubleOperations() -> [BenchmarkResult] {
             A._addBLAS(B, multiplied: alpha)
         })
     )
-
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.multiply(by: Double)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Matrix<Double>.multiply(by: Double)", runs: 20, iterations: 10000, maxDimension: 100, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._multiply(by: alpha)
         }, 
@@ -232,9 +229,8 @@ public func testDoubleOperations() -> [BenchmarkResult] {
             A._multiplyBLAS(by: alpha)
         })
     )
-
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.copyElements(from: Matrix<Double>)", runs: 10, iterations: 100_000, maxDimension: 30, 
+        benchmarkOperationDouble(name: "Matrix<Double>.copyElements(from: Matrix<Double>)", runs: 20, iterations: 10000, maxDimension: 100, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._copyElements(from: B)
         }, 
@@ -243,9 +239,8 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
 
-
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Matrix<Double>, into: Matrix<Double>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Matrix<Double>, into: Matrix<Double>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, into: &C)
         }, 
@@ -254,7 +249,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Matrix<Double>, multiplied: Double, into: Matrix<Double>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Matrix<Double>, multiplied: Double, into: Matrix<Double>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, multiplied: alpha, into: &C)
         }, 
@@ -263,7 +258,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Matrix<Double>, addingInto: Matrix<Double>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Matrix<Double>, addingInto: Matrix<Double>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, addingInto: &C)
         }, 
@@ -272,7 +267,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Matrix<Double>, multiplied: Double, addingInto: Matrix<Double>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationDouble(name: "Matrix<Double>.dot(_: Matrix<Double>, multiplied: Double, addingInto: Matrix<Double>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, multiplied: alpha, addingInto: &C)
         }, 
@@ -282,7 +277,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
     )
     
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.dot(symmetricSide: SymmetricSide, _: Matrix<Double>, into: Matrix<Double>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationDouble(name: "Matrix<Double>.dot(symmetricSide: SymmetricSide, _: Matrix<Double>, into: Matrix<Double>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, into: &C)
         }, 
@@ -291,7 +286,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.dot(symmetricSide: SymmetricSide, _: Matrix<Double>, multiplied: Double, into: Matrix<Double>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationDouble(name: "Matrix<Double>.dot(symmetricSide: SymmetricSide, _: Matrix<Double>, multiplied: Double, into: Matrix<Double>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, multiplied: alpha, into: &C)
         }, 
@@ -300,7 +295,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.dot(symmetricSide: SymmetricSide, _: Matrix<Double>, addingInto: Matrix<Double>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationDouble(name: "Matrix<Double>.dot(symmetricSide: SymmetricSide, _: Matrix<Double>, addingInto: Matrix<Double>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, addingInto: &C)
         }, 
@@ -309,7 +304,7 @@ public func testDoubleOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationDouble(name: "Matrix<Double>.dot(symmetricSide: SymmetricSide, _: Matrix<Double>, multiplied: Double, addingInto: Matrix<Double>)", runs: 10, iterations: 10_000, maxDimension: 20, 
+        benchmarkOperationDouble(name: "Matrix<Double>.dot(symmetricSide: SymmetricSide, _: Matrix<Double>, multiplied: Double, addingInto: Matrix<Double>)", runs: 20, iterations: 10000, maxDimension: 40, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, multiplied: alpha, addingInto: &C)
         }, 
