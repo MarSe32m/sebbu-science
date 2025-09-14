@@ -29,9 +29,11 @@ public extension Vector where T: AlgebraicField {
     }
 
     @inlinable
+    @_transparent
     mutating func _multiply(by: T) {
-        for i in 0..<components.count {
-            components[i] = Relaxed.product(components[i], by)
+        var componentsSpan = components.mutableSpan
+        for i in componentsSpan.indices {
+            componentsSpan[unchecked: i] = Relaxed.product(componentsSpan[unchecked: i], by)
         }
     }
 
@@ -76,6 +78,15 @@ public extension Vector<Double> {
 
     @inlinable
     @_transparent
+    mutating func _multiply(by: T) {
+        var componentsSpan = components.mutableSpan
+        for i in componentsSpan.indices {
+            componentsSpan[unchecked: i] = Relaxed.product(componentsSpan[unchecked: i], by)
+        }
+    }
+
+    @inlinable
+    @_transparent
     mutating func _multiplyBLAS(by: T) {
         BLAS.dscal(components.count, by, &components, 1)
     }
@@ -103,6 +114,15 @@ public extension Vector<Float> {
             _multiplyBLAS(by: by)
         } else {
             _multiply(by: by)
+        }
+    }
+
+    @inlinable
+    @_transparent
+    mutating func _multiply(by: T) {
+        var componentsSpan = components.mutableSpan
+        for i in componentsSpan.indices {
+            componentsSpan[unchecked: i] = Relaxed.product(componentsSpan[unchecked: i], by)
         }
     }
 

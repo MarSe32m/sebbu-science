@@ -34,7 +34,7 @@ func _testLinearLeastSquares() {
 
 @main
 struct Main {
-    public static func main() {
+    public static func main() throws {
 #if os(macOS)
 PythonLibrary.useLibrary(at: "/Library/Frameworks/Python.framework/Versions/3.12/Python")
 #elseif os(Linux)
@@ -43,24 +43,6 @@ PythonLibrary.useLibrary(at: "/usr/lib/x86_64-linux-gnu/libpython3.12.so.1.0")
 #elseif os(Windows)
 //TODO: Set the library path on Windows machine
 #endif
-        var results: [BenchmarkResult] = []
-        let doubleTime = ContinuousClock().measure {
-            results.append(contentsOf: testDoubleOperations())
-        }
-        let floatTime = ContinuousClock().measure {
-            results.append(contentsOf: testFloatOperations())
-        }
-        let complexDoubleTime = ContinuousClock().measure {
-            results.append(contentsOf: testComplexDoubleOperations())
-        }
-        let complexFloatTime = ContinuousClock().measure {
-            results.append(contentsOf: testComplexFloatOperations())
-        }
-        print("Double benchmarks took:        ", doubleTime)
-        print("Float benchmarks took:         ", floatTime)
-        print("Complex Double benchmarks took:", complexDoubleTime)
-        print("Complex Float benchmarks took: ", complexFloatTime)
-        let data = try! JSONEncoder().encode(results)
         #if os(Windows)
         let fileName = "bechmark_results_windows.json"
         #elseif os(Linux)
@@ -70,13 +52,39 @@ PythonLibrary.useLibrary(at: "/usr/lib/x86_64-linux-gnu/libpython3.12.so.1.0")
         #endif
         let currentDir = FileManager.default.currentDirectoryPath.appending("/\(fileName)")
         let url = URL(filePath: currentDir)
-        try! data.write(to: url)
-        
-        #if !canImport(Musl)
-        for result in results {
-            plot(result)
+        var results: [BenchmarkResult] = []
+        // Load already existing data
+        if let data = try? Data(contentsOf: url) {
+            results = try JSONDecoder().decode([BenchmarkResult].self, from: data)
+            #if !canImport(Musl)
+            for result in results {
+                plot(result)
+            }
+            #endif
+        } else {
+            let doubleTime = ContinuousClock().measure {
+                results.append(contentsOf: testDoubleOperations())
+            }
+            let floatTime = ContinuousClock().measure {
+                results.append(contentsOf: testFloatOperations())
+            }
+            let complexDoubleTime = ContinuousClock().measure {
+                results.append(contentsOf: testComplexDoubleOperations())
+            }
+            let complexFloatTime = ContinuousClock().measure {
+                results.append(contentsOf: testComplexFloatOperations())
+            }
+            print("Double benchmarks took:        ", doubleTime)
+            print("Float benchmarks took:         ", floatTime)
+            print("Complex Double benchmarks took:", complexDoubleTime)
+            print("Complex Float benchmarks took: ", complexFloatTime)
+            print("Total benchmark time:          ", doubleTime + floatTime + complexDoubleTime + complexFloatTime)
+            let data = try! JSONEncoder().encode(results)
+            try! data.write(to: url)
         }
-        #endif
+
+        
+        
         //print("Hello world 2")
         //let mat = Matrix<Complex<Double>>(elements: [Complex(1,2), Complex(2,1), Complex(1,2),
         //                                             Complex(1,2), Complex(2,1), Complex(1,2),
