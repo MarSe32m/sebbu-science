@@ -4,7 +4,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
     var results: [BenchmarkResult] = []
     //MARK: Vector-Vector operations
     results.append(
-        benchmarkOperationFloat(name: "Vector<Float>.add(_: Vector<Float>)", runs: 10, iterations: 10000, maxDimension: 1000, 
+        benchmarkOperationFloat(name: "Vector<Float>.add(_: Vector<Float>)", runs: 20, iterations: 1000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._add(y)
         }, 
@@ -13,7 +13,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationFloat(name: "Vector<Float>.add(_: Vector<Float>, multiplied: Float)", runs: 10, iterations: 10000, maxDimension: 1000, 
+        benchmarkOperationFloat(name: "Vector<Float>.add(_: Vector<Float>, multiplied: Float)", runs: 20, iterations: 1000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._add(y, multiplied: alpha)
         }, 
@@ -23,7 +23,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
     )
 
     results.append(
-        benchmarkOperationFloat(name: "Vector<Float>.multiply(by: Float)", runs: 10, iterations: 10000, maxDimension: 1000, 
+        benchmarkOperationFloat(name: "Vector<Float>.multiply(by: Float)", runs: 20, iterations: 1000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._multiply(by: alpha)
         }, 
@@ -33,7 +33,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
     )
 
     results.append(
-        benchmarkOperationFloat(name: "Vector<Float>.dot(_:Vector<Float>)", runs: 10, iterations: 10000, maxDimension: 1000, 
+        benchmarkOperationFloat(name: "Vector<Float>.dot(_:Vector<Float>)", runs: 20, iterations: 1000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             let d = x._dot(y)
             blackHole(d)
@@ -44,7 +44,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationFloat(name: "Vector<Float>.copyComponents(from: Vector<Float>)", runs: 10, iterations: 10000, maxDimension: 1000, 
+        benchmarkOperationFloat(name: "Vector<Float>.copyComponents(from: Vector<Float>)", runs: 20, iterations: 1000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             x._copyComponents(from: y)
         }, 
@@ -205,7 +205,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
 
     //MARK: Matrix-Matrix operations
     results.append(
-        benchmarkOperationFloat(name: "Matrix<Float>.add(_: Matrix<Float>)", runs: 20, iterations: 10000, maxDimension: 100, 
+        benchmarkOperationFloat(name: "Matrix<Float>.add(_: Matrix<Float>)", runs: 20, iterations: 1000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._add(B)
         }, 
@@ -214,7 +214,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationFloat(name: "Matrix<Float>.add(_: Matrix<Float>, multiplied: Float)", runs: 20, iterations: 10000, maxDimension: 100, 
+        benchmarkOperationFloat(name: "Matrix<Float>.add(_: Matrix<Float>, multiplied: Float)", runs: 20, iterations: 1000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._add(B, multiplied: alpha)
         }, 
@@ -224,7 +224,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
     )
 
     results.append(
-        benchmarkOperationFloat(name: "Matrix<Float>.multiply(by: Float)", runs: 20, iterations: 10000, maxDimension: 100, 
+        benchmarkOperationFloat(name: "Matrix<Float>.multiply(by: Float)", runs: 20, iterations: 1000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._multiply(by: alpha)
         }, 
@@ -234,7 +234,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
     )
 
     results.append(
-        benchmarkOperationFloat(name: "Matrix<Float>.copyElements(from: Matrix<Float>)", runs: 20, iterations: 10000, maxDimension: 100, 
+        benchmarkOperationFloat(name: "Matrix<Float>.copyElements(from: Matrix<Float>)", runs: 20, iterations: 1000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._copyElements(from: B)
         }, 
@@ -245,7 +245,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
 
 
     results.append(
-        benchmarkOperationFloat(name: "Matrix<Float>.dot(_: Matrix<Float>, into: Matrix<Float>)", runs: 20, iterations: 10000, maxDimension: 40, 
+        benchmarkOperationFloat(name: "Matrix<Float>.dot(_: Matrix<Float>, into: Matrix<Float>)", runs: 20, iterations: 1000, maxDimension: 35, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, into: &C)
         }, 
@@ -254,7 +254,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationFloat(name: "Matrix<Float>.dot(_: Matrix<Float>, multiplied: Float, into: Matrix<Float>)", runs: 20, iterations: 10000, maxDimension: 40, 
+        benchmarkOperationFloat(name: "Matrix<Float>.dot(_: Matrix<Float>, multiplied: Float, into: Matrix<Float>)", runs: 20, iterations: 1000, maxDimension: 35, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, multiplied: alpha, into: &C)
         }, 
@@ -263,7 +263,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationFloat(name: "Matrix<Float>.dot(_: Matrix<Float>, addingInto: Matrix<Float>)", runs: 20, iterations: 10000, maxDimension: 40, 
+        benchmarkOperationFloat(name: "Matrix<Float>.dot(_: Matrix<Float>, addingInto: Matrix<Float>)", runs: 20, iterations: 1000, maxDimension: 35, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, addingInto: &C)
         }, 
@@ -272,7 +272,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationFloat(name: "Matrix<Float>.dot(_: Matrix<Float>, multiplied: Float, addingInto: Matrix<Float>)", runs: 20, iterations: 10000, maxDimension: 40, 
+        benchmarkOperationFloat(name: "Matrix<Float>.dot(_: Matrix<Float>, multiplied: Float, addingInto: Matrix<Float>)", runs: 20, iterations: 1000, maxDimension: 35, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, multiplied: alpha, addingInto: &C)
         }, 
@@ -282,7 +282,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
     )
     
     results.append(
-        benchmarkOperationFloat(name: "Matrix<Float>.dot(symmetricSide: SymmetricSide, _: Matrix<Float>, into: Matrix<Float>)", runs: 20, iterations: 10000, maxDimension: 40, 
+        benchmarkOperationFloat(name: "Matrix<Float>.dot(symmetricSide: SymmetricSide, _: Matrix<Float>, into: Matrix<Float>)", runs: 20, iterations: 1000, maxDimension: 35, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, into: &C)
         }, 
@@ -291,7 +291,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationFloat(name: "Matrix<Float>.dot(symmetricSide: SymmetricSide, _: Matrix<Float>, multiplied: Float, into: Matrix<Float>)", runs: 20, iterations: 10000, maxDimension: 40, 
+        benchmarkOperationFloat(name: "Matrix<Float>.dot(symmetricSide: SymmetricSide, _: Matrix<Float>, multiplied: Float, into: Matrix<Float>)", runs: 20, iterations: 1000, maxDimension: 35, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, multiplied: alpha, into: &C)
         }, 
@@ -300,7 +300,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationFloat(name: "Matrix<Float>.dot(symmetricSide: SymmetricSide, _: Matrix<Float>, addingInto: Matrix<Float>)", runs: 20, iterations: 10000, maxDimension: 40, 
+        benchmarkOperationFloat(name: "Matrix<Float>.dot(symmetricSide: SymmetricSide, _: Matrix<Float>, addingInto: Matrix<Float>)", runs: 20, iterations: 1000, maxDimension: 35, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, addingInto: &C)
         }, 
@@ -309,7 +309,7 @@ public func testFloatOperations() -> [BenchmarkResult] {
         })
     )
     results.append(
-        benchmarkOperationFloat(name: "Matrix<Float>.dot(symmetricSide: SymmetricSide, _: Matrix<Float>, multiplied: Float, addingInto: Matrix<Float>)", runs: 20, iterations: 10000, maxDimension: 40, 
+        benchmarkOperationFloat(name: "Matrix<Float>.dot(symmetricSide: SymmetricSide, _: Matrix<Float>, multiplied: Float, addingInto: Matrix<Float>)", runs: 20, iterations: 1000, maxDimension: 35, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
             A._dot(B, multiplied: alpha, addingInto: &C)
         }, 

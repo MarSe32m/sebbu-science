@@ -152,9 +152,14 @@ public extension Matrix<Complex<Double>> {
     @inlinable
     @_transparent
     mutating func _multiply(by: Double) {
-        var span = elements.mutableSpan
-        for i in span.indices {
-            span[unchecked: i] = Relaxed.product(by, span[unchecked: i])
+        var elementsSpan = elements.mutableSpan
+        elementsSpan.withUnsafeMutableBufferPointer { elements in 
+            let count = 2 * elements.count
+            elements.baseAddress?.withMemoryRebound(to: Double.self, capacity: count) { elements in 
+                for i in 0..<count {
+                    elements[i] = Relaxed.product(elements[i], by)
+                }
+            }
         }
     }
 
@@ -221,9 +226,14 @@ public extension Matrix<Complex<Float>> {
     @inlinable
     @_transparent
     mutating func _multiply(by: Float) {
-        var span = elements.mutableSpan
-        for i in span.indices {
-            span[unchecked: i] = Relaxed.product(by, span[unchecked: i])
+        var elementsSpan = elements.mutableSpan
+        elementsSpan.withUnsafeMutableBufferPointer { elements in 
+            let count = 2 * elements.count
+            elements.baseAddress?.withMemoryRebound(to: Float.self, capacity: count) { elements in 
+                for i in 0..<count {
+                    elements[i] = Relaxed.product(elements[i], by)
+                }
+            }
         }
     }
 
