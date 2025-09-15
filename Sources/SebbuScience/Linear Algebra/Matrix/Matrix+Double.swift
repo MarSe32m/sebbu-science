@@ -575,7 +575,7 @@ public extension MatrixOperations {
     }
 
     //TODO: TEST
-    //@inlinable
+    @inlinable
     static func solve(A: Matrix<Double>, B: Matrix<Double>) throws -> Matrix<Double> {
         #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
         let N = A.rows
@@ -593,36 +593,28 @@ public extension MatrixOperations {
         if info != 0 { throw MatrixOperationError.info(Int(info))}
         return .init(elements: _B, rows: N, columns: B.columns)
         #elseif canImport(Accelerate)
-        fatalError("TODO: Implement")
-        var a: [Complex<Double>] = []
-        a.reserveCapacity(A.elements.count)
-        // Convert to columns major order
-        for j in 0..<A.columns {
-            for i in 0..<A.rows {
-                a.append(A[i, j])
-            }
-        }
-        var _B = Array(B.elements)
+        var a = A.transpose.elements
+        var b = B.transpose.elements
         var N = A.rows
         var nrhs = B.columns
-        var lda = A.columns
-        var ldb = N
+        var lda = A.rows
+        var ldb = B.rows
         var ipiv: [Int] = .init(repeating: .zero, count: N)
         var info = 0
         a.withUnsafeMutableBufferPointer { A in
-            _B.withUnsafeMutableBufferPointer { b in
-                dgesv_(&N, &nrhs, .init(A.baseAddress), &lda, &ipiv, .init(b.baseAddress), &ldb, &info)
+            b.withUnsafeMutableBufferPointer { B in
+                dgesv_(&N, &nrhs, .init(A.baseAddress), &lda, &ipiv, .init(B.baseAddress), &ldb, &info)
             }
         }
-        if info != 0 { throw MatrixOperationError.info(info) }
-        return .init(elements: _B, rows: B.columns, columns: N)
+        if info != 0 { throw MatrixOperations.MatrixOperationError.info(info) }
+        return .init(elements: b, rows: B.columns, columns: N).transpose
 #else
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
 
     //TODO: TEST
-    //@inlinable
+    @inlinable
     static func singularValueDecomposition(A: Matrix<Double>) throws -> (U: Matrix<Double>, singularValues: [Double], VT: Matrix<Double>) {
         #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
         let m = lapack_int(A.rows)
@@ -650,7 +642,55 @@ public extension MatrixOperations {
         if info != 0 { throw MatrixOperationError.info(Int(info)) }
         return (U, singularValues, VT)
         #elseif canImport(Accelerate)
-        fatalError("TODO: Implement")
+        var a = A.transpose.elements
+        var m = A.rows
+        var n = A.columns
+        var lda = m
+
+        var U: Matrix<Double> = .zeros(rows: m, columns: m)
+        var ldu = m
+        var VT: Matrix<Double> = .zeros(rows: n, columns: n)
+        var ldvt = n
+        var singularValues: [Double] = .init(repeating: .zero, count: Int(min(m, n)))
+        var jobu = Int8(bitPattern: UInt8(ascii: "A"))
+        var jobvt = Int8(bitPattern: UInt8(ascii: "A"))
+
+        var info = 0
+        var lwork = -1
+        var wkopt: Double = .zero
+        a.withUnsafeMutableBufferPointer { A in
+            singularValues.withUnsafeMutableBufferPointer { S in 
+                U.elements.withUnsafeMutableBufferPointer { U in 
+                    VT.elements.withUnsafeMutableBufferPointer { VH in 
+                        withUnsafeMutablePointer(to: &wkopt) { wkopt in 
+                            dgesvd_(&jobu, &jobvt, 
+                                    &m, &n, .init(A.baseAddress), &lda, 
+                                    .init(S.baseAddress), .init(U.baseAddress), &ldu, .init(VH.baseAddress), &ldvt,
+                                    .init(wkopt), &lwork, &info)
+                        }
+                    }
+                }
+            }
+        }
+        lwork = Int(wkopt)
+        var work: [Double] = .init(repeating: .zero, count: lwork)
+        a.withUnsafeMutableBufferPointer { A in
+            singularValues.withUnsafeMutableBufferPointer { S in 
+                U.elements.withUnsafeMutableBufferPointer { U in 
+                    VT.elements.withUnsafeMutableBufferPointer { VT in 
+                        work.withUnsafeMutableBufferPointer { work in 
+                            dgesvd_(&jobu, &jobvt, 
+                                    &m, &n, .init(A.baseAddress), &lda, 
+                                    .init(S.baseAddress), .init(U.baseAddress), &ldu, .init(VT.baseAddress), &ldvt,
+                                    .init(work.baseAddress!), &lwork, &info)
+                        }
+                    }
+                }
+            }
+        }
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        
+        return (U: U.transpose, singularValues: singularValues, VT: VT.transpose)
 #else
         fatalError("TODO: Default implementation not yet implemented")
 #endif

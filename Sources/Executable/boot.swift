@@ -7,15 +7,6 @@ import PythonKitUtilities
 
 typealias Field = Complex<Double>
 
-func printMatrix(_ A: Matrix<Complex<Double>>) {
-    for i in 0..<A.rows {
-        for j in 0..<A.columns {
-            print("( ", String(format: "%.2f", A[i,j].real), ", ", String(format: "%.2f", A[i, j].imaginary), " )", separator: "", terminator: " ")
-        }
-        print()
-    }
-}
-
 func _testLinearLeastSquares() {
     let A: Matrix<Complex<Double>> = .init(elements: [
         Complex(-4.20, -3.44), Complex(-3.35, 1.52), Complex(1.73, 8.85), Complex(2.35, 0.34),
@@ -32,9 +23,30 @@ func _testLinearLeastSquares() {
     printMatrix(X.result)
 }
 
+func _testSolve() {
+    let A: Matrix<Double> = .init(elements: [
+        6.80, -6.05, -0.45,  8.32, -9.67,
+        -2.11, -3.30,  2.58,  2.71, -5.14,
+        5.66, 5.36, -2.70,  4.35, -7.26,
+        5.97, -4.44,  0.27, -7.17, 6.08,
+        8.23, 1.08,  9.04,  2.14, -6.87
+    ], rows: 5, columns: 5)
+    let B: Matrix<Double> = .init(elements: [
+        4.02, -1.56, 9.81,
+        6.19,  4.00, -4.09,
+        -8.22, -8.67, -4.57,
+        -7.57,  1.75, -8.61,
+        -3.03,  2.86, 8.99
+    ], rows: 5, columns: 3)
+    let X = try! MatrixOperations.solve(A: A, B: B)
+    printMatrix(X)
+}
+
 @main
 struct Main {
     public static func main() throws {
+        _testSolve()
+        _testLinearLeastSquares()
 #if os(macOS)
 PythonLibrary.useLibrary(at: "/Library/Frameworks/Python.framework/Versions/3.12/Python")
 #elseif os(Linux)

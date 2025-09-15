@@ -54,7 +54,65 @@ public extension Optimize {
 
         return (result, residuals)
         #elseif canImport(Accelerate)
-        fatalError("TODO: Implement")
+        var m = A.rows
+        var n = A.columns
+        var nrhs = B.columns
+
+        var lda = m
+        var ldb = max(m, n)
+
+        var a = A.transpose.elements
+        var _bElements = B.elements
+        while _bElements.count < ldb * nrhs { _bElements.append(.zero) }
+        var b = Matrix(elements: _bElements, rows: m, columns: nrhs).transpose.elements
+
+        var info = 0
+
+        var lwork = -1
+        var wkopt: Double = .zero
+        var trans = Int8(bitPattern: UInt8(ascii: "N"))
+
+        a.withUnsafeMutableBufferPointer { A in 
+            b.withUnsafeMutableBufferPointer { B in 
+                withUnsafeMutablePointer(to: &wkopt) { wkopt in 
+                    dgels_(&trans, &m, &n, &nrhs, 
+                           .init(A.baseAddress), &lda, 
+                           .init(B.baseAddress), &ldb,
+                           .init(wkopt), &lwork, &info)
+                }
+            }
+        }
+        lwork = Int(wkopt)
+        var work = [Double](repeating: .zero, count: lwork)
+        a.withUnsafeMutableBufferPointer { A in 
+            b.withUnsafeMutableBufferPointer { B in 
+                work.withUnsafeMutableBufferPointer { work in 
+                    dgels_(&trans, &m, &n, &nrhs, 
+                           .init(A.baseAddress), &lda, 
+                           .init(B.baseAddress), &ldb,
+                           .init(work.baseAddress!), &lwork, &info)
+                }
+            }
+        }
+        if info != 0 { throw MatrixOperations.MatrixOperationError.info(info) }
+        var result: Matrix<Double> = .zeros(rows: n, columns: nrhs)
+        for j in 0..<nrhs {
+            for i in 0..<n {
+                result[i, j] = b[j * ldb + i]
+            }
+        }
+    
+        var residuals: Matrix<Double>? = nil
+        if m > n {
+            let resRows = m - n
+            residuals = .zeros(rows: resRows, columns: nrhs)
+            for j in 0..<nrhs {
+                for i in 0..<resRows {
+                    residuals![i, j] = b[j * ldb + n + i]
+                }
+            }
+        }
+        return (result, residuals)
         #else
         fatalError("TODO: Not implemented yet")
         #endif
@@ -97,7 +155,65 @@ public extension Optimize {
 
         return (result, residuals)
         #elseif canImport(Accelerate)
-        fatalError("TODO: Implement")
+        var m = A.rows
+        var n = A.columns
+        var nrhs = B.columns
+
+        var lda = m
+        var ldb = max(m, n)
+
+        var a = A.transpose.elements
+        var _bElements = B.elements
+        while _bElements.count < ldb * nrhs { _bElements.append(.zero) }
+        var b = Matrix(elements: _bElements, rows: m, columns: nrhs).transpose.elements
+
+        var info = 0
+
+        var lwork = -1
+        var wkopt: Float = .zero
+        var trans = Int8(bitPattern: UInt8(ascii: "N"))
+
+        a.withUnsafeMutableBufferPointer { A in 
+            b.withUnsafeMutableBufferPointer { B in 
+                withUnsafeMutablePointer(to: &wkopt) { wkopt in 
+                    sgels_(&trans, &m, &n, &nrhs, 
+                           .init(A.baseAddress), &lda, 
+                           .init(B.baseAddress), &ldb,
+                           .init(wkopt), &lwork, &info)
+                }
+            }
+        }
+        lwork = Int(wkopt)
+        var work = [Float](repeating: .zero, count: lwork)
+        a.withUnsafeMutableBufferPointer { A in 
+            b.withUnsafeMutableBufferPointer { B in 
+                work.withUnsafeMutableBufferPointer { work in 
+                    sgels_(&trans, &m, &n, &nrhs, 
+                           .init(A.baseAddress), &lda, 
+                           .init(B.baseAddress), &ldb,
+                           .init(work.baseAddress!), &lwork, &info)
+                }
+            }
+        }
+        if info != 0 { throw MatrixOperations.MatrixOperationError.info(info) }
+        var result: Matrix<Float> = .zeros(rows: n, columns: nrhs)
+        for j in 0..<nrhs {
+            for i in 0..<n {
+                result[i, j] = b[j * ldb + i]
+            }
+        }
+    
+        var residuals: Matrix<Float>? = nil
+        if m > n {
+            let resRows = m - n
+            residuals = .zeros(rows: resRows, columns: nrhs)
+            for j in 0..<nrhs {
+                for i in 0..<resRows {
+                    residuals![i, j] = b[j * ldb + n + i]
+                }
+            }
+        }
+        return (result, residuals)
         #else
         fatalError("TODO: Not implemented yet")
         #endif
@@ -140,7 +256,65 @@ public extension Optimize {
 
         return (result, residuals)
         #elseif canImport(Accelerate)
-        fatalError("TODO: Implement")
+        var m = A.rows
+        var n = A.columns
+        var nrhs = B.columns
+
+        var lda = m
+        var ldb = max(m, n)
+
+        var a = A.transpose.elements
+        var _bElements = B.elements
+        while _bElements.count < ldb * nrhs { _bElements.append(.zero) }
+        var b = Matrix(elements: _bElements, rows: m, columns: nrhs).transpose.elements
+
+        var info = 0
+
+        var lwork = -1
+        var wkopt: Complex<Float> = .zero
+        var trans = Int8(bitPattern: UInt8(ascii: "N"))
+
+        a.withUnsafeMutableBufferPointer { A in 
+            b.withUnsafeMutableBufferPointer { B in 
+                withUnsafeMutablePointer(to: &wkopt) { wkopt in 
+                    cgels_(&trans, &m, &n, &nrhs, 
+                           .init(A.baseAddress), &lda, 
+                           .init(B.baseAddress), &ldb,
+                           .init(wkopt), &lwork, &info)
+                }
+            }
+        }
+        lwork = Int(wkopt.real)
+        var work = [Complex<Float>](repeating: .zero, count: lwork)
+        a.withUnsafeMutableBufferPointer { A in 
+            b.withUnsafeMutableBufferPointer { B in 
+                work.withUnsafeMutableBufferPointer { work in 
+                    cgels_(&trans, &m, &n, &nrhs, 
+                           .init(A.baseAddress), &lda, 
+                           .init(B.baseAddress), &ldb,
+                           .init(work.baseAddress!), &lwork, &info)
+                }
+            }
+        }
+        if info != 0 { throw MatrixOperations.MatrixOperationError.info(info) }
+        var result: Matrix<Complex<Float>> = .zeros(rows: n, columns: nrhs)
+        for j in 0..<nrhs {
+            for i in 0..<n {
+                result[i, j] = b[j * ldb + i]
+            }
+        }
+    
+        var residuals: Matrix<Complex<Float>>? = nil
+        if m > n {
+            let resRows = m - n
+            residuals = .zeros(rows: resRows, columns: nrhs)
+            for j in 0..<nrhs {
+                for i in 0..<resRows {
+                    residuals![i, j] = b[j * ldb + n + i]
+                }
+            }
+        }
+        return (result, residuals)
         #else
         fatalError("TODO: Not implemented yet")
         #endif
@@ -183,7 +357,65 @@ public extension Optimize {
 
         return (result, residuals)
         #elseif canImport(Accelerate)
-        fatalError("TODO: Implement")
+        var m = A.rows
+        var n = A.columns
+        var nrhs = B.columns
+
+        var lda = m
+        var ldb = max(m, n)
+
+        var a = A.transpose.elements
+        var _bElements = B.elements
+        while _bElements.count < ldb * nrhs { _bElements.append(.zero) }
+        var b = Matrix(elements: _bElements, rows: m, columns: nrhs).transpose.elements
+
+        var info = 0
+
+        var lwork = -1
+        var wkopt: Complex<Double> = .zero
+        var trans = Int8(bitPattern: UInt8(ascii: "N"))
+
+        a.withUnsafeMutableBufferPointer { A in 
+            b.withUnsafeMutableBufferPointer { B in 
+                withUnsafeMutablePointer(to: &wkopt) { wkopt in 
+                    zgels_(&trans, &m, &n, &nrhs, 
+                           .init(A.baseAddress), &lda, 
+                           .init(B.baseAddress), &ldb,
+                           .init(wkopt), &lwork, &info)
+                }
+            }
+        }
+        lwork = Int(wkopt.real)
+        var work = [Complex<Double>](repeating: .zero, count: lwork)
+        a.withUnsafeMutableBufferPointer { A in 
+            b.withUnsafeMutableBufferPointer { B in 
+                work.withUnsafeMutableBufferPointer { work in 
+                    zgels_(&trans, &m, &n, &nrhs, 
+                           .init(A.baseAddress), &lda, 
+                           .init(B.baseAddress), &ldb,
+                           .init(work.baseAddress!), &lwork, &info)
+                }
+            }
+        }
+        if info != 0 { throw MatrixOperations.MatrixOperationError.info(info) }
+        var result: Matrix<Complex<Double>> = .zeros(rows: n, columns: nrhs)
+        for j in 0..<nrhs {
+            for i in 0..<n {
+                result[i, j] = b[j * ldb + i]
+            }
+        }
+    
+        var residuals: Matrix<Complex<Double>>? = nil
+        if m > n {
+            let resRows = m - n
+            residuals = .zeros(rows: resRows, columns: nrhs)
+            for j in 0..<nrhs {
+                for i in 0..<resRows {
+                    residuals![i, j] = b[j * ldb + n + i]
+                }
+            }
+        }
+        return (result, residuals)
         #else
         fatalError("TODO: Not implemented yet")
         #endif

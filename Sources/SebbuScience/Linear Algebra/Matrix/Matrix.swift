@@ -44,15 +44,32 @@ public struct Matrix<T> {
     
     @inlinable
     public subscript(_ i: Int, _ j: Int) -> T {
+        @_transparent
         _read {
             let index = i &* columns &+ j
             precondition(index < elements.count)
             yield elements[index]
         }
-        
+
+        @_transparent
         _modify {
             let index = i &* columns &+ j
             precondition(index < elements.count)
+            yield &elements[index]
+        }
+    }
+
+    @inlinable
+    public subscript(unchecked i: Int, unchecked j: Int) -> T {
+        @_transparent
+        _read {
+            let index = i &* columns &+ j
+            yield elements[index]
+        }
+        
+        @_transparent
+        _modify {
+            let index = i &* columns &+ j
             yield &elements[index]
         }
     }

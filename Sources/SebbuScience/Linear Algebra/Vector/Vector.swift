@@ -29,9 +29,11 @@ public struct Vector<T> {
     
     @inlinable
     public subscript(_ index: Int) -> T {
+        @_transparent
         _read {
             yield components[index]
         }
+        @_transparent
         _modify {
             yield &components[index]
         }
