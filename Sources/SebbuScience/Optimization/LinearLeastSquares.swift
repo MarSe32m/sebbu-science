@@ -64,7 +64,7 @@ public extension Optimize {
         var a = A.transpose.elements
         var _bElements = B.elements
         while _bElements.count < ldb * nrhs { _bElements.append(.zero) }
-        var b = Matrix(elements: _bElements, rows: m, columns: nrhs).transpose.elements
+        var b = Matrix(elements: _bElements, rows: ldb, columns: nrhs).transpose.elements
 
         var info = 0
 
@@ -165,7 +165,7 @@ public extension Optimize {
         var a = A.transpose.elements
         var _bElements = B.elements
         while _bElements.count < ldb * nrhs { _bElements.append(.zero) }
-        var b = Matrix(elements: _bElements, rows: m, columns: nrhs).transpose.elements
+        var b = Matrix(elements: _bElements, rows: ldb, columns: nrhs).transpose.elements
 
         var info = 0
 
@@ -266,7 +266,7 @@ public extension Optimize {
         var a = A.transpose.elements
         var _bElements = B.elements
         while _bElements.count < ldb * nrhs { _bElements.append(.zero) }
-        var b = Matrix(elements: _bElements, rows: m, columns: nrhs).transpose.elements
+        var b = Matrix(elements: _bElements, rows: ldb, columns: nrhs).transpose.elements
 
         var info = 0
 
@@ -367,7 +367,7 @@ public extension Optimize {
         var a = A.transpose.elements
         var _bElements = B.elements
         while _bElements.count < ldb * nrhs { _bElements.append(.zero) }
-        var b = Matrix(elements: _bElements, rows: m, columns: nrhs).transpose.elements
+        var b = Matrix(elements: _bElements, rows: ldb, columns: nrhs).transpose.elements
 
         var info = 0
 
