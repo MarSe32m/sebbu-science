@@ -36,7 +36,7 @@ public extension Optimize {
         var _A = Array(A.elements)
         var _B = Array(B.elements)
         // Pad with zeros
-        while _B.count < Int(m * nrhs) { _B.append(.zero) }
+        while _B.count < Int(max(m, n) * nrhs) { _B.append(.zero) }
         let _N = Int8(bitPattern: UInt8(ascii: "N"))
         let info = _A.withUnsafeMutableBufferPointer { A in
             _B.withUnsafeMutableBufferPointer { B in 
@@ -137,7 +137,7 @@ public extension Optimize {
         var _A = Array(A.elements)
         var _B = Array(B.elements)
         // Pad with zeros
-        while _B.count < Int(m * nrhs) { _B.append(.zero) }
+        while _B.count < Int(max(m, n) * nrhs) { _B.append(.zero) }
         let _N = Int8(bitPattern: UInt8(ascii: "N"))
         let info = _A.withUnsafeMutableBufferPointer { A in
             _B.withUnsafeMutableBufferPointer { B in 
@@ -238,7 +238,7 @@ public extension Optimize {
         var _A = Array(A.elements)
         var _B = Array(B.elements)
         // Pad with zeros
-        while _B.count < Int(m * nrhs) { _B.append(.zero) }
+        while _B.count < Int(max(m, n) * nrhs) { _B.append(.zero) }
         let _N = Int8(bitPattern: UInt8(ascii: "N"))
         let info = _A.withUnsafeMutableBufferPointer { A in
             _B.withUnsafeMutableBufferPointer { B in 
@@ -339,7 +339,7 @@ public extension Optimize {
         var _A = Array(A.elements)
         var _B = Array(B.elements)
         // Pad with zeros
-        while _B.count < Int(m * nrhs) { _B.append(.zero) }
+        while _B.count < Int(max(n, m) * nrhs) { _B.append(.zero) }
         let _N = Int8(bitPattern: UInt8(ascii: "N"))
         let info = _A.withUnsafeMutableBufferPointer { A in
             _B.withUnsafeMutableBufferPointer { B in 
