@@ -36,6 +36,7 @@ func _testPseudoInverse() {
     printMatrix(res)
 }
 
+
 func _testSolve() {
     let A: Matrix<Double> = .init(elements: [
         6.80, -6.05, -0.45,  8.32, -9.67,
@@ -55,12 +56,11 @@ func _testSolve() {
     printMatrix(X)
 }
 
+
+
 @main
 struct Main {
     public static func main() throws {
-        _testPseudoInverse()
-        _testSolve()
-        _testLinearLeastSquares()
 #if os(macOS)
 PythonLibrary.useLibrary(at: "/Library/Frameworks/Python.framework/Versions/3.12/Python")
 #elseif os(Linux)
@@ -69,6 +69,11 @@ PythonLibrary.useLibrary(at: "/usr/lib/x86_64-linux-gnu/libpython3.12.so.1.0")
 #elseif os(Windows)
 //TODO: Set the library path on Windows machine
 #endif
+        _testGaussNewtonDouble()
+        _testPseudoInverse()
+        _testSolve()
+        _testLinearLeastSquares()
+
         #if os(Windows)
         let fileName = "bechmark_results_windows.json"
         #elseif os(Linux)
