@@ -83,6 +83,22 @@ public extension Matrix<Complex<Float>> {
         fatalError("TODO: Not yet implemented")
         #endif
     }
+    
+    @inlinable
+    var pseudoInverse: Self? {
+        //TODO: Should we check wherther the matrix is a special case, for example diagonal etc?
+        guard let (U, S, VH) = try? MatrixOperations.singularValueDecomposition(A: self) else { return nil }
+        //FIXME: Can S be empty here?
+        // Tolerance for the pseudoinverse of S
+        let tolerance = Float(Swift.max(rows, columns)) * Float.ulpOfOne * S.max()!
+        var sigma: Self = .zeros(rows: columns, columns: rows)
+        for i in 0..<min(rows, columns) {
+            if S[i] > tolerance {
+                sigma[i, i] = Complex(1 / S[i])
+            }
+        }
+        return VH.conjugateTranspose.dot(sigma).dot(U.conjugateTranspose)
+    }
 }
 
 //MARK: Copying elements and zeroing elements

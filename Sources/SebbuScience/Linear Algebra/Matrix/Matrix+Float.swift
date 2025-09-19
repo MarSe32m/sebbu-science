@@ -70,6 +70,22 @@ public extension Matrix<Float> {
     }
     
     @inlinable
+    var pseudoInverse: Self? {
+        //TODO: Should we check wherther the matrix is a special case, for example diagonal etc?
+        guard let (U, S, VT) = try? MatrixOperations.singularValueDecomposition(A: self) else { return nil }
+        //FIXME: Can S be empty here?
+        // Tolerance for the pseudoinverse of S
+        let tolerance = Float(Swift.max(rows, columns)) * Float.ulpOfOne * S.max()!
+        var sigma: Self = .zeros(rows: columns, columns: rows)
+        for i in 0..<min(rows, columns) {
+            if S[i] > tolerance {
+                sigma[i, i] = 1 / S[i]
+            }
+        }
+        return VT.transpose.dot(sigma).dot(U.transpose)
+    }
+    
+    @inlinable
     var frobeniusNorm: Float {
         elements.reduce(.zero) { $0 + $1 * $1 }.squareRoot()
     }

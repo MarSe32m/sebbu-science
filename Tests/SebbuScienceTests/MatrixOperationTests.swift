@@ -409,3 +409,57 @@ struct LeastSquaresTests {
         #expect(X.isApproximatelyEqual(to: solution, absoluteTolerance: 1e-5))
     }
 }
+
+struct PseudoInverseTests {
+    @Test("Matrix<Double>.pseudoInverse test", arguments: 0..<10)
+    func pseudoInverseDouble(_ argument: Int) {
+        let rows = Int.random(in: 2...100)
+        let columns = Int.random(in: 2...100)
+        let A: Matrix<Double> = .init(elements: (0..<rows * columns).map { _ in .random(in: -10...10) }, rows: rows, columns: columns)
+        let pseudoInverse = A.pseudoInverse
+        #expect(pseudoInverse != nil)
+        let B = A.dot(pseudoInverse!).dot(A)
+        let C = pseudoInverse!.dot(A).dot(pseudoInverse!)
+        #expect(A.isApproximatelyEqual(to: B, absoluteTolerance: 1e-10))
+        #expect(pseudoInverse!.isApproximatelyEqual(to: C, absoluteTolerance: 1e-10))
+    }
+    
+    @Test("Matrix<Float>.pseudoInverse test", arguments: 0..<10)
+    func pseudoInverseFloat(_ argument: Int) {
+        let rows = Int.random(in: 2...100)
+        let columns = Int.random(in: 2...100)
+        let A: Matrix<Float> = .init(elements: (0..<rows * columns).map { _ in .random(in: -10...10) }, rows: rows, columns: columns)
+        let pseudoInverse = A.pseudoInverse
+        #expect(pseudoInverse != nil)
+        let B = A.dot(pseudoInverse!).dot(A)
+        let C = pseudoInverse!.dot(A).dot(pseudoInverse!)
+        #expect(A.isApproximatelyEqual(to: B, absoluteTolerance: 1e-4))
+        #expect(pseudoInverse!.isApproximatelyEqual(to: C, absoluteTolerance: 1e-4))
+    }
+    
+    @Test("Matrix<Complex<Double>>.pseudoInverse test", arguments: 0..<10)
+    func pseudoInverseComplexDouble(_ argument: Int) {
+        let rows = Int.random(in: 2...100)
+        let columns = Int.random(in: 2...100)
+        let A: Matrix<Complex<Double>> = .init(elements: (0..<rows * columns).map { _ in .random(in: -10...10) }, rows: rows, columns: columns)
+        let pseudoInverse = A.pseudoInverse
+        #expect(pseudoInverse != nil)
+        let B = A.dot(pseudoInverse!).dot(A)
+        let C = pseudoInverse!.dot(A).dot(pseudoInverse!)
+        #expect(A.isApproximatelyEqual(to: B, absoluteTolerance: 1e-10))
+        #expect(pseudoInverse!.isApproximatelyEqual(to: C, absoluteTolerance: 1e-10))
+    }
+    
+    @Test("Matrix<Complex<Float>>.pseudoInverse test", arguments: 0..<10)
+    func pseudoInverseComplexFloat(_ argument: Int) {
+        let rows = Int.random(in: 2...100)
+        let columns = Int.random(in: 2...100)
+        let A: Matrix<Complex<Float>> = .init(elements: (0..<rows * columns).map { _ in .random(in: -10...10) }, rows: rows, columns: columns)
+        let pseudoInverse = A.pseudoInverse
+        #expect(pseudoInverse != nil)
+        let B = A.dot(pseudoInverse!).dot(A)
+        let C = pseudoInverse!.dot(A).dot(pseudoInverse!)
+        #expect(A.isApproximatelyEqual(to: B, absoluteTolerance: 1e-4))
+        #expect(pseudoInverse!.isApproximatelyEqual(to: C, absoluteTolerance: 1e-4))
+    }
+}

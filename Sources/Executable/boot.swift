@@ -23,6 +23,19 @@ func _testLinearLeastSquares() {
     printMatrix(X.result)
 }
 
+func _testPseudoInverse() {
+    let A: Matrix<Double> = .init(elements: [
+        6.80, -6.05, -0.45,  8.32, -9.67,
+        -2.11, -3.30,  2.58,  2.71, -5.14,
+        5.66, 5.36, -2.70,  4.35, -7.26,
+        5.97, -4.44,  0.27, -7.17, 6.08,
+        8.23, 1.08,  9.04,  2.14, -6.87
+    ], rows: 5, columns: 5)
+    let ainv = A.pseudoInverse!
+    let res = A.dot(ainv).dot(A)
+    printMatrix(res)
+}
+
 func _testSolve() {
     let A: Matrix<Double> = .init(elements: [
         6.80, -6.05, -0.45,  8.32, -9.67,
@@ -45,6 +58,7 @@ func _testSolve() {
 @main
 struct Main {
     public static func main() throws {
+        _testPseudoInverse()
         _testSolve()
         _testLinearLeastSquares()
 #if os(macOS)
