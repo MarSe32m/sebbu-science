@@ -129,3 +129,72 @@ public extension Matrix where T: AlgebraicField, T.Magnitude: FloatingPoint {
         return true
     }
 }
+
+public extension Matrix where T: AlgebraicField {
+    /// Solves the system of equations Ax=b with the [Gauss-Seidel method](https://en.wikipedia.org/wiki/Gauss–Seidel_method)
+    /// - Parameters:
+    ///   - A: The matrix A in the system of equations Ax=b. Must be a square matrix with non-zero diagonals
+    ///   - b: The vector b in the system of equatoins Ax=b
+    ///   - result: On entry contains the intial guess. On exit it is the solution ´x´
+    ///   - iterations: Number of iterations to perform
+    @inlinable
+    static func solveGaussSeidel(A: Self, b: Vector<T>, result: inout Vector<T>, iterations: Int) {
+        precondition(A.rows == A.columns, "A must be a square matrix")
+        precondition(A.rows == b.count)
+        for _ in 0..<iterations {
+            for i in 0..<A.columns {
+                //TODO: What should we do in this case?
+                if A[i, i] == .zero { continue }
+                result[i] = b[i]
+                for j in 0..<A.rows where j != i {
+                    result[i] -= A[i, j] * result[j]
+                }
+                result[i] /= A[i, i]
+            }
+        }
+    }
+    
+    /// Solves the system of equations Ax=b with the [Gauss-Seidel method](https://en.wikipedia.org/wiki/Gauss–Seidel_method)
+    /// - Parameters:
+    ///   - A: The matrix A in the system of equations Ax=b. Must be a square matrix with non-zero diagonals
+    ///   - b: The vector b in the system of equatoins Ax=b
+    ///   - initalGuess: Initial guess of the solution
+    ///   - iterations: Number of iterations to perform
+    /// - Returns: The solution x after the given iterations
+    @inlinable
+    static func solveGaussSeidel(A: Self, b: Vector<T>, initialGuess: Vector<T>, iterations: Int) -> Vector<T> {
+        var result = initialGuess
+        solveGaussSeidel(A: A, b: b, result: &result, iterations: iterations)
+        return result
+    }
+    
+    /// Solves the system of equations Ax=b with the [Jacobi method](https://en.wikipedia.org/wiki/Jacobi_method)
+    /// result contains the initial guess on entry and the result on exit
+    @inlinable
+    static func solveJacobi(A: Self, b: Vector<T>, result: inout Vector<T>, iterations: Int) {
+        precondition(A.rows == A.columns, "A must be a square matrix")
+        precondition(A.rows == b.count)
+        var x: Vector<T> = .zero(result.count)
+        swap(&x, &result)
+        for _ in 0..<iterations {
+            for i in 0..<A.columns {
+                //TODO: What should we do in this case?
+                if A[i, i] == .zero { continue }
+                var delta: T = .zero
+                for j in 0..<A.rows where j != i {
+                    delta += A[i, j] * x[j]
+                }
+                result[i] = (b[i] - delta) / A[i, i]
+            }
+            swap(&x, &result)
+        }
+        swap(&x, &result)
+    }
+    
+    @inlinable
+    static func solveJacobi(A: Self, b: Vector<T>, initialGuess: Vector<T>, iterations: Int) -> Vector<T> {
+        var result = initialGuess
+        solveJacobi(A: A, b: b, result: &result, iterations: iterations)
+        return result
+    }
+}

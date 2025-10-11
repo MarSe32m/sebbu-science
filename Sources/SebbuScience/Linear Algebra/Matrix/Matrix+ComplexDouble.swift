@@ -38,43 +38,39 @@ public extension Matrix<Complex<Double>> {
         if info != 0 { return nil }
         return .init(elements: a, rows: rows, columns: columns)
         #elseif canImport(Accelerate)
-        var a: [Complex<Double>] = []
-        a.reserveCapacity(elements.count)
-        for j in 0..<columns {
-            for i in 0..<rows {
-                a.append(self[i, j])
-            }
-        }
         var m = rows
         var n = columns
         var lda = rows
-        var ipiv: [Int] = .init(repeating: .zero, count: Swift.min(m, n))
         var info = 0
-        a.withUnsafeMutableBufferPointer { a in
-            zgetrf_(&m, &n, OpaquePointer(a.baseAddress), &lda, &ipiv, &info)
-        }
-        if info != 0 { return nil }
-
-        var work: [Complex<Double>] = [.zero]
-        var lwork = -1
-        a.withUnsafeMutableBufferPointer { a in
-            work.withUnsafeMutableBufferPointer { work in
-                zgetri_(&n, OpaquePointer(a.baseAddress), &lda, &ipiv, OpaquePointer(work.baseAddress!), &lwork, &info)
+        return withUnsafeTemporaryAllocation(of: Complex<Double>.self, capacity: elements.count) { a in
+            var index = 0
+            for j in 0..<columns {
+                for i in 0..<rows {
+                    a[index] = self[i, j]
+                    index += 1
+                }
             }
-        }
-        if info != 0 { return nil }
-        lwork = Int(work[0].real)
-        work = .init(repeating: .zero, count: lwork)
-        a.withUnsafeMutableBufferPointer { a in
-            work.withUnsafeMutableBufferPointer { work in
-                zgetri_(&n, OpaquePointer(a.baseAddress), &lda, &ipiv, OpaquePointer(work.baseAddress!), &lwork, &info)
-            }
-        }
-        if info != 0 { return nil }
-        return .init(rows: rows, columns: columns) { buffer in
-            for i in 0..<rows {
-                for j in 0..<columns {
-                    buffer[i * n + j] = a[j * n + i]
+            return withUnsafeTemporaryAllocation(of: Int.self, capacity: Swift.min(m, n)) { ipiv in
+                for i in 0..<Swift.min(m, n) { ipiv[i] = .zero }
+                zgetrf_(&m, &n, OpaquePointer(a.baseAddress), &lda, ipiv.baseAddress, &info)
+                if info != 0 { return nil }
+                var work: Complex<Double> = .zero
+                var lwork = -1
+                withUnsafeMutablePointer(to: &work) { work in
+                    zgetri_(&n, .init(a.baseAddress), &lda, ipiv.baseAddress, .init(work), &lwork, &info)
+                }
+                if info != 0 { return nil }
+                lwork = Int(work.real)
+                withUnsafeTemporaryAllocation(of: Complex<Double>.self, capacity: lwork) { work in
+                    zgetri_(&n, .init(a.baseAddress), &lda, ipiv.baseAddress, .init(work.baseAddress!), &lwork, &info)
+                }
+                if info != 0 { return nil }
+                return .init(rows: rows, columns: columns) { buffer in
+                    for i in 0..<rows {
+                        for j in 0..<columns {
+                            buffer[i * n + j] = a[j * n + i]
+                        }
+                    }
                 }
             }
         }

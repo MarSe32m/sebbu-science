@@ -17,7 +17,7 @@ public extension Optimize {
             let step = JpseudoInverse.dot(r)
             let newParameters = currentParameters - step
             
-            if step.norm < tolerance || r.norm < tolerance {
+            if step.norm < tolerance || r.normSquared < tolerance {
                 return newParameters
             }
             currentParameters = newParameters
@@ -56,7 +56,7 @@ public extension Optimize {
             let step = JpseudoInverse.dot(r)
             let newParameters = currentParameters - step
             
-            if step.norm < tolerance || r.norm < tolerance {
+            if step.norm < tolerance || r.normSquared < tolerance {
                 return newParameters
             }
             currentParameters = newParameters
@@ -95,7 +95,7 @@ public extension Optimize {
             let step = JpseudoInverse.dot(r)
             let newParameters = currentParameters - step
             
-            if step.norm < tolerance || r.norm < tolerance {
+            if step.norm < tolerance || r.normSquared < tolerance {
                 return newParameters
             }
             currentParameters = newParameters
@@ -134,7 +134,7 @@ public extension Optimize {
             let step = JpseudoInverse.dot(r)
             let newParameters = currentParameters - step
             
-            if step.norm < tolerance || r.norm < tolerance {
+            if step.norm < tolerance || r.normSquared < tolerance {
                 return newParameters
             }
             currentParameters = newParameters
