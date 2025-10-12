@@ -15,7 +15,7 @@ public struct RK45FixedStep<T> {
     public var currentState: T
     
     @usableFromInline
-    internal var borrowedState: T
+    internal var stepCount: Int = 0
     
     @usableFromInline
     internal let f: (_ t: Double, _ state: T) -> T
@@ -35,7 +35,6 @@ public struct RK45FixedStep<T> {
         self.t = t0
         self.dt = dt
         self.currentState = initialState
-        self.borrowedState = initialState
         self.k2Argument = initialState
         self.k3Argument = initialState
         self.k4Argument = initialState
@@ -51,10 +50,12 @@ public struct RK45FixedStep<T> {
 extension RK45FixedStep<Double> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
-        return result
+        return (t, currentState)
     }
     @inlinable
     internal mutating func _step() {
@@ -72,10 +73,12 @@ extension RK45FixedStep<Double> {
 extension RK45FixedStep<[Double]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -111,10 +114,12 @@ extension RK45FixedStep<[Double]> {
 extension RK45FixedStep<Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -133,10 +138,12 @@ extension RK45FixedStep<Complex<Double>> {
 extension RK45FixedStep<[Complex<Double>]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -172,10 +179,12 @@ extension RK45FixedStep<[Complex<Double>]> {
 extension RK45FixedStep<Vector<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState.copyComponents(from: currentState)
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -216,10 +225,12 @@ extension RK45FixedStep<Vector<Double>> {
 extension RK45FixedStep<[Vector<Double>]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -259,10 +270,12 @@ extension RK45FixedStep<Vector<Complex<Double>>> {
     @inlinable
     @inline(__always)
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState.copyComponents(from: currentState)
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -303,10 +316,12 @@ extension RK45FixedStep<Vector<Complex<Double>>> {
 extension RK45FixedStep<[Vector<Complex<Double>>]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -346,10 +361,12 @@ extension RK45FixedStep<Matrix<Double>> {
     @inlinable
     @inline(__always)
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState.copyElements(from: currentState)
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -390,10 +407,12 @@ extension RK45FixedStep<Matrix<Double>> {
 extension RK45FixedStep<[Matrix<Double>]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -433,10 +452,12 @@ extension RK45FixedStep<Matrix<Complex<Double>>> {
     @inlinable
     @inline(__always)
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState.copyElements(from: currentState)
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -477,10 +498,12 @@ extension RK45FixedStep<Matrix<Complex<Double>>> {
 extension RK45FixedStep<[Matrix<Complex<Double>>]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
