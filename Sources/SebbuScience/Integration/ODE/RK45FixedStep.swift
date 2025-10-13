@@ -44,6 +44,7 @@ public struct RK45FixedStep<T> {
     public mutating func reset(initialState: T, t0: Double) {
         self.currentState = initialState
         self.t = t0
+        self.stepCount = 0
     }
 }
 
@@ -74,9 +75,7 @@ extension RK45FixedStep<[Double]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 {
-            return (t, currentState)
-        }
+        if stepCount == 0 { return (t, currentState) }
         _step()
         return (t, currentState)
     }
@@ -115,9 +114,7 @@ extension RK45FixedStep<Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 {
-            return (t, currentState)
-        }
+        if stepCount == 0 { return (t, currentState) }
         _step()
         return (t, currentState)
     }
@@ -139,9 +136,7 @@ extension RK45FixedStep<[Complex<Double>]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 {
-            return (t, currentState)
-        }
+        if stepCount == 0 { return (t, currentState) }
         _step()
         return (t, currentState)
     }
@@ -180,9 +175,7 @@ extension RK45FixedStep<Vector<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 {
-            return (t, currentState)
-        }
+        if stepCount == 0 { return (t, currentState) }
         _step()
         return (t, currentState)
     }
@@ -226,9 +219,7 @@ extension RK45FixedStep<[Vector<Double>]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 {
-            return (t, currentState)
-        }
+        if stepCount == 0 { return (t, currentState) }
         _step()
         return (t, currentState)
     }
@@ -271,9 +262,7 @@ extension RK45FixedStep<Vector<Complex<Double>>> {
     @inline(__always)
     public mutating func step() -> (t: Double, element: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 {
-            return (t, currentState)
-        }
+        if stepCount == 0 { return (t, currentState) }
         _step()
         return (t, currentState)
     }
@@ -317,9 +306,7 @@ extension RK45FixedStep<[Vector<Complex<Double>>]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 {
-            return (t, currentState)
-        }
+        if stepCount == 0 { return (t, currentState) }
         _step()
         return (t, currentState)
     }
@@ -362,9 +349,7 @@ extension RK45FixedStep<Matrix<Double>> {
     @inline(__always)
     public mutating func step() -> (t: Double, element: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 {
-            return (t, currentState)
-        }
+        if stepCount == 0 { return (t, currentState) }
         _step()
         return (t, currentState)
     }
@@ -408,9 +393,7 @@ extension RK45FixedStep<[Matrix<Double>]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 {
-            return (t, currentState)
-        }
+        if stepCount == 0 { return (t, currentState) }
         _step()
         return (t, currentState)
     }
@@ -453,9 +436,7 @@ extension RK45FixedStep<Matrix<Complex<Double>>> {
     @inline(__always)
     public mutating func step() -> (t: Double, element: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 {
-            return (t, currentState)
-        }
+        if stepCount == 0 { return (t, currentState) }
         _step()
         return (t, currentState)
     }
@@ -499,9 +480,7 @@ extension RK45FixedStep<[Matrix<Complex<Double>>]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 {
-            return (t, currentState)
-        }
+        if stepCount == 0 { return (t, currentState) }
         _step()
         return (t, currentState)
     }
