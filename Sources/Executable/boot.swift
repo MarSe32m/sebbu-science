@@ -69,6 +69,7 @@ PythonLibrary.useLibrary(at: "/usr/lib/x86_64-linux-gnu/libpython3.12.so.1.0")
 #elseif os(Windows)
 //TODO: Set the library path on Windows machine
 #endif
+        testMultiNoiseSRK2()
         _testGaussNewtonDouble()
         _testPseudoInverse()
         _testSolve()
