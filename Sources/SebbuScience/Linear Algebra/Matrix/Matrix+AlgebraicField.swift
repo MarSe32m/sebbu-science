@@ -53,6 +53,80 @@ public extension Matrix where T: AlgebraicField {
             span[unchecked: i] = .zero
         }
     }
+    
+    @inlinable
+    func kronecker(_ other: Self) -> Self {
+        var result: Self = .zeros(rows: rows * other.rows, columns: columns * other.columns)
+        kronecker(other, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func kronecker(_ other: Self, multiplied: T) -> Self {
+        var result: Self = .zeros(rows: rows * other.rows, columns: columns * other.columns)
+        kronecker(other, multiplied: multiplied, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func kronecker(_ other: Self, into: inout Self) {
+        precondition(into.rows == rows * other.rows)
+        precondition(into.columns == columns * other.columns)
+        for r in 0..<rows {
+            for v in 0..<other.rows {
+                for s in 0..<columns {
+                    for w in 0..<other.columns {
+                        into[other.rows * r + v, other.columns * s + w] = self[r, s] * other[v, w]
+                    }
+                }
+            }
+        }
+    }
+    
+    @inlinable
+    func kronecker(_ other: Self, multiplied: T, into: inout Self) {
+        precondition(into.rows == rows * other.rows)
+        precondition(into.columns == columns * other.columns)
+        for r in 0..<rows {
+            for v in 0..<other.rows {
+                for s in 0..<columns {
+                    for w in 0..<other.columns {
+                        into[other.rows * r + v, other.columns * s + w] = multiplied * self[r, s] * other[v, w]
+                    }
+                }
+            }
+        }
+    }
+    
+    @inlinable
+    func kronecker(_ other: Self, addingInto into: inout Self) {
+        precondition(into.rows == rows * other.rows)
+        precondition(into.columns == columns * other.columns)
+        for r in 0..<rows {
+            for v in 0..<other.rows {
+                for s in 0..<columns {
+                    for w in 0..<other.columns {
+                        into[other.rows * r + v, other.columns * s + w] += self[r, s] * other[v, w]
+                    }
+                }
+            }
+        }
+    }
+    
+    @inlinable
+    func kronecker(_ other: Self, multiplied: T, addingInto into: inout Self) {
+        precondition(into.rows == rows * other.rows)
+        precondition(into.columns == columns * other.columns)
+        for r in 0..<rows {
+            for v in 0..<other.rows {
+                for s in 0..<columns {
+                    for w in 0..<other.columns {
+                        into[other.rows * r + v, other.columns * s + w] += multiplied * self[r, s] * other[v, w]
+                    }
+                }
+            }
+        }
+    }
 }
 
 public extension Matrix where T: Real {
