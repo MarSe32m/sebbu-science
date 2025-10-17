@@ -15,7 +15,7 @@ public struct RK23FixedStep<T> {
     public var currentState: T
     
     @usableFromInline
-    internal var borrowedState: T
+    internal var stepCount: Int = 0
     
     @usableFromInline
     internal let f: (_ t: Double, _ state: T) -> T
@@ -35,7 +35,6 @@ public struct RK23FixedStep<T> {
         self.t = t0
         self.dt = dt
         self.currentState = initialState
-        self.borrowedState = initialState
         self.k2Argument = initialState
         self.k3Argument = initialState
         self.k4Argument = initialState
@@ -45,16 +44,17 @@ public struct RK23FixedStep<T> {
     public mutating func reset(initialState: T, t0: Double) {
         self.currentState = initialState
         self.t = t0
+        self.stepCount = 0
     }
 }
 
 extension RK23FixedStep<Double> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     @inlinable
     internal mutating func _step() {
@@ -71,10 +71,12 @@ extension RK23FixedStep<Double> {
 extension RK23FixedStep<[Double]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -100,10 +102,10 @@ extension RK23FixedStep<[Double]> {
 extension RK23FixedStep<Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -121,10 +123,10 @@ extension RK23FixedStep<Complex<Double>> {
 extension RK23FixedStep<[Complex<Double>]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -150,10 +152,10 @@ extension RK23FixedStep<[Complex<Double>]> {
 extension RK23FixedStep<Vector<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState.copyComponents(from: currentState)
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -176,10 +178,10 @@ extension RK23FixedStep<Vector<Double>> {
 extension RK23FixedStep<[Vector<Double>]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -206,10 +208,10 @@ extension RK23FixedStep<Vector<Complex<Double>>> {
     @inlinable
     @inline(__always)
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState.copyComponents(from: currentState)
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -232,10 +234,10 @@ extension RK23FixedStep<Vector<Complex<Double>>> {
 extension RK23FixedStep<[Vector<Complex<Double>>]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -262,10 +264,10 @@ extension RK23FixedStep<Matrix<Double>> {
     @inlinable
     @inline(__always)
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState.copyElements(from: currentState)
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -288,10 +290,10 @@ extension RK23FixedStep<Matrix<Double>> {
 extension RK23FixedStep<[Matrix<Double>]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -318,10 +320,10 @@ extension RK23FixedStep<Matrix<Complex<Double>>> {
     @inlinable
     @inline(__always)
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState.copyElements(from: currentState)
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -344,10 +346,10 @@ extension RK23FixedStep<Matrix<Complex<Double>>> {
 extension RK23FixedStep<[Matrix<Complex<Double>>]> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable

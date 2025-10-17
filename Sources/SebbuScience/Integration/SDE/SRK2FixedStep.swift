@@ -20,7 +20,7 @@ public struct SRK2FixedStep<T, NoiseType> {
     public var currentState: T
     
     @usableFromInline
-    internal var borrowedState: T
+    internal var stepCount: Int = 0
     
     // Drift term
     @usableFromInline
@@ -43,7 +43,6 @@ public struct SRK2FixedStep<T, NoiseType> {
         self.dt = dt
         self.sqrtDt = dt.squareRoot()
         self.currentState = initialState
-        self.borrowedState = initialState
         self.auxiliaryState = initialState
         self.f = f
         self.g = g
@@ -53,16 +52,17 @@ public struct SRK2FixedStep<T, NoiseType> {
     public mutating func reset(initialState: T, t0: Double) {
         self.currentState = initialState
         self.t = t0
+        self.stepCount = 0
     }
 }
 
 extension SRK2FixedStep<Double, Double> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -81,10 +81,10 @@ extension SRK2FixedStep<Double, Double> {
 extension SRK2FixedStep<[Double], Double> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -113,10 +113,10 @@ extension SRK2FixedStep<[Double], Double> {
 extension SRK2FixedStep<Complex<Double>, Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -137,10 +137,10 @@ extension SRK2FixedStep<Complex<Double>, Complex<Double>> {
 extension SRK2FixedStep<[Complex<Double>], Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -169,10 +169,10 @@ extension SRK2FixedStep<[Complex<Double>], Complex<Double>> {
 extension SRK2FixedStep<Vector<Double>, Double> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState.copyComponents(from: currentState)
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -203,10 +203,10 @@ extension SRK2FixedStep<Vector<Double>, Double> {
 extension SRK2FixedStep<[Vector<Double>], Double> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -242,10 +242,10 @@ extension SRK2FixedStep<Vector<Complex<Double>>, Complex<Double>> {
     @inlinable
     @inline(__always)
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState.copyComponents(from: currentState)
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -277,10 +277,10 @@ extension SRK2FixedStep<Vector<Complex<Double>>, Complex<Double>> {
 extension SRK2FixedStep<[Vector<Complex<Double>>], Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -316,10 +316,10 @@ extension SRK2FixedStep<Matrix<Double>, Double> {
     @inlinable
     @inline(__always)
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState.copyElements(from: currentState)
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -352,10 +352,10 @@ extension SRK2FixedStep<Matrix<Double>, Double> {
 extension SRK2FixedStep<[Matrix<Double>], Double> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -391,10 +391,10 @@ extension SRK2FixedStep<Matrix<Complex<Double>>, Complex<Double>> {
     @inlinable
     @inline(__always)
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState.copyElements(from: currentState)
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
@@ -427,10 +427,10 @@ extension SRK2FixedStep<Matrix<Complex<Double>>, Complex<Double>> {
 extension SRK2FixedStep<[Matrix<Complex<Double>>], Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, element: T) {
-        borrowedState = currentState
-        let result = (t, borrowedState)
+        defer { stepCount &+= 1 }
+        if stepCount == 0 { return (t, currentState) }
         _step()
-        return result
+        return (t, currentState)
     }
     
     @inlinable
