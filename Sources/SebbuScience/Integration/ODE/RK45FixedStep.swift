@@ -50,7 +50,7 @@ public struct RK45FixedStep<T> {
 
 extension RK45FixedStep<Double> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
         if stepCount == 0 {
             return (t, currentState)
@@ -73,9 +73,11 @@ extension RK45FixedStep<Double> {
 
 extension RK45FixedStep<[Double]> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 { return (t, currentState) }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
         return (t, currentState)
     }
@@ -112,9 +114,11 @@ extension RK45FixedStep<[Double]> {
 
 extension RK45FixedStep<Complex<Double>> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 { return (t, currentState) }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
         return (t, currentState)
     }
@@ -134,9 +138,11 @@ extension RK45FixedStep<Complex<Double>> {
 
 extension RK45FixedStep<[Complex<Double>]> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 { return (t, currentState) }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
         return (t, currentState)
     }
@@ -173,9 +179,11 @@ extension RK45FixedStep<[Complex<Double>]> {
 
 extension RK45FixedStep<Vector<Double>> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 { return (t, currentState) }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
         return (t, currentState)
     }
@@ -217,9 +225,11 @@ extension RK45FixedStep<Vector<Double>> {
 
 extension RK45FixedStep<[Vector<Double>]> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 { return (t, currentState) }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
         return (t, currentState)
     }
@@ -259,10 +269,11 @@ extension RK45FixedStep<[Vector<Double>]> {
 
 extension RK45FixedStep<Vector<Complex<Double>>> {
     @inlinable
-    @inline(__always)
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 { return (t, currentState) }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
         return (t, currentState)
     }
@@ -304,9 +315,11 @@ extension RK45FixedStep<Vector<Complex<Double>>> {
 
 extension RK45FixedStep<[Vector<Complex<Double>>]> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 { return (t, currentState) }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
         return (t, currentState)
     }
@@ -346,10 +359,11 @@ extension RK45FixedStep<[Vector<Complex<Double>>]> {
 
 extension RK45FixedStep<Matrix<Double>> {
     @inlinable
-    @inline(__always)
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 { return (t, currentState) }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
         return (t, currentState)
     }
@@ -391,9 +405,11 @@ extension RK45FixedStep<Matrix<Double>> {
 
 extension RK45FixedStep<[Matrix<Double>]> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 { return (t, currentState) }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
         return (t, currentState)
     }
@@ -433,10 +449,11 @@ extension RK45FixedStep<[Matrix<Double>]> {
 
 extension RK45FixedStep<Matrix<Complex<Double>>> {
     @inlinable
-    @inline(__always)
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 { return (t, currentState) }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
         return (t, currentState)
     }
@@ -478,9 +495,11 @@ extension RK45FixedStep<Matrix<Complex<Double>>> {
 
 extension RK45FixedStep<[Matrix<Complex<Double>>]> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
-        if stepCount == 0 { return (t, currentState) }
+        if stepCount == 0 {
+            return (t, currentState)
+        }
         _step()
         return (t, currentState)
     }

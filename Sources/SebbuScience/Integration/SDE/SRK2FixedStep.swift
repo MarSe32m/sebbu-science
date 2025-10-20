@@ -58,7 +58,7 @@ public struct SRK2FixedStep<T, NoiseType> {
 
 extension SRK2FixedStep<Double, Double> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
         if stepCount == 0 { return (t, currentState) }
         _step()
@@ -80,7 +80,7 @@ extension SRK2FixedStep<Double, Double> {
 
 extension SRK2FixedStep<[Double], Double> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
         if stepCount == 0 { return (t, currentState) }
         _step()
@@ -112,7 +112,7 @@ extension SRK2FixedStep<[Double], Double> {
 
 extension SRK2FixedStep<Complex<Double>, Complex<Double>> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
         if stepCount == 0 { return (t, currentState) }
         _step()
@@ -136,7 +136,7 @@ extension SRK2FixedStep<Complex<Double>, Complex<Double>> {
 
 extension SRK2FixedStep<[Complex<Double>], Complex<Double>> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
         if stepCount == 0 { return (t, currentState) }
         _step()
@@ -168,7 +168,7 @@ extension SRK2FixedStep<[Complex<Double>], Complex<Double>> {
 
 extension SRK2FixedStep<Vector<Double>, Double> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
         if stepCount == 0 { return (t, currentState) }
         _step()
@@ -202,7 +202,7 @@ extension SRK2FixedStep<Vector<Double>, Double> {
 
 extension SRK2FixedStep<[Vector<Double>], Double> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
         if stepCount == 0 { return (t, currentState) }
         _step()
@@ -240,8 +240,7 @@ extension SRK2FixedStep<[Vector<Double>], Double> {
 
 extension SRK2FixedStep<Vector<Complex<Double>>, Complex<Double>> {
     @inlinable
-    @inline(__always)
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
         if stepCount == 0 { return (t, currentState) }
         _step()
@@ -276,7 +275,7 @@ extension SRK2FixedStep<Vector<Complex<Double>>, Complex<Double>> {
 
 extension SRK2FixedStep<[Vector<Complex<Double>>], Complex<Double>> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
         if stepCount == 0 { return (t, currentState) }
         _step()
@@ -314,8 +313,7 @@ extension SRK2FixedStep<[Vector<Complex<Double>>], Complex<Double>> {
 
 extension SRK2FixedStep<Matrix<Double>, Double> {
     @inlinable
-    @inline(__always)
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
         if stepCount == 0 { return (t, currentState) }
         _step()
@@ -351,7 +349,7 @@ extension SRK2FixedStep<Matrix<Double>, Double> {
 
 extension SRK2FixedStep<[Matrix<Double>], Double> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
         if stepCount == 0 { return (t, currentState) }
         _step()
@@ -389,8 +387,7 @@ extension SRK2FixedStep<[Matrix<Double>], Double> {
 
 extension SRK2FixedStep<Matrix<Complex<Double>>, Complex<Double>> {
     @inlinable
-    @inline(__always)
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
         if stepCount == 0 { return (t, currentState) }
         _step()
@@ -426,7 +423,7 @@ extension SRK2FixedStep<Matrix<Complex<Double>>, Complex<Double>> {
 
 extension SRK2FixedStep<[Matrix<Complex<Double>>], Complex<Double>> {
     @inlinable
-    public mutating func step() -> (t: Double, element: T) {
+    public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
         if stepCount == 0 { return (t, currentState) }
         _step()
