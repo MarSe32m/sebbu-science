@@ -136,6 +136,11 @@ public extension Matrix where T: Real {
     }
     
     @inlinable
+    var conjugate: Self {
+        self
+    }
+    
+    @inlinable
     var frobeniusNorm: T {
         var result: T = .zero
         for element in self.elements {
@@ -160,6 +165,11 @@ public extension Matrix<Complex<Double>> {
     }
     
     @inlinable
+    var conjugate: Self {
+        .init(elements: elements.conjugate, rows: rows, columns: columns)
+    }
+    
+    @inlinable
     var frobeniusNorm: Double {
         var norm: Double = .zero
         for element in elements {
@@ -181,6 +191,11 @@ public extension Matrix<Complex<Float>> {
             }
         }
         return Matrix(elements: newElements, rows: newRows, columns: newColumns)
+    }
+    
+    @inlinable
+    var conjugate: Self {
+        .init(elements: elements.conjugate, rows: rows, columns: columns)
     }
     
     @inlinable

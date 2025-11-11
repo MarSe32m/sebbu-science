@@ -44,6 +44,162 @@ public enum MatrixOperations {
     }
     
     @inlinable
+    public static func partialTrace<T: AlgebraicField>(_ A: Matrix<T>, dimensions: [Int], keep: [Int], into: inout Matrix<T>) {
+        let totalDim = dimensions.reduce(1, *)
+        precondition(A.rows == totalDim)
+        precondition(A.columns == totalDim)
+        if keep.isEmpty {
+            into[0, 0] = A.trace
+            return
+        }
+        let n = dimensions.count
+        let traced = (0..<n).filter { !keep.contains($0) }
+        
+        let keptDims = keep.map { dimensions[$0] }
+        let reducedDim = keptDims.reduce(1, *)
+        precondition(reducedDim >= 1, "Can't trace a matrix with negative dimensions")
+        precondition(into.rows == reducedDim)
+        precondition(into.columns == reducedDim)
+        
+        let tracedDims = traced.map { dimensions[$0] }
+        let tracedTotal = tracedDims.reduce(1, *)
+        
+        var rowFull = [Int](repeating: 0, count: n)
+        var colFull = [Int](repeating: 0, count: n)
+        
+        @inline(__always)
+        func unravelIndex(_ index: Int, dims: [Int]) -> [Int] {
+            var result = [Int](repeating: 0, count: dims.count)
+            var idx = index
+            for i in (0..<dims.count).reversed() {
+                result[i] = idx % dims[i]
+                idx /= dims[i]
+            }
+            return result
+        }
+        
+        @inline(__always)
+        func ravelIndex(_ multi: [Int], dims: [Int]) -> Int {
+            var flat = 0
+            for i in 0..<dims.count {
+                flat = flat * dims[i] + multi[i]
+            }
+            return flat
+        }
+        
+        for aFlat in 0..<reducedDim {
+            let aMultiKept = unravelIndex(aFlat, dims: keptDims)
+            for bFlat in 0..<reducedDim {
+                let bMultiKept = unravelIndex(bFlat, dims: keptDims)
+                
+                var sum: T = .zero
+                
+                // Sum over traced indices
+                for t in 0..<tracedTotal {
+                    let tMulti = unravelIndex(t, dims: tracedDims)
+                    
+                    var ki = 0
+                    var ti = 0
+                    for i in 0..<n {
+                        if keep.contains(i) {
+                            rowFull[i] = aMultiKept[ki]
+                            colFull[i] = bMultiKept[ki]
+                            ki += 1
+                        } else {
+                            rowFull[i] = tMulti[ti]
+                            colFull[i] = tMulti[ti]
+                            ti += 1
+                        }
+                    }
+                    
+                    let rowFlat = ravelIndex(rowFull, dims: dimensions)
+                    let colFlat = ravelIndex(colFull, dims: dimensions)
+                    sum += A[rowFlat, colFlat]
+                }
+                into[aFlat, bFlat] = sum
+            }
+        }
+    }
+    
+    @inlinable
+    public static func partialTrace<T: AlgebraicField>(_ A: Matrix<T>, dimensions: [Int], keep: [Int], addingInto into: inout Matrix<T>) {
+        let totalDim = dimensions.reduce(1, *)
+        precondition(A.rows == totalDim)
+        precondition(A.columns == totalDim)
+        if keep.isEmpty {
+            into[0, 0] = A.trace
+            return
+        }
+        let n = dimensions.count
+        let traced = (0..<n).filter { !keep.contains($0) }
+        
+        let keptDims = keep.map { dimensions[$0] }
+        let reducedDim = keptDims.reduce(1, *)
+        precondition(reducedDim >= 1, "Can't trace a matrix with negative dimensions")
+        precondition(into.rows == reducedDim)
+        precondition(into.columns == reducedDim)
+        
+        let tracedDims = traced.map { dimensions[$0] }
+        let tracedTotal = tracedDims.reduce(1, *)
+        
+        var rowFull = [Int](repeating: 0, count: n)
+        var colFull = [Int](repeating: 0, count: n)
+        
+        @inline(__always)
+        func unravelIndex(_ index: Int, dims: [Int]) -> [Int] {
+            var result = [Int](repeating: 0, count: dims.count)
+            var idx = index
+            for i in (0..<dims.count).reversed() {
+                result[i] = idx % dims[i]
+                idx /= dims[i]
+            }
+            return result
+        }
+        
+        @inline(__always)
+        func ravelIndex(_ multi: [Int], dims: [Int]) -> Int {
+            var flat = 0
+            for i in 0..<dims.count {
+                flat = flat * dims[i] + multi[i]
+            }
+            return flat
+        }
+        
+        for aFlat in 0..<reducedDim {
+            let aMultiKept = unravelIndex(aFlat, dims: keptDims)
+            for bFlat in 0..<reducedDim {
+                let bMultiKept = unravelIndex(bFlat, dims: keptDims)
+                
+                var sum: T = .zero
+                
+                // Sum over traced indices
+                for t in 0..<tracedTotal {
+                    let tMulti = unravelIndex(t, dims: tracedDims)
+                    
+                    var ki = 0
+                    var ti = 0
+                    for i in 0..<n {
+                        if keep.contains(i) {
+                            rowFull[i] = aMultiKept[ki]
+                            colFull[i] = bMultiKept[ki]
+                            ki += 1
+                        } else {
+                            rowFull[i] = tMulti[ti]
+                            colFull[i] = tMulti[ti]
+                            ti += 1
+                        }
+                    }
+                    
+                    let rowFlat = ravelIndex(rowFull, dims: dimensions)
+                    let colFlat = ravelIndex(colFull, dims: dimensions)
+                    sum += A[rowFlat, colFlat]
+                }
+                into[aFlat, bFlat] += sum
+            }
+        }
+    }
+    
+    @inlinable
     public static func partialTrace<T: AlgebraicField>(_ A: Matrix<T>, dimensions: [Int], keep: [Int]) -> Matrix<T> {
         let totalDim = dimensions.reduce(1, *)
         precondition(A.rows == totalDim)
@@ -54,6 +210,7 @@ public enum MatrixOperations {
         
         let keptDims = keep.map { dimensions[$0] }
         let reducedDim = keptDims.reduce(1, *)
+        precondition(reducedDim >= 1, "Can't trace a matrix with negative dimensions")
         var rhoReduced: Matrix<T> = .zeros(rows: reducedDim, columns: reducedDim)
         
         let tracedDims = traced.map { dimensions[$0] }
