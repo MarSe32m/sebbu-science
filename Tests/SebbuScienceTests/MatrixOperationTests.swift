@@ -1,5 +1,6 @@
 import Testing
 @testable import SebbuScience
+import Numerics
 
 
 struct MatrixOperationTests {
@@ -461,5 +462,241 @@ struct PseudoInverseTests {
         let C = pseudoInverse!.dot(A).dot(pseudoInverse!)
         #expect(A.isApproximatelyEqual(to: B, absoluteTolerance: 1e-4))
         #expect(pseudoInverse!.isApproximatelyEqual(to: C, absoluteTolerance: 1e-4))
+    }
+}
+
+struct DiagonalizationTests {
+    @Test("Matrix<Double>.diagonalize test")
+    func diagonalizeDouble() throws {
+        for dimension in 1...20 {
+            let A: Matrix<Double> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
+            let AComplex: Matrix<Complex<Double>> = .init(elements: A.elements.map { Complex($0) }, rows: dimension, columns: dimension)
+            
+            let (eigenValues, leftEigenVectors, rightEigenVectors) = try MatrixOperations.diagonalize(A)
+            
+            let D: Matrix<Complex<Double>> = .diagonal(from: eigenValues)
+            let U: Matrix<Complex<Double>> = .from(columns: rightEigenVectors.map { $0.components })
+            let Uinv: Matrix<Complex<Double>> = .from(rows: leftEigenVectors.map { $0.components })
+            
+            #expect(U.dot(D).dot(Uinv).isApproximatelyEqual(to: AComplex, absoluteTolerance: 1e-10))
+            #expect(Uinv.dot(AComplex).dot(U).isApproximatelyEqual(to: D, absoluteTolerance: 1e-10))
+            
+            for (eigenValue, eigenVector) in zip(eigenValues, leftEigenVectors) {
+                let scaled = eigenValue * eigenVector
+                let operated = eigenVector.dot(AComplex)
+                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-10))
+            }
+            
+            for (eigenValue, eigenVector) in zip(eigenValues, rightEigenVectors) {
+                let scaled = eigenValue * eigenVector
+                let operated = AComplex.dot(eigenVector)
+                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-10))
+            }
+        }
+    }
+    
+    @Test("Matrix<Double>.diagonalizeSymmetric test")
+    func diagonalizeSymmetricDouble() throws {
+        for dimension in 1...20 {
+            var A: Matrix<Double> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
+            for i in 0..<dimension {
+                for j in i..<dimension {
+                    A[i, j] = A[j, i]
+                }
+            }
+            
+            let (eigenValues, eigenVectors) = try MatrixOperations.diagonalizeSymmetric(A)
+            
+            let D: Matrix<Double> = .diagonal(from: eigenValues)
+            let U: Matrix<Double> = .from(columns: eigenVectors.map { $0.components })
+            let Uinv: Matrix<Double> = U.transpose
+            
+            #expect(U.dot(D).dot(Uinv).isApproximatelyEqual(to: A, absoluteTolerance: 1e-10))
+            #expect(Uinv.dot(A).dot(U).isApproximatelyEqual(to: D, absoluteTolerance: 1e-10))
+            
+            for (eigenValue, eigenVector) in zip(eigenValues, eigenVectors) {
+                let scaled = eigenValue * eigenVector
+                let operatedFromRight = eigenVector.dot(A)
+                let operatedFromLeft = A.dot(eigenVector)
+                #expect(scaled.isApproximatelyEqual(to: operatedFromRight, absoluteTolerance: 1e-10))
+                #expect(scaled.isApproximatelyEqual(to: operatedFromLeft, absoluteTolerance: 1e-10))
+            }
+        }
+    }
+    
+    @Test("Matrix<Float>.diagonalize test")
+    func diagonalizeFloat() throws {
+        for dimension in 1...20 {
+            let A: Matrix<Float> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
+            let AComplex: Matrix<Complex<Float>> = .init(elements: A.elements.map { Complex($0) }, rows: dimension, columns: dimension)
+            
+            let (eigenValues, leftEigenVectors, rightEigenVectors) = try MatrixOperations.diagonalize(A)
+            
+            let D: Matrix<Complex<Float>> = .diagonal(from: eigenValues)
+            let U: Matrix<Complex<Float>> = .from(columns: rightEigenVectors.map { $0.components })
+            let Uinv: Matrix<Complex<Float>> = .from(rows: leftEigenVectors.map { $0.components })
+            
+            #expect(U.dot(D).dot(Uinv).isApproximatelyEqual(to: AComplex, absoluteTolerance: 1e-4))
+            #expect(Uinv.dot(AComplex).dot(U).isApproximatelyEqual(to: D, absoluteTolerance: 1e-4))
+            
+            for (eigenValue, eigenVector) in zip(eigenValues, leftEigenVectors) {
+                let scaled = eigenValue * eigenVector
+                let operated = eigenVector.dot(AComplex)
+                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-4))
+            }
+            
+            for (eigenValue, eigenVector) in zip(eigenValues, rightEigenVectors) {
+                let scaled = eigenValue * eigenVector
+                let operated = AComplex.dot(eigenVector)
+                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-4))
+            }
+        }
+    }
+    
+    @Test("Matrix<Float>.diagonalizeSymmetric test")
+    func diagonalizeSymmetricFloat() throws {
+        for dimension in 1...20 {
+            var A: Matrix<Float> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
+            for i in 0..<dimension {
+                for j in i..<dimension {
+                    A[i, j] = A[j, i]
+                }
+            }
+            
+            let (eigenValues, eigenVectors) = try MatrixOperations.diagonalizeSymmetric(A)
+            
+            let D: Matrix<Float> = .diagonal(from: eigenValues)
+            let U: Matrix<Float> = .from(columns: eigenVectors.map { $0.components })
+            let Uinv: Matrix<Float> = U.transpose
+            
+            #expect(U.dot(D).dot(Uinv).isApproximatelyEqual(to: A, absoluteTolerance: 1e-4))
+            #expect(Uinv.dot(A).dot(U).isApproximatelyEqual(to: D, absoluteTolerance: 1e-4))
+            
+            for (eigenValue, eigenVector) in zip(eigenValues, eigenVectors) {
+                let scaled = eigenValue * eigenVector
+                let operatedFromRight = eigenVector.dot(A)
+                let operatedFromLeft = A.dot(eigenVector)
+                #expect(scaled.isApproximatelyEqual(to: operatedFromRight, absoluteTolerance: 1e-4))
+                #expect(scaled.isApproximatelyEqual(to: operatedFromLeft, absoluteTolerance: 1e-4))
+            }
+        }
+    }
+    
+    @Test("Matrix<Complex<Double>>.diagonalize test")
+    func diagonalizeComplexDouble() throws {
+        for dimension in 1...20 {
+            let A: Matrix<Complex<Double>> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
+            
+            let (eigenValues, leftEigenVectors, rightEigenVectors) = try MatrixOperations.diagonalize(A)
+            
+            let D: Matrix<Complex<Double>> = .diagonal(from: eigenValues)
+            let U: Matrix<Complex<Double>> = .from(columns: rightEigenVectors.map { $0.components })
+            let Uinv: Matrix<Complex<Double>> = .from(rows: leftEigenVectors.map { $0.components })
+            
+            #expect(U.dot(D).dot(Uinv).isApproximatelyEqual(to: A, absoluteTolerance: 1e-10))
+            #expect(Uinv.dot(A).dot(U).isApproximatelyEqual(to: D, absoluteTolerance: 1e-10))
+            
+            for (eigenValue, eigenVector) in zip(eigenValues, leftEigenVectors) {
+                let scaled = eigenValue * eigenVector
+                let operated = eigenVector.dot(A)
+                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-10))
+            }
+            
+            for (eigenValue, eigenVector) in zip(eigenValues, rightEigenVectors) {
+                let scaled = eigenValue * eigenVector
+                let operated = A.dot(eigenVector)
+                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-10))
+            }
+        }
+    }
+    
+    @Test("Matrix<Complex<Double>>.diagonalizeHermitian test")
+    func diagonalizeHermitianComplexDouble() throws {
+        for dimension in 1...20 {
+            var A: Matrix<Complex<Double>> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
+            for i in 0..<dimension {
+                A[i, i] = Complex(A[i,i].real)
+                for j in i..<dimension {
+                    A[i, j] = A[j, i].conjugate
+                }
+            }
+            let (eigenValues, eigenVectors) = try MatrixOperations.diagonalizeHermitian(A)
+            
+            let D: Matrix<Complex<Double>> = .diagonal(from: eigenValues.map { Complex($0) })
+            let U: Matrix<Complex<Double>> = .from(columns: eigenVectors.map { $0.components })
+            let Uinv: Matrix<Complex<Double>> = U.conjugateTranspose
+            
+            #expect(U.dot(D).dot(Uinv).isApproximatelyEqual(to: A, absoluteTolerance: 1e-10))
+            #expect(Uinv.dot(A).dot(U).isApproximatelyEqual(to: D, absoluteTolerance: 1e-10))
+            
+            for (eigenValue, eigenVector) in zip(eigenValues, eigenVectors) {
+                let scaledFromRight = eigenValue * eigenVector.conjugate
+                let operatedFromRight = eigenVector.conjugate.dot(A)
+                #expect(scaledFromRight.isApproximatelyEqual(to: operatedFromRight, absoluteTolerance: 1e-10))
+                
+                let scaledFromLeft = eigenValue * eigenVector
+                let operatedFromLeft = A.dot(eigenVector)
+                #expect(scaledFromLeft.isApproximatelyEqual(to: operatedFromLeft, absoluteTolerance: 1e-10))
+            }
+        }
+    }
+    
+    @Test("Matrix<Complex<Float>>.diagonalize test")
+    func diagonalizeComplexFloat() throws {
+        for dimension in 1...20 {
+            let A: Matrix<Complex<Float>> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
+            
+            let (eigenValues, leftEigenVectors, rightEigenVectors) = try MatrixOperations.diagonalize(A)
+            
+            let D: Matrix<Complex<Float>> = .diagonal(from: eigenValues)
+            let U: Matrix<Complex<Float>> = .from(columns: rightEigenVectors.map { $0.components })
+            let Uinv: Matrix<Complex<Float>> = .from(rows: leftEigenVectors.map { $0.components })
+            
+            #expect(U.dot(D).dot(Uinv).isApproximatelyEqual(to: A, absoluteTolerance: 1e-4))
+            #expect(Uinv.dot(A).dot(U).isApproximatelyEqual(to: D, absoluteTolerance: 1e-4))
+            
+            for (eigenValue, eigenVector) in zip(eigenValues, leftEigenVectors) {
+                let scaled = eigenValue * eigenVector
+                let operated = eigenVector.dot(A)
+                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-4))
+            }
+            
+            for (eigenValue, eigenVector) in zip(eigenValues, rightEigenVectors) {
+                let scaled = eigenValue * eigenVector
+                let operated = A.dot(eigenVector)
+                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-4))
+            }
+        }
+    }
+    
+    @Test("Matrix<Complex<Float>>.diagonalizeHermitian test")
+    func diagonalizeHermitianComplexFloat() throws {
+        for dimension in 1...20 {
+            var A: Matrix<Complex<Float>> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
+            for i in 0..<dimension {
+                A[i, i] = Complex(A[i,i].real)
+                for j in i..<dimension {
+                    A[i, j] = A[j, i].conjugate
+                }
+            }
+            let (eigenValues, eigenVectors) = try MatrixOperations.diagonalizeHermitian(A)
+            
+            let D: Matrix<Complex<Float>> = .diagonal(from: eigenValues.map { Complex($0) })
+            let U: Matrix<Complex<Float>> = .from(columns: eigenVectors.map { $0.components })
+            let Uinv: Matrix<Complex<Float>> = U.conjugateTranspose
+            
+            #expect(U.dot(D).dot(Uinv).isApproximatelyEqual(to: A, absoluteTolerance: 1e-4))
+            #expect(Uinv.dot(A).dot(U).isApproximatelyEqual(to: D, absoluteTolerance: 1e-4))
+            
+            for (eigenValue, eigenVector) in zip(eigenValues, eigenVectors) {
+                let scaledFromRight = eigenValue * eigenVector.conjugate
+                let operatedFromRight = eigenVector.conjugate.dot(A)
+                #expect(scaledFromRight.isApproximatelyEqual(to: operatedFromRight, absoluteTolerance: 1e-4))
+                
+                let scaledFromLeft = eigenValue * eigenVector
+                let operatedFromLeft = A.dot(eigenVector)
+                #expect(scaledFromLeft.isApproximatelyEqual(to: operatedFromLeft, absoluteTolerance: 1e-4))
+            }
+        }
     }
 }

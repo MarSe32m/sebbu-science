@@ -268,23 +268,27 @@ public extension MatrixOperations {
         let info = LAPACKE_dgeev(LAPACK_ROW_MAJOR, V, V, .init(N), &_A, .init(lda), &eigenReal, &eigenImaginary, &vl, .init(ldvl), &vr, .init(ldvr))
         if info != 0 { throw MatrixOperationError.info(Int(info)) }
         let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Double>($0, $1) })
-        var leftEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
+        var _leftEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
         var rightEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(N), count: N)
         for i in 0..<N {
             var j = 0
             while j < N {
                 if eigenImaginary[j] == .zero {
-                    leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j])
+                    _leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j])
                     rightEigenVectors[j][i] = Complex<Double>(vr[i * N + j])
                     j += 1
                 } else {
-                    leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j], vl[i * N + j + 1])
-                    leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j], -vl[i * N + j + 1])
+                    _leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j], vl[i * N + j + 1])
+                    _leftEigenVectors[j][i] = Complex<Double>(vl[i * N + j], -vl[i * N + j + 1])
                     rightEigenVectors[j][i] = Complex<Double>(vr[i * N + j], vr[i * N + j + 1])
                     rightEigenVectors[j][i] = Complex<Double>(vr[i * N + j], -vr[i * N + j + 1])
                     j += 2
                 }
             }
+        }
+        let leftEigenVectors = _leftEigenVectors.indices.map { i in
+            let s = _leftEigenVectors[i].inner(rightEigenVectors[i])
+            return _leftEigenVectors[i].conjugate / s
         }
         return (eigenValues, leftEigenVectors, rightEigenVectors)
         #elseif canImport(Accelerate)
@@ -308,27 +312,31 @@ public extension MatrixOperations {
         var info = 0
         dgeev_("V", "V", &n, &a, &lda, &eigenReal, &eigenImaginary, &vl, &ldvl, &vr, &ldvr, &work, &lwork, &info)
         if info != 0 { throw MatrixOperationError.info(Int(info)) }
-        lwork = Int(work[0])
+        lwork = max(1, Int(work[0]))
         work = .init(repeating: .zero, count: lwork)
         dgeev_("V", "V", &n, &a, &lda, &eigenReal, &eigenImaginary, &vl, &ldvl, &vr, &ldvr, &work, &lwork, &info)
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
         let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Double>($0, $1) })
-        var leftEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(n), count: n)
+        var _leftEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(n), count: n)
         var rightEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(n), count: n)
-        for i in 0..<n {
-            var j = 0
-            while j < n {
-                if eigenImaginary[j] == .zero {
-                    leftEigenVectors[j][i] = Complex<Double>(vl[i * n + j])
-                    rightEigenVectors[j][i] = Complex<Double>(vr[i * n + j])
-                    j += 1
+        var i = 0
+        while i < n {
+            for j in 0..<n {
+                if eigenImaginary[i] == .zero {
+                    _leftEigenVectors[i][j] = Complex<Double>(vl[i * n + j])
+                    rightEigenVectors[i][j] = Complex<Double>(vr[i * n + j])
                 } else {
-                    leftEigenVectors[j][i] = Complex<Double>(vl[i * n + j], vl[i * n + j + 1])
-                    leftEigenVectors[j][i] = Complex<Double>(vl[i * n + j], -vl[i * n + j + 1])
-                    rightEigenVectors[j][i] = Complex<Double>(vr[i * n + j], vr[i * n + j + 1])
-                    rightEigenVectors[j][i] = Complex<Double>(vr[i * n + j], -vr[i * n + j + 1])
-                    j += 2
+                    _leftEigenVectors[i][j] = Complex<Double>(vl[i * n + j], vl[(i + 1) * n + j])
+                    _leftEigenVectors[i + 1][j] = _leftEigenVectors[i][j].conjugate
+                    rightEigenVectors[i][j] = Complex<Double>(vr[i * n + j], vr[(i + 1) * n + j])
+                    rightEigenVectors[i + 1][j] = rightEigenVectors[i][j].conjugate
                 }
             }
+            i += (eigenImaginary[i] == .zero ? 1 : 2)
+        }
+        let leftEigenVectors = _leftEigenVectors.indices.map { i in
+            let s = _leftEigenVectors[i].inner(rightEigenVectors[i])
+            return _leftEigenVectors[i].conjugate / s
         }
         return (eigenValues, leftEigenVectors, rightEigenVectors)
 #else
@@ -400,18 +408,17 @@ public extension MatrixOperations {
         dgeev_("V", "N", &n, &a, &lda, &eigenReal, &eigenImaginary, &vl, &ldvl, nil, &ldvr, &work, &lwork, &info)
         let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Double>($0, $1) })
         var leftEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(n), count: n)
-        for i in 0..<n {
-            var j = 0
-            while j < n {
-                if eigenImaginary[j] == .zero {
-                    leftEigenVectors[j][i] = Complex<Double>(vl[i * n + j])
-                    j += 1
+        var i = 0
+        while i < n {
+            for j in 0..<n {
+                if eigenImaginary[i] == .zero {
+                    leftEigenVectors[i][j] = Complex<Double>(vl[i * n + j])
                 } else {
-                    leftEigenVectors[j][i] = Complex<Double>(vl[i * n + j], vl[i * n + j + 1])
-                    leftEigenVectors[j][i] = Complex<Double>(vl[i * n + j], -vl[i * n + j + 1])
-                    j += 2
+                    leftEigenVectors[i][j] = Complex<Double>(vl[i * n + j], vl[(i + 1) * n + j])
+                    leftEigenVectors[i + 1][j] = leftEigenVectors[i][j].conjugate
                 }
             }
+            i += (eigenImaginary[i] == .zero ? 1 : 2)
         }
         return (eigenValues, leftEigenVectors)
 #else
@@ -483,18 +490,17 @@ public extension MatrixOperations {
         dgeev_("N", "V", &n, &a, &lda, &eigenReal, &eigenImaginary, nil, &ldvl, &vr, &ldvr, &work, &lwork, &info)
         let eigenValues = Array(zip(eigenReal, eigenImaginary).map { Complex<Double>($0, $1) })
         var rightEigenVectors: [Vector<Complex<Double>>] = .init(repeating: .zero(n), count: n)
-        for i in 0..<n {
-            var j = 0
-            while j < n {
-                if eigenImaginary[j] == .zero {
-                    rightEigenVectors[j][i] = Complex<Double>(vr[i * n + j])
-                    j += 1
+        var i = 0
+        while i < n {
+            for j in 0..<n {
+                if eigenImaginary[i] == .zero {
+                    rightEigenVectors[i][j] = Complex<Double>(vr[i * n + j])
                 } else {
-                    rightEigenVectors[j][i] = Complex<Double>(vr[i * n + j], vr[i * n + j + 1])
-                    rightEigenVectors[j][i] = Complex<Double>(vr[i * n + j], -vr[i * n + j + 1])
-                    j += 2
+                    rightEigenVectors[i][j] = Complex<Double>(vr[i * n + j], vr[(i + 1) * n + j])
+                    rightEigenVectors[i + 1][j] = rightEigenVectors[i][j].conjugate
                 }
             }
+            i += (eigenImaginary[i] == .zero ? 1 : 2)
         }
         return (eigenValues, rightEigenVectors)
 #else

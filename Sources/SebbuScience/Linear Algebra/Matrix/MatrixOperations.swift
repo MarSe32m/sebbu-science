@@ -273,4 +273,40 @@ public enum MatrixOperations {
         }
         return rhoReduced
     }
+    
+    static func printMatrix(_ matrix: Matrix<Complex<Double>>, format: String = "%.3f") {
+        for i in 0..<matrix.rows {
+            for j in 0..<matrix.columns {
+                print("( ", String(format: format, matrix[i,j].real), ", ", String(format: format, matrix[i, j].imaginary), " )", separator: "", terminator: " ")
+            }
+            print()
+        }
+    }
+    
+    static func printMatrix(_ matrix: Matrix<Complex<Float>>, format: String = "%.3f") {
+        for i in 0..<matrix.rows {
+            for j in 0..<matrix.columns {
+                print("( ", String(format: format, matrix[i,j].real), ", ", String(format: format, matrix[i, j].imaginary), " )", separator: "", terminator: " ")
+            }
+            print()
+        }
+    }
+    
+    static func printMatrix(_ matrix: Matrix<Double>, format: String = "%.3f") {
+        for i in 0..<matrix.rows {
+            for j in 0..<matrix.columns {
+                print(String(format: format, matrix[i,j]), separator: "", terminator: " ")
+            }
+            print()
+        }
+    }
+    
+    static func printMatrix(_ matrix: Matrix<Float>, format: String = "%.3f") {
+        for i in 0..<matrix.rows {
+            for j in 0..<matrix.columns {
+                print(String(format: format, matrix[i,j]), separator: "", terminator: " ")
+            }
+            print()
+        }
+    }
 }

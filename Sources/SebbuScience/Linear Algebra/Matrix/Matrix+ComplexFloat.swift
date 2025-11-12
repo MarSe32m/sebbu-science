@@ -329,13 +329,17 @@ public extension MatrixOperations {
             }
         }
         if info != 0 { throw MatrixOperationError.info(Int(info)) }
-        var leftEigenVectors: [Vector<Complex<Float>>] = [Vector<Complex<Float>>](repeating: .zero(N), count: N)
+        var _leftEigenVectors: [Vector<Complex<Float>>] = [Vector<Complex<Float>>](repeating: .zero(N), count: N)
         var rightEigenVectors: [Vector<Complex<Float>>] = [Vector<Complex<Float>>](repeating: .zero(N), count: N)
         for i in 0..<N {
             for j in 0..<N {
-                leftEigenVectors[j][i] = vl[N * i + j]
+                _leftEigenVectors[j][i] = vl[N * i + j]
                 rightEigenVectors[j][i] = vr[N * i + j]
             }
+        }
+        let leftEigenVectors = _leftEigenVectors.indices.map { i in
+            let s = _leftEigenVectors[i].inner(rightEigenVectors[i])
+            return _leftEigenVectors[i].conjugate / s
         }
         return (eigenValues, leftEigenVectors, rightEigenVectors)
         #elseif canImport(Accelerate)
@@ -387,13 +391,17 @@ public extension MatrixOperations {
             }
         }
         if info != 0 { throw MatrixOperationError.info(Int(info)) }
-        var leftEigenVectors: [Vector<Complex<Float>>] = .init(repeating: .zero(n), count: n)
+        var _leftEigenVectors: [Vector<Complex<Float>>] = .init(repeating: .zero(n), count: n)
         var rightEigenVectors: [Vector<Complex<Float>>] = .init(repeating: .zero(n), count: n)
         for i in 0..<n {
             for j in 0..<n {
-                leftEigenVectors[j][i] = vl[n * i + j]
-                rightEigenVectors[j][i] = vr[n * i + j]
+                _leftEigenVectors[i][j] = vl[n * i + j]
+                rightEigenVectors[i][j] = vr[n * i + j]
             }
+        }
+        let leftEigenVectors = _leftEigenVectors.indices.map { i in
+            let s = _leftEigenVectors[i].inner(rightEigenVectors[i])
+            return _leftEigenVectors[i].conjugate / s
         }
         return (eigenValues, leftEigenVectors, rightEigenVectors)
 #else
@@ -483,7 +491,7 @@ public extension MatrixOperations {
         var leftEigenVectors: [Vector<Complex<Float>>] = .init(repeating: .zero(n), count: n)
         for i in 0..<n {
             for j in 0..<n {
-                leftEigenVectors[j][i] = vl[n * i + j]
+                leftEigenVectors[i][j] = vl[n * i + j]
             }
         }
         return (eigenValues, leftEigenVectors)
@@ -574,7 +582,7 @@ public extension MatrixOperations {
         var rightEigenVectors: [Vector<Complex<Float>>] = .init(repeating: .zero(n), count: n)
         for i in 0..<n {
             for j in 0..<n {
-                rightEigenVectors[j][i] = vr[n * i + j]
+                rightEigenVectors[i][j] = vr[n * i + j]
             }
         }
         return (eigenValues, rightEigenVectors)
