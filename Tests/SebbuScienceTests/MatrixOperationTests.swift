@@ -477,7 +477,7 @@ struct DiagonalizationTests {
             let D: Matrix<Complex<Double>> = .diagonal(from: eigenValues)
             let U: Matrix<Complex<Double>> = .from(columns: rightEigenVectors.map { $0.components })
             let Uinv: Matrix<Complex<Double>> = .from(rows: leftEigenVectors.map { $0.components })
-            
+
             #expect(U.dot(D).dot(Uinv).isApproximatelyEqual(to: AComplex, absoluteTolerance: 1e-10))
             #expect(Uinv.dot(AComplex).dot(U).isApproximatelyEqual(to: D, absoluteTolerance: 1e-10))
             

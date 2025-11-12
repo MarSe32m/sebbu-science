@@ -154,13 +154,13 @@ public extension MatrixOperations {
         let V = Int8(bitPattern: UInt8(ascii: "V"))
         let U = Int8(bitPattern: UInt8(ascii: "U"))
         let info = _A.withUnsafeMutableBufferPointer { A in 
-            LAPACKE_zheevd(LAPACK_COL_MAJOR, V, U, .init(N), .init(A.baseAddress), .init(lda), &eigenValues)
+            LAPACKE_zheevd(LAPACK_ROW_MAJOR, V, U, .init(N), .init(A.baseAddress), .init(lda), &eigenValues)
         }
         if info != 0 { throw MatrixOperationError.info(Int(info)) }
         var eigenVectors = [Vector<Complex<Double>>](repeating: .zero(N), count: N)
         for i in 0..<N {
             for j in 0..<N {
-                eigenVectors[i][j] = _A[N * i + j]
+                eigenVectors[j][i] = _A[N * i + j]
             }
         }
         return (eigenValues, eigenVectors)
@@ -239,7 +239,7 @@ public extension MatrixOperations {
         let _N = Int8(bitPattern: UInt8(ascii: "N"))
         let U = Int8(bitPattern: UInt8(ascii: "U"))
         let info = _A.withUnsafeMutableBufferPointer { A in 
-            LAPACKE_zheevd(LAPACK_COL_MAJOR, _N, U, .init(N), .init(A.baseAddress), .init(lda), &eigenValues)
+            LAPACKE_zheevd(LAPACK_ROW_MAJOR, _N, U, .init(N), .init(A.baseAddress), .init(lda), &eigenValues)
         }
         if info != 0 { throw MatrixOperationError.info(Int(info)) }
         return eigenValues

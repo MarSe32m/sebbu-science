@@ -282,9 +282,9 @@ public extension MatrixOperations {
                     j += 1
                 } else {
                     _leftEigenVectors[j][i] = Complex<Float>(vl[i * N + j], vl[i * N + j + 1])
-                    _leftEigenVectors[j][i] = Complex<Float>(vl[i * N + j], -vl[i * N + j + 1])
+                    _leftEigenVectors[j + 1][i] = Complex<Float>(vl[i * N + j], -vl[i * N + j + 1])
                     rightEigenVectors[j][i] = Complex<Float>(vr[i * N + j], vr[i * N + j + 1])
-                    rightEigenVectors[j][i] = Complex<Float>(vr[i * N + j], -vr[i * N + j + 1])
+                    rightEigenVectors[j + 1][i] = Complex<Float>(vr[i * N + j], -vr[i * N + j + 1])
                     j += 2
                 }
             }
@@ -380,7 +380,7 @@ public extension MatrixOperations {
                     j += 1
                 } else {
                     leftEigenVectors[j][i] = Complex<Float>(vl[i * N + j], vl[i * N + j + 1])
-                    leftEigenVectors[j][i] = Complex<Float>(vl[i * N + j], -vl[i * N + j + 1])
+                    leftEigenVectors[j + 1][i] = Complex<Float>(vl[i * N + j], -vl[i * N + j + 1])
                     j += 2
                 }
             }
@@ -463,7 +463,7 @@ public extension MatrixOperations {
                     j += 1
                 } else {
                     rightEigenVectors[j][i] = Complex<Float>(vr[i * N + j], vr[i * N + j + 1])
-                    rightEigenVectors[j][i] = Complex<Float>(vr[i * N + j], -vr[i * N + j + 1])
+                    rightEigenVectors[j + 1][i] = Complex<Float>(vr[i * N + j], -vr[i * N + j + 1])
                     j += 2
                 }
             }
