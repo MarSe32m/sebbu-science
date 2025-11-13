@@ -137,7 +137,6 @@ public extension MatrixOperations {
     ///   - rows: Number of rows in the matrix
     /// - Throws: ```MatrixOperationError``` with the LAPACK error code if the diagonalization fails.
     /// - Returns: A tuple containing the eigenvalues and eigenvectors
-    //TODO: TESTS!
     //@inlinable
     static func diagonalizeSymmetric(_ A: Matrix<Float>) throws -> (eigenValues: [Float], eigenVectors: [Vector<Float>]) {
         precondition(A.rows == A.columns)
@@ -253,7 +252,6 @@ public extension MatrixOperations {
     /// - Throws: ```MatrixOperationError``` with the LAPACK error code if the diagonalization fails.
     /// - Returns: A tuple containing the eigenvalues, left eigenvectors and right eigenvectors
     /// - Note: If you know your matrix is symmetric, consider using ```diagonalizeSymmetric(_:,rows:)``` method instead.
-    //TODO: TESTS!
     //@inlinable
     static func diagonalize(_ A: Matrix<Float>) throws -> (eigenValues: [Complex<Float>], leftEigenVectors: [Vector<Complex<Float>>], rightEigenVectors: [Vector<Complex<Float>>]) {
         precondition(A.rows == A.columns)
@@ -641,7 +639,6 @@ public extension MatrixOperations {
 #endif
     }
 
-    //TODO: TEST
     //@inlinable
     static func singularValueDecomposition(A: Matrix<Float>) throws -> (U: Matrix<Float>, singularValues: [Float], VT: Matrix<Float>) {
         #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
@@ -719,6 +716,30 @@ public extension MatrixOperations {
         if info != 0 { throw MatrixOperationError.info(Int(info)) }
         
         return (U: U.transpose, singularValues: singularValues, VT: VT.transpose)
+#else
+        fatalError("TODO: Default implementation not yet implemented")
+#endif
+    }
+
+    //@inlinable
+    static func schurDecomposition(_ A: Matrix<Float>) throws -> (eigenValues: [Complex<Float>], U: Matrix<Float>, Q: Matrix<Float>) {
+        precondition(A.rows == A.columns, "Schur decomposition can only be calculated for square matrices")
+#if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let VChar = Int8(bitPattern: UInt8(ascii: "V"))
+        let NChar = Int8(bitPattern: UInt8(ascii: "N"))
+        let n = lapack_int(A.rows)
+        var sdim: lapack_int = .zero
+        var eigenValuesReal: [Float] = .init(repeating: .zero, count: A.rows)
+        var eigenValuesImaginary: [Float] = .init(repeating: .zero, count: A.rows)
+        var schurVectors: [Float] = .init(repeating: .zero, count: A.elements.count)
+        var AElements = Array(A.elements)
+        let info = LAPACKE_sgees(LAPACK_ROW_MAJOR, VChar, NChar, nil, n, &AElements, n, &sdim, &eigenValuesReal, &eigenValuesImaginary, &schurVectors, n)
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        let U = Matrix<Float>(elements: AElements, rows: A.rows, columns: A.columns)
+        let Q = Matrix<Float>(elements: schurVectors, rows: A.rows, columns: A.columns)
+        return (zip(eigenValuesReal, eigenValuesImaginary).map { Complex($0, $1) }, U, Q)
+#elseif canImport(Accelerate)
+        fatalError("TODO: Implement with Accelerate LAPACK")
 #else
         fatalError("TODO: Default implementation not yet implemented")
 #endif
