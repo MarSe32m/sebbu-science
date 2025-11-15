@@ -850,7 +850,46 @@ public extension MatrixOperations {
         let Q = Matrix<Complex<Float>>(elements: schurVectors, rows: A.rows, columns: A.columns)
         return (eigenValues, U, Q)
 #elseif canImport(Accelerate)
-        fatalError("TODO: Implement with Accelerate LAPACK")
+        var VChar = Int8(bitPattern: UInt8(ascii: "V"))
+        var NChar = Int8(bitPattern: UInt8(ascii: "N"))
+        var n = lapack_int(A.rows)
+        var AElements = A.transpose.elements
+        
+        var sdim: lapack_int = .zero
+        var eigenValues: [Complex<Float>] = .init(repeating: .zero, count: A.rows)
+        var schurVectors: [Complex<Float>] = .init(repeating: .zero, count: A.elements.count)
+        
+        var work: [Complex<Float>] = [.zero]
+        var lwork: Int = -1
+        var rwork: [Float] = .init(repeating: .zero, count: n)
+        var info: Int = 0
+        
+        AElements.withUnsafeMutableBufferPointer { A in
+            eigenValues.withUnsafeMutableBufferPointer { w in
+                schurVectors.withUnsafeMutableBufferPointer { vs in
+                    work.withUnsafeMutableBufferPointer { work in
+                        cgees_(&VChar, &NChar, nil, &n, .init(A.baseAddress), &n, &sdim, .init(w.baseAddress), .init(vs.baseAddress), &n, .init(work.baseAddress!), &lwork, &rwork, nil, &info)
+                    }
+                }
+            }
+        }
+        lwork = Swift.max(Int(work[0].real), 1)
+        work = .init(repeating: .zero, count: lwork)
+        AElements.withUnsafeMutableBufferPointer { A in
+            eigenValues.withUnsafeMutableBufferPointer { w in
+                schurVectors.withUnsafeMutableBufferPointer { vs in
+                    work.withUnsafeMutableBufferPointer { work in
+                        cgees_(&VChar, &NChar, nil, &n, .init(A.baseAddress), &n, &sdim, .init(w.baseAddress), .init(vs.baseAddress), &n, .init(work.baseAddress!), &lwork, &rwork, nil, &info)
+                    }
+                }
+            }
+        }
+        
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        
+        let U = Matrix<Complex<Float>>(elements: AElements, rows: A.rows, columns: A.columns).transpose
+        let Q = Matrix<Complex<Float>>(elements: schurVectors, rows: A.rows, columns: A.columns).transpose
+        return (eigenValues, U, Q)
 #else
         fatalError("TODO: Default implementation not yet implemented")
 #endif

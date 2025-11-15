@@ -739,7 +739,31 @@ public extension MatrixOperations {
         let Q = Matrix<Float>(elements: schurVectors, rows: A.rows, columns: A.columns)
         return (zip(eigenValuesReal, eigenValuesImaginary).map { Complex($0, $1) }, U, Q)
 #elseif canImport(Accelerate)
-        fatalError("TODO: Implement with Accelerate LAPACK")
+        var VChar = Int8(bitPattern: UInt8(ascii: "V"))
+        var NChar = Int8(bitPattern: UInt8(ascii: "N"))
+        var n = lapack_int(A.rows)
+        var AElements = A.transpose.elements
+        
+        var sdim: lapack_int = .zero
+        var eigenValuesReal: [Float] = .init(repeating: .zero, count: A.rows)
+        var eigenValuesImaginary: [Float] = .init(repeating: .zero, count: A.rows)
+        var schurVectors: [Float] = .init(repeating: .zero, count: A.elements.count)
+        
+        var work: [Float] = [.zero]
+        var lwork: Int = -1
+        var info: Int = 0
+        
+        sgees_(&VChar, &NChar, nil, &n, &AElements, &n, &sdim, &eigenValuesReal, &eigenValuesImaginary, &schurVectors, &n, &work, &lwork, nil, &info)
+        
+        lwork = Swift.max(Int(work[0]), 1)
+        work = .init(repeating: .zero, count: lwork)
+        sgees_(&VChar, &NChar, nil, &n, &AElements, &n, &sdim, &eigenValuesReal, &eigenValuesImaginary, &schurVectors, &n, &work, &lwork, nil, &info)
+        
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        
+        let U = Matrix<Float>(elements: AElements, rows: A.rows, columns: A.columns).transpose
+        let Q = Matrix<Float>(elements: schurVectors, rows: A.rows, columns: A.columns).transpose
+        return (zip(eigenValuesReal, eigenValuesImaginary).map { Complex($0, $1) }, U, Q)
 #else
         fatalError("TODO: Default implementation not yet implemented")
 #endif

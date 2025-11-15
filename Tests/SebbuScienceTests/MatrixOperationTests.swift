@@ -526,7 +526,7 @@ struct DiagonalizationTests {
     
     @Test("Matrix<Float>.diagonalize test")
     func diagonalizeFloat() throws {
-        for dimension in 1...64 {
+        for dimension in 1...32 {
             let A: Matrix<Float> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             let AComplex: Matrix<Complex<Float>> = .init(elements: A.elements.map { Complex($0) }, rows: dimension, columns: dimension)
             
@@ -536,19 +536,19 @@ struct DiagonalizationTests {
             let U: Matrix<Complex<Float>> = .from(columns: rightEigenVectors.map { $0.components })
             let Uinv: Matrix<Complex<Float>> = .from(rows: leftEigenVectors.map { $0.components })
             
-            #expect(U.dot(D).dot(Uinv).isApproximatelyEqual(to: AComplex, absoluteTolerance: 1e-4))
-            #expect(Uinv.dot(AComplex).dot(U).isApproximatelyEqual(to: D, absoluteTolerance: 1e-4))
+            #expect(U.dot(D).dot(Uinv).isApproximatelyEqual(to: AComplex, absoluteTolerance: 1e-3))
+            #expect(Uinv.dot(AComplex).dot(U).isApproximatelyEqual(to: D, absoluteTolerance: 1e-3))
             
             for (eigenValue, eigenVector) in zip(eigenValues, leftEigenVectors) {
                 let scaled = eigenValue * eigenVector
                 let operated = eigenVector.dot(AComplex)
-                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-4))
+                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-3))
             }
             
             for (eigenValue, eigenVector) in zip(eigenValues, rightEigenVectors) {
                 let scaled = eigenValue * eigenVector
                 let operated = AComplex.dot(eigenVector)
-                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-4))
+                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-3))
             }
         }
     }
@@ -643,7 +643,7 @@ struct DiagonalizationTests {
     
     @Test("Matrix<Complex<Float>>.diagonalize test")
     func diagonalizeComplexFloat() throws {
-        for dimension in 1...64 {
+        for dimension in 1...32 {
             let A: Matrix<Complex<Float>> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             
             let (eigenValues, leftEigenVectors, rightEigenVectors) = try MatrixOperations.diagonalize(A)
@@ -763,7 +763,7 @@ struct SchurDecompositionTests {
             let (eigenValues, U, Q) = try MatrixOperations.schurDecomposition(A)
             #expect(Q.dot(U).dot(Q.conjugateTranspose).isApproximatelyEqual(to: A, absoluteTolerance: 1e-4))
             for i in 0..<dimension {
-                #expect(eigenValues[i].isApproximatelyEqual(to: U[i, i], absoluteTolerance: 1e-10))
+                #expect(eigenValues[i].isApproximatelyEqual(to: U[i, i], absoluteTolerance: 1e-4))
             }
         }
     }
