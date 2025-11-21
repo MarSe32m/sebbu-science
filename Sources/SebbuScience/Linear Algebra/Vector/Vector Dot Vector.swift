@@ -86,6 +86,22 @@ public extension Vector where T: AlgebraicField {
     func outer(_ other: Self, into: inout Matrix<T>) {
         _outer(other, into: &into)
     }
+    
+    @inlinable
+    @_transparent
+    func outer(_ other: Self, multiplied: T, into: inout Matrix<T>) {
+        _outer(other, multiplied: multiplied, into: &into)
+    }
+
+    @inlinable
+    func _outer(_ other: Self, multiplied: T, into: inout Matrix<T>) {
+        precondition(into.rows == count && into.columns == other.count)
+        for i in 0..<count {
+            for j in 0..<other.count {
+                into[i, j] = Relaxed.product(multiplied, Relaxed.product(components[i], other.components[j]))
+            }
+        }
+    }
 
     @inlinable
     func _outer(_ other: Self, into: inout Matrix<T>) {
@@ -93,6 +109,38 @@ public extension Vector where T: AlgebraicField {
         for i in 0..<count {
             for j in 0..<other.count {
                 into[i, j] = Relaxed.product(components[i], other.components[j])
+            }
+        }
+    }
+    
+    @inlinable
+    @_transparent
+    func outer(_ other: Self, addingInto into: inout Matrix<T>) {
+        _outer(other, addingInto: &into)
+    }
+    
+    @inlinable
+    @_transparent
+    func outer(_ other: Self, multiplied: T, addingInto into: inout Matrix<T>) {
+        _outer(other, multiplied: multiplied, addingInto: &into)
+    }
+
+    @inlinable
+    func _outer(_ other: Self, addingInto into: inout Matrix<T>) {
+        precondition(into.rows == count && into.columns == other.count)
+        for i in 0..<count {
+            for j in 0..<other.count {
+                into[i, j] = Relaxed.multiplyAdd(components[i], other.components[j], into[i, j])
+            }
+        }
+    }
+    
+    @inlinable
+    func _outer(_ other: Self, multiplied: T, addingInto into: inout Matrix<T>) {
+        precondition(into.rows == count && into.columns == other.count)
+        for i in 0..<count {
+            for j in 0..<other.count {
+                into[i, j] = Relaxed.multiplyAdd(Relaxed.product(multiplied, components[i]), other.components[j], into[i, j])
             }
         }
     }
