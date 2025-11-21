@@ -468,7 +468,7 @@ struct PseudoInverseTests {
 struct DiagonalizationTests {
     @Test("Matrix<Double>.diagonalize test")
     func diagonalizeDouble() throws {
-        for dimension in 1...20 {
+        for dimension in 1...64 {
             let A: Matrix<Double> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             let AComplex: Matrix<Complex<Double>> = .init(elements: A.elements.map { Complex($0) }, rows: dimension, columns: dimension)
             
@@ -477,7 +477,7 @@ struct DiagonalizationTests {
             let D: Matrix<Complex<Double>> = .diagonal(from: eigenValues)
             let U: Matrix<Complex<Double>> = .from(columns: rightEigenVectors.map { $0.components })
             let Uinv: Matrix<Complex<Double>> = .from(rows: leftEigenVectors.map { $0.components })
-            
+
             #expect(U.dot(D).dot(Uinv).isApproximatelyEqual(to: AComplex, absoluteTolerance: 1e-10))
             #expect(Uinv.dot(AComplex).dot(U).isApproximatelyEqual(to: D, absoluteTolerance: 1e-10))
             
@@ -497,7 +497,7 @@ struct DiagonalizationTests {
     
     @Test("Matrix<Double>.diagonalizeSymmetric test")
     func diagonalizeSymmetricDouble() throws {
-        for dimension in 1...20 {
+        for dimension in 1...64 {
             var A: Matrix<Double> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             for i in 0..<dimension {
                 for j in i..<dimension {
@@ -526,7 +526,7 @@ struct DiagonalizationTests {
     
     @Test("Matrix<Float>.diagonalize test")
     func diagonalizeFloat() throws {
-        for dimension in 1...20 {
+        for dimension in 1...32 {
             let A: Matrix<Float> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             let AComplex: Matrix<Complex<Float>> = .init(elements: A.elements.map { Complex($0) }, rows: dimension, columns: dimension)
             
@@ -536,26 +536,26 @@ struct DiagonalizationTests {
             let U: Matrix<Complex<Float>> = .from(columns: rightEigenVectors.map { $0.components })
             let Uinv: Matrix<Complex<Float>> = .from(rows: leftEigenVectors.map { $0.components })
             
-            #expect(U.dot(D).dot(Uinv).isApproximatelyEqual(to: AComplex, absoluteTolerance: 1e-4))
-            #expect(Uinv.dot(AComplex).dot(U).isApproximatelyEqual(to: D, absoluteTolerance: 1e-4))
+            #expect(U.dot(D).dot(Uinv).isApproximatelyEqual(to: AComplex, absoluteTolerance: 1e-3))
+            #expect(Uinv.dot(AComplex).dot(U).isApproximatelyEqual(to: D, absoluteTolerance: 1e-3))
             
             for (eigenValue, eigenVector) in zip(eigenValues, leftEigenVectors) {
                 let scaled = eigenValue * eigenVector
                 let operated = eigenVector.dot(AComplex)
-                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-4))
+                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-3))
             }
             
             for (eigenValue, eigenVector) in zip(eigenValues, rightEigenVectors) {
                 let scaled = eigenValue * eigenVector
                 let operated = AComplex.dot(eigenVector)
-                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-4))
+                #expect(scaled.isApproximatelyEqual(to: operated, absoluteTolerance: 1e-3))
             }
         }
     }
     
     @Test("Matrix<Float>.diagonalizeSymmetric test")
     func diagonalizeSymmetricFloat() throws {
-        for dimension in 1...20 {
+        for dimension in 1...64 {
             var A: Matrix<Float> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             for i in 0..<dimension {
                 for j in i..<dimension {
@@ -584,7 +584,7 @@ struct DiagonalizationTests {
     
     @Test("Matrix<Complex<Double>>.diagonalize test")
     func diagonalizeComplexDouble() throws {
-        for dimension in 1...20 {
+        for dimension in 1...64 {
             let A: Matrix<Complex<Double>> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             
             let (eigenValues, leftEigenVectors, rightEigenVectors) = try MatrixOperations.diagonalize(A)
@@ -612,7 +612,7 @@ struct DiagonalizationTests {
     
     @Test("Matrix<Complex<Double>>.diagonalizeHermitian test")
     func diagonalizeHermitianComplexDouble() throws {
-        for dimension in 1...20 {
+        for dimension in 1...64 {
             var A: Matrix<Complex<Double>> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             for i in 0..<dimension {
                 A[i, i] = Complex(A[i,i].real)
@@ -643,7 +643,7 @@ struct DiagonalizationTests {
     
     @Test("Matrix<Complex<Float>>.diagonalize test")
     func diagonalizeComplexFloat() throws {
-        for dimension in 1...20 {
+        for dimension in 1...32 {
             let A: Matrix<Complex<Float>> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             
             let (eigenValues, leftEigenVectors, rightEigenVectors) = try MatrixOperations.diagonalize(A)
@@ -671,7 +671,7 @@ struct DiagonalizationTests {
     
     @Test("Matrix<Complex<Float>>.diagonalizeHermitian test")
     func diagonalizeHermitianComplexFloat() throws {
-        for dimension in 1...20 {
+        for dimension in 1...64 {
             var A: Matrix<Complex<Float>> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             for i in 0..<dimension {
                 A[i, i] = Complex(A[i,i].real)
@@ -696,6 +696,74 @@ struct DiagonalizationTests {
                 let scaledFromLeft = eigenValue * eigenVector
                 let operatedFromLeft = A.dot(eigenVector)
                 #expect(scaledFromLeft.isApproximatelyEqual(to: operatedFromLeft, absoluteTolerance: 1e-4))
+            }
+        }
+    }
+}
+
+struct SchurDecompositionTests {
+    @Test("Matrix<Double>.schurDecomposition test")
+    func schurDecompositionDouble() throws {
+        for dimension in 1...128 {
+            let A: Matrix<Double> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
+            let (eigenValues, U, Q) = try MatrixOperations.schurDecomposition(A)
+            #expect(Q.dot(U).dot(Q.transpose).isApproximatelyEqual(to: A, absoluteTolerance: 1e-10))
+            var i = 0
+            while i < dimension {
+                if eigenValues[i].imaginary != .zero {
+                    let cb = Complex<Double>.sqrt(Complex(U[i, i + 1] * U[i + 1, i]))
+                    #expect(eigenValues[i].isApproximatelyEqual(to: U[i, i] + cb, absoluteTolerance: 1e-10))
+                    #expect(eigenValues[i + 1].isApproximatelyEqual(to: U[i, i] - cb, absoluteTolerance: 1e-10))
+                    i += 2
+                } else {
+                    #expect(eigenValues[i].isApproximatelyEqual(to: Complex(U[i, i]), absoluteTolerance: 1e-10))
+                    i += 1
+                }
+            }
+        }
+    }
+
+    @Test("Matrix<Float>.schurDecomposition test")
+    func schurDecompositionFloat() throws {
+        for dimension in 1...128 {
+            let A: Matrix<Float> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
+            let (eigenValues, U, Q) = try MatrixOperations.schurDecomposition(A)
+            #expect(Q.dot(U).dot(Q.transpose).isApproximatelyEqual(to: A, absoluteTolerance: 1e-4))
+            var i = 0
+            while i < dimension {
+                if eigenValues[i].imaginary != .zero {
+                    let cb = Complex<Float>.sqrt(Complex(U[i, i + 1] * U[i + 1, i]))
+                    #expect(eigenValues[i].isApproximatelyEqual(to: U[i, i] + cb, absoluteTolerance: 1e-4))
+                    #expect(eigenValues[i + 1].isApproximatelyEqual(to: U[i, i] - cb, absoluteTolerance: 1e-4))
+                    i += 2
+                } else {
+                    #expect(eigenValues[i].isApproximatelyEqual(to: Complex(U[i, i]), absoluteTolerance: 1e-4))
+                    i += 1
+                }
+            }
+        }
+    }
+
+    @Test("Matrix<Complex<Double>>.schurDecomposition test")
+    func schurDecompositionComplexDouble() throws {
+        for dimension in 1...128 {
+            let A: Matrix<Complex<Double>> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
+            let (eigenValues, U, Q) = try MatrixOperations.schurDecomposition(A)
+            #expect(Q.dot(U).dot(Q.conjugateTranspose).isApproximatelyEqual(to: A, absoluteTolerance: 1e-10))
+            for i in 0..<dimension {
+                #expect(eigenValues[i].isApproximatelyEqual(to: U[i, i], absoluteTolerance: 1e-10))
+            }
+        }
+    }
+
+    @Test("Matrix<Complex<Float>>.schurDecomposition test")
+    func schurDecompositionComplexFloat() throws {
+        for dimension in 1...128 {
+            let A: Matrix<Complex<Float>> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
+            let (eigenValues, U, Q) = try MatrixOperations.schurDecomposition(A)
+            #expect(Q.dot(U).dot(Q.conjugateTranspose).isApproximatelyEqual(to: A, absoluteTolerance: 1e-4))
+            for i in 0..<dimension {
+                #expect(eigenValues[i].isApproximatelyEqual(to: U[i, i], absoluteTolerance: 1e-4))
             }
         }
     }

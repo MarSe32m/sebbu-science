@@ -6,8 +6,9 @@
             "args": [],
             "cwd": "${workspaceFolder:sebbu-science}",
             "name": "Debug Executable",
-            "program": "${workspaceFolder:sebbu-science}/.build/debug/Executable",
-            "preLaunchTask": "swift: Build Debug Executable"
+            "preLaunchTask": "swift: Build Debug Executable",
+            "target": "Executable",
+            "configuration": "debug"
         },
         {
             "type": "swift",
@@ -15,8 +16,9 @@
             "args": [],
             "cwd": "${workspaceFolder:sebbu-science}",
             "name": "Release Executable",
-            "program": "${workspaceFolder:sebbu-science}/.build/release/Executable",
-            "preLaunchTask": "swift: Build Release Executable"
+            "preLaunchTask": "swift: Build Release Executable",
+            "target": "Executable",
+            "configuration": "release"
         }
     ]
 }

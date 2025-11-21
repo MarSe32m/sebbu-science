@@ -142,7 +142,6 @@ public extension MatrixOperations {
     ///   - rows: Number of rows in the matrix
     /// - Throws: ```MatrixOperationError``` with the LAPACK error code if the diagonalization fails.
     /// - Returns: A tuple containing the eigenvalues and eigenvectors
-    //TODO: TESTS!
     //@inlinable
     static func diagonalizeHermitian(_ A: Matrix<Complex<Double>>) throws -> (eigenValues: [Double], eigenVectors: [Vector<Complex<Double>>]) {
         precondition(A.rows == A.columns)
@@ -154,13 +153,13 @@ public extension MatrixOperations {
         let V = Int8(bitPattern: UInt8(ascii: "V"))
         let U = Int8(bitPattern: UInt8(ascii: "U"))
         let info = _A.withUnsafeMutableBufferPointer { A in 
-            LAPACKE_zheevd(LAPACK_COL_MAJOR, V, U, .init(N), .init(A.baseAddress), .init(lda), &eigenValues)
+            LAPACKE_zheevd(LAPACK_ROW_MAJOR, V, U, .init(N), .init(A.baseAddress), .init(lda), &eigenValues)
         }
         if info != 0 { throw MatrixOperationError.info(Int(info)) }
         var eigenVectors = [Vector<Complex<Double>>](repeating: .zero(N), count: N)
         for i in 0..<N {
             for j in 0..<N {
-                eigenVectors[i][j] = _A[N * i + j]
+                eigenVectors[j][i] = _A[N * i + j]
             }
         }
         return (eigenValues, eigenVectors)
@@ -239,7 +238,7 @@ public extension MatrixOperations {
         let _N = Int8(bitPattern: UInt8(ascii: "N"))
         let U = Int8(bitPattern: UInt8(ascii: "U"))
         let info = _A.withUnsafeMutableBufferPointer { A in 
-            LAPACKE_zheevd(LAPACK_COL_MAJOR, _N, U, .init(N), .init(A.baseAddress), .init(lda), &eigenValues)
+            LAPACKE_zheevd(LAPACK_ROW_MAJOR, _N, U, .init(N), .init(A.baseAddress), .init(lda), &eigenValues)
         }
         if info != 0 { throw MatrixOperationError.info(Int(info)) }
         return eigenValues
@@ -300,7 +299,6 @@ public extension MatrixOperations {
     ///   - rows: Number of rows in the matrix
     /// - Throws: ```MatrixOperationError``` with the LAPACK error code if the diagonalization fails.
     /// - Returns: A tuple containing the eigenvalues and left eigenvectors and right eigenvectors
-    //TODO: TESTS!
     //@inlinable
     static func diagonalize(_ A: Matrix<Complex<Double>>) throws -> (eigenValues: [Complex<Double>], leftEigenVectors: [Vector<Complex<Double>>], rightEigenVectors: [Vector<Complex<Double>>]) {
         precondition(A.rows == A.columns)
@@ -741,7 +739,6 @@ public extension MatrixOperations {
 #endif
     }
 
-    //TODO: TEST
     //@inlinable
     static func singularValueDecomposition(A: Matrix<Complex<Double>>) throws -> (U: Matrix<Complex<Double>>, singularValues: [Double], VH: Matrix<Complex<Double>>) {
         #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
@@ -820,6 +817,74 @@ public extension MatrixOperations {
         if info != 0 { throw MatrixOperationError.info(Int(info)) }
         
         return (U: U.transpose, singularValues: singularValues, VH: VH.transpose)
+#else
+        fatalError("TODO: Default implementation not yet implemented")
+#endif
+    }
+
+    //@inlinable
+    static func schurDecomposition(_ A: Matrix<Complex<Double>>) throws -> (eigenValues: [Complex<Double>], U: Matrix<Complex<Double>>, Q: Matrix<Complex<Double>>) {
+        precondition(A.rows == A.columns, "Schur decomposition can only be calculated for square matrices")
+#if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        let VChar = Int8(bitPattern: UInt8(ascii: "V"))
+        let NChar = Int8(bitPattern: UInt8(ascii: "N"))
+        let n = lapack_int(A.rows)
+        var sdim: lapack_int = .zero
+        var eigenValues: [Complex<Double>] = .init(repeating: .zero, count: A.rows)
+        var schurVectors: [Complex<Double>] = .init(repeating: .zero, count: A.elements.count)
+        var AElements = Array(A.elements)
+        let info = AElements.withUnsafeMutableBufferPointer { A in 
+            eigenValues.withUnsafeMutableBufferPointer { w in 
+                schurVectors.withUnsafeMutableBufferPointer { vs in 
+                    LAPACKE_zgees(LAPACK_ROW_MAJOR, VChar, NChar, nil, n, .init(A.baseAddress), n, &sdim, .init(w.baseAddress), .init(vs.baseAddress), n)
+                }
+            }
+        }
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        let U = Matrix<Complex<Double>>(elements: AElements, rows: A.rows, columns: A.columns)
+        let Q = Matrix<Complex<Double>>(elements: schurVectors, rows: A.rows, columns: A.columns)
+        return (eigenValues, U, Q)
+#elseif canImport(Accelerate)
+        var VChar = Int8(bitPattern: UInt8(ascii: "V"))
+        var NChar = Int8(bitPattern: UInt8(ascii: "N"))
+        var n = lapack_int(A.rows)
+        var AElements = A.transpose.elements
+        
+        var sdim: lapack_int = .zero
+        var eigenValues: [Complex<Double>] = .init(repeating: .zero, count: A.rows)
+        var schurVectors: [Complex<Double>] = .init(repeating: .zero, count: A.elements.count)
+        
+        var work: [Complex<Double>] = [.zero]
+        var lwork: Int = -1
+        var rwork: [Double] = .init(repeating: .zero, count: n)
+        var info: Int = 0
+        
+        AElements.withUnsafeMutableBufferPointer { A in
+            eigenValues.withUnsafeMutableBufferPointer { w in
+                schurVectors.withUnsafeMutableBufferPointer { vs in
+                    work.withUnsafeMutableBufferPointer { work in
+                        zgees_(&VChar, &NChar, nil, &n, .init(A.baseAddress), &n, &sdim, .init(w.baseAddress), .init(vs.baseAddress), &n, .init(work.baseAddress!), &lwork, &rwork, nil, &info)
+                    }
+                }
+            }
+        }
+        lwork = Swift.max(Int(work[0].real), 1)
+        work = .init(repeating: .zero, count: lwork)
+        AElements.withUnsafeMutableBufferPointer { A in
+            eigenValues.withUnsafeMutableBufferPointer { w in
+                schurVectors.withUnsafeMutableBufferPointer { vs in
+                    work.withUnsafeMutableBufferPointer { work in
+                        zgees_(&VChar, &NChar, nil, &n, .init(A.baseAddress), &n, &sdim, .init(w.baseAddress), .init(vs.baseAddress), &n, .init(work.baseAddress!), &lwork, &rwork, nil, &info)
+                    }
+                }
+            }
+        }
+        
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        
+        let U = Matrix<Complex<Double>>(elements: AElements, rows: A.rows, columns: A.columns).transpose
+        let Q = Matrix<Complex<Double>>(elements: schurVectors, rows: A.rows, columns: A.columns).transpose
+        return (eigenValues, U, Q)
 #else
         fatalError("TODO: Default implementation not yet implemented")
 #endif
