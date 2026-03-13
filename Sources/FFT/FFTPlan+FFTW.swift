@@ -4,12 +4,8 @@
 //
 //  Created by Sebastian Toivonen on 30.4.2025.
 //
-#if canImport(CFFTW) || canImport(_CFFTWWindows)
 #if canImport(CFFTW)
 import CFFTW
-#elseif canImport(_CFFTWWindows)
-import _CFFTWWindows
-#endif
 import Numerics
 import Synchronization
 

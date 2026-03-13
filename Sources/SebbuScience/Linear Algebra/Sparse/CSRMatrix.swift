@@ -7,8 +7,6 @@
 
 #if canImport(COpenBLAS)
 import COpenBLAS
-#elseif canImport(_COpenBLASWindows)
-import _COpenBLASWindows
 #elseif canImport(Accelerate)
 import Accelerate
 #endif
@@ -377,7 +375,7 @@ public extension CSRMatrix<Complex<Double>> {
     @_optimize(speed)
     @inlinable
     mutating func multiply(by: Double) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS)
         let N = blasint(values.count)
         withUnsafePointer(to: by) { alpha in
             cblas_zscal(N, alpha, &values, 1)

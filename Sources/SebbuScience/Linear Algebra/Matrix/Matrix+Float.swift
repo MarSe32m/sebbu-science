@@ -7,8 +7,6 @@
 
 #if canImport(COpenBLAS)
 import COpenBLAS
-#elseif canImport(_COpenBLASWindows)
-import _COpenBLASWindows
 #elseif canImport(Accelerate)
 import Accelerate
 #endif
@@ -22,7 +20,7 @@ public extension Matrix<Float> {
     //@inlinable
     var inverse: Self? {
         if rows != columns { return nil }
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS)
         var a = elements
         var m = rows
         var lda = columns
@@ -140,7 +138,7 @@ public extension MatrixOperations {
     //@inlinable
     static func diagonalizeSymmetric(_ A: Matrix<Float>) throws -> (eigenValues: [Float], eigenVectors: [Vector<Float>]) {
         precondition(A.rows == A.columns)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS)
         let N = A.rows
         let lda = N
         var eigenValues: [Float] = .init(repeating: .zero, count: N)
@@ -203,7 +201,7 @@ public extension MatrixOperations {
     //@inlinable
     static func eigenValuesSymmetric(_ A: Matrix<Float>) throws -> [Float] {
         precondition(A.rows == A.columns)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS)
         let N = A.rows
         let lda = N
         var eigenValues: [Float] = .init(repeating: .zero, count: N)
@@ -255,7 +253,7 @@ public extension MatrixOperations {
     //@inlinable
     static func diagonalize(_ A: Matrix<Float>) throws -> (eigenValues: [Complex<Float>], leftEigenVectors: [Vector<Complex<Float>>], rightEigenVectors: [Vector<Complex<Float>>]) {
         precondition(A.rows == A.columns)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS)
         let N = A.rows
         let lda = N
         let ldvl = N
@@ -355,7 +353,7 @@ public extension MatrixOperations {
     //@inlinable
     static func diagonalizeLeft(_ A: Matrix<Float>) throws -> (eigenValues: [Complex<Float>], leftEigenVectors: [Vector<Complex<Float>>]) {
         precondition(A.rows == A.columns)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS)
         let N = A.rows
         let lda = N
         let ldvl = N
@@ -438,7 +436,7 @@ public extension MatrixOperations {
     //@inlinable
     static func diagonalizeRight(_ A: Matrix<Float>) throws -> (eigenValues: [Complex<Float>], rightEigenVectors: [Vector<Complex<Float>>]) {
         precondition(A.rows == A.columns)
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS)
         let N = A.rows
         let lda = N
         let ldvl = N
@@ -519,7 +517,7 @@ public extension MatrixOperations {
     //TODO: TESTS!
     //@inlinable
     static func eigenValues(_ A: Matrix<Float>) throws -> [Complex<Float>] {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS)
         let N = A.rows
         let lda = N
         let ldvl = N
@@ -565,7 +563,7 @@ public extension MatrixOperations {
     //TODO: TEST!
     @inlinable
     static func solve(A: Matrix<Float>, b: Vector<Float>) throws -> Vector<Float> {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS)
         let N = A.rows
         let nrhs: lapack_int = 1
         let lda: lapack_int = lapack_int(N)
@@ -603,7 +601,7 @@ public extension MatrixOperations {
     //TODO: TEST
     @inlinable
     static func solve(A: Matrix<Float>, B: Matrix<Float>) throws -> Matrix<Float> {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS)
         let N = A.rows
         let nrhs: lapack_int = numericCast(B.columns)
         let lda: lapack_int = numericCast(N)
@@ -641,7 +639,7 @@ public extension MatrixOperations {
 
     //@inlinable
     static func singularValueDecomposition(A: Matrix<Float>) throws -> (U: Matrix<Float>, singularValues: [Float], VT: Matrix<Float>) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS)
         let m = lapack_int(A.rows)
         let n = lapack_int(A.columns)
         var _A = Array(A.elements)
@@ -724,7 +722,7 @@ public extension MatrixOperations {
     //@inlinable
     static func schurDecomposition(_ A: Matrix<Float>) throws -> (eigenValues: [Complex<Float>], U: Matrix<Float>, Q: Matrix<Float>) {
         precondition(A.rows == A.columns, "Schur decomposition can only be calculated for square matrices")
-#if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+#if canImport(COpenBLAS)
         let VChar = Int8(bitPattern: UInt8(ascii: "V"))
         let NChar = Int8(bitPattern: UInt8(ascii: "N"))
         let n = lapack_int(A.rows)

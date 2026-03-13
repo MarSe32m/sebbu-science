@@ -39,9 +39,7 @@ let package = Package(
             name: "FFT",
             dependencies: [
                 .target(name: "_SebbuScienceCommon"),
-                //FIXME: Use binaryTarget CFFTW on Windows also once https://github.com/swiftlang/swift-package-manager/issues/8657 is fixed
-                .target(name: "_CFFTWWindows", condition: .when(platforms: [.windows])),
-                .target(name: "CFFTW", condition: .when(platforms: [.linux])),
+                .target(name: "CFFTW", condition: .when(platforms: [.linux, .windows])),
                 .product(name: "Numerics", package: "swift-numerics"),
                 .target(name: "NumericsExtensions")
             ]),
@@ -64,10 +62,8 @@ let package = Package(
             dependencies: [
                 .target(name: "_SebbuScienceCommon"),
                 .target(name: "FFT"),
-                .target(name: "CFFTW", condition: .when(platforms: [.linux])),
-                .target(name: "_CFFTWWindows", condition: .when(platforms: [.windows])),
-                .target(name: "COpenBLAS", condition: .when(platforms: [.linux])),
-                .target(name: "_COpenBLASWindows", condition: .when(platforms: [.windows])),
+                .target(name: "CFFTW", condition: .when(platforms: [.linux, .windows])),
+                .target(name: "COpenBLAS", condition: .when(platforms: [.linux, .windows])),
                 .target(name: "NumericsExtensions"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
                 .product(name: "Numerics", package: "swift-numerics"),
@@ -93,22 +89,6 @@ let package = Package(
             ],
             linkerSettings: [
                 .linkedFramework("Accelerate", .when(platforms: [.macOS]))
-            ]
-        ),
-        //FIXME: Remove this and use static COpenBLAS on Windows once https://github.com/swiftlang/swift-package-manager/issues/8657 is fixed
-        .target(
-            name: "_COpenBLASWindows", 
-            linkerSettings: [
-                .linkedLibrary("libopenblas", .when(platforms: [.windows])),
-                .unsafeFlags(["-L\(Context.packageDirectory)/COpenBLAS.artifactbundle/lib/windows"], .when(platforms: [.windows]))
-            ]
-        ),
-        //FIXME: Remove this and use static CFFTW on Windows once https://github.com/swiftlang/swift-package-manager/issues/8657 is fixed
-        .target(
-            name: "_CFFTWWindows",
-            linkerSettings: [
-                .linkedLibrary("fftw3", .when(platforms: [.windows])),
-                .unsafeFlags(["-L\(Context.packageDirectory)/CFFTW.artifactbundle/lib/windows"], .when(platforms: [.windows]))
             ]
         ),
         .testTarget(

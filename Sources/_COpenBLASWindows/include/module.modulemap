@@ -1,4 +1,0 @@
-module _COpenBLASWindows {
-    header "include.h"
-    export *
-}

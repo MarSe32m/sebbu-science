@@ -2,10 +2,6 @@
 import COpenBLAS
 public typealias blasint = Int32
 public typealias lapack_int = Int32
-#elseif canImport(_COpenBLASWindows)
-import _COpenBLASWindows
-public typealias blasint = Int32
-public typealias lapack_int = Int32
 #elseif canImport(Accelerate)
 import Accelerate
 public typealias blasint = __LAPACK_int
@@ -15,7 +11,7 @@ public typealias lapack_int = __LAPACK_int
 public enum BLAS {
     @inlinable
     public static var isAvailable: Bool {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         true
         #else
         false
@@ -145,7 +141,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func daxpy(_ N: Int, _ alpha: Double, _ x: UnsafePointer<Double>, _ incx: Int, _ y: UnsafeMutablePointer<Double>, _ incy: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         cblas_daxpy(blasint(N), alpha, x, blasint(incx), y, blasint(incy))
         #else
         fatalError("Not available on this platform")
@@ -155,7 +151,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func saxpy(_ N: Int, _ alpha: Float, _ x: UnsafePointer<Float>, _ incx: Int, _ y: UnsafeMutablePointer<Float>, _ incy: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         cblas_saxpy(blasint(N), alpha, x, blasint(incx), y, blasint(incy))
         #else
         fatalError("Not available on this platform")
@@ -165,7 +161,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func zaxpy(_ N: Int, _ alpha: Complex<Double>, _ x: UnsafePointer<Complex<Double>>, _ incx: Int, _ y: UnsafeMutablePointer<Complex<Double>>, _ incy: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         withUnsafePointer(to: alpha) { alpha in 
             cblas_zaxpy(blasint(N), .init(alpha), .init(x), blasint(incx), .init(y), blasint(incy))
         }
@@ -177,7 +173,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func zaxpy(_ N: Int, _ alpha: Double, _ x: UnsafePointer<Complex<Double>>, _ incx: Int, _ y: UnsafeMutablePointer<Complex<Double>>, _ incy: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         assert(incx == 1 && incy == 1, "Currently this is implemented for single increments")
         let count = 2 * N
         x.withMemoryRebound(to: Double.self, capacity: count) { x in
@@ -193,7 +189,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func caxpy(_ N: Int, _ alpha: Complex<Float>, _ x: UnsafePointer<Complex<Float>>, _ incx: Int, _ y: UnsafeMutablePointer<Complex<Float>>, _ incy: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         withUnsafePointer(to: alpha) { alpha in 
             cblas_caxpy(blasint(N), .init(alpha), .init(x), blasint(incx), .init(y), blasint(incy))
         }
@@ -205,7 +201,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func caxpy(_ N: Int, _ alpha: Float, _ x: UnsafePointer<Complex<Float>>, _ incx: Int, _ y: UnsafeMutablePointer<Complex<Float>>, _ incy: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         assert(incx == 1 && incy == 1, "Currently this is implemented for single increments")
         let count = 2 * N
         x.withMemoryRebound(to: Float.self, capacity: count) { x in
@@ -221,7 +217,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func dscal(_ N: Int, _ alpha: Double, _ x: UnsafeMutablePointer<Double>, _ incx: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         cblas_dscal(blasint(N), alpha, x, blasint(incx))
         #else
         fatalError("Not available on this platform")
@@ -231,7 +227,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func sscal(_ N: Int, _ alpha: Float, _ x: UnsafeMutablePointer<Float>, _ incx: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         cblas_sscal(blasint(N), alpha, x, blasint(incx))
         #else
         fatalError("Not available on this platform")
@@ -241,7 +237,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func zscal(_ N: Int, _ alpha: Complex<Double>, _ x: UnsafeMutablePointer<Complex<Double>>, _ incx: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         withUnsafePointer(to: alpha) { alpha in
             cblas_zscal(blasint(N), .init(alpha), .init(x), blasint(incx))
         }
@@ -253,7 +249,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func zdscal(_ N: Int, _ alpha: Double, _ x: UnsafeMutablePointer<Complex<Double>>, _ incx: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         assert(incx == 1, "Currently this is implemented for single increments")
         let count = 2 * N
         x.withMemoryRebound(to: Double.self, capacity: count) { x in 
@@ -267,7 +263,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func cscal(_ N: Int, _ alpha: Complex<Float>, _ x: UnsafeMutablePointer<Complex<Float>>, _ incx: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         withUnsafePointer(to: alpha) { alpha in
             cblas_cscal(blasint(N), .init(alpha), .init(x), blasint(incx))
         }
@@ -279,7 +275,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func csscal(_ N: Int, _ alpha: Float, _ x: UnsafeMutablePointer<Complex<Float>>, _ incx: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         assert(incx == 1, "Currently this is implemented for single increments")
         let count = 2 * N
         x.withMemoryRebound(to: Float.self, capacity: count) { x in 
@@ -293,7 +289,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func ddot(_ N: Int, _ x: UnsafePointer<Double>, _ incx: Int, _ y: UnsafePointer<Double>, _ incy: Int) -> Double {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         cblas_ddot(blasint(N), x, blasint(incx), y, blasint(incy))
         #else
         fatalError("Not available on this platform")
@@ -303,7 +299,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func sdot(_ N: Int, _ x: UnsafePointer<Float>, _ incx: Int, _ y: UnsafePointer<Float>, _ incy: Int) -> Float {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         cblas_sdot(blasint(N), x, blasint(incx), y, blasint(incy))
         #else
         fatalError("Not available on this platform")
@@ -313,7 +309,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func zdotu(_ N: Int, _ x: UnsafePointer<Complex<Double>>, _ incx: Int, _ y: UnsafePointer<Complex<Double>>, _ incy: Int) -> Complex<Double> {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         var result: Complex<Double> = .zero
         withUnsafeMutablePointer(to: &result) { ret in 
             cblas_zdotu_sub(blasint(N), .init(x), blasint(incx), .init(y), blasint(incy), .init(ret))
@@ -327,7 +323,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func zdotc(_ N: Int, _ x: UnsafePointer<Complex<Double>>, _ incx: Int, _ y: UnsafePointer<Complex<Double>>, _ incy: Int) -> Complex<Double> {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         var result: Complex<Double> = .zero
         withUnsafeMutablePointer(to: &result) { ret in 
             cblas_zdotc_sub(blasint(N), .init(x), blasint(incx), .init(y), blasint(incy), .init(ret))
@@ -342,7 +338,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func cdotu(_ N: Int, _ x: UnsafePointer<Complex<Float>>, _ incx: Int, _ y: UnsafePointer<Complex<Float>>, _ incy: Int) -> Complex<Float> {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         var result: Complex<Float> = .zero
         withUnsafeMutablePointer(to: &result) { ret in 
             cblas_cdotu_sub(blasint(N), .init(x), blasint(incx), .init(y), blasint(incy), .init(ret))
@@ -356,7 +352,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func cdotc(_ N: Int, _ x: UnsafePointer<Complex<Float>>, _ incx: Int, _ y: UnsafePointer<Complex<Float>>, _ incy: Int) -> Complex<Float> {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         var result: Complex<Float> = .zero
         withUnsafeMutablePointer(to: &result) { ret in 
             cblas_cdotc_sub(blasint(N), .init(x), blasint(incx), .init(y), blasint(incy), .init(ret))
@@ -370,7 +366,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func dgemv(_ order: Order, _ trans: Transpose, _ m: Int, _ n: Int, _ alpha: Double, _ A: UnsafePointer<Double>, _ lda: Int, _ x: UnsafePointer<Double>, _ incx: Int, _ beta: Double, _ y: UnsafeMutablePointer<Double>, _ incy: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         cblas_dgemv(order.rawValue, trans.rawValue, blasint(m), blasint(n), alpha, A, blasint(lda), x, blasint(incx), beta, y, blasint(incy))
         #else
         fatalError("Not available on this platform")
@@ -380,7 +376,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func sgemv(_ order: Order, _ trans: Transpose, _ m: Int, _ n: Int, _ alpha: Float, _ A: UnsafePointer<Float>, _ lda: Int, _ x: UnsafePointer<Float>, _ incx: Int, _ beta: Float, _ y: UnsafeMutablePointer<Float>, _ incy: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         cblas_sgemv(order.rawValue, trans.rawValue, blasint(m), blasint(n), alpha, A, blasint(lda), x, blasint(incx), beta, y, blasint(incy))
         #else
         fatalError("Not available on this platform")
@@ -390,7 +386,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func zgemv(_ order: Order, _ trans: Transpose, _ m: Int, _ n: Int, _ alpha: Complex<Double>, _ A: UnsafePointer<Complex<Double>>, _ lda: Int, _ x: UnsafePointer<Complex<Double>>, _ incx: Int, _ beta: Complex<Double>, _ y: UnsafeMutablePointer<Complex<Double>>, _ incy: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         withUnsafePointer(to: alpha) { alpha in
             withUnsafePointer(to: beta) { beta in 
                 cblas_zgemv(order.rawValue, trans.rawValue, blasint(m), blasint(n), .init(alpha), .init(A), blasint(lda), .init(x), blasint(incx), .init(beta), .init(y), blasint(incy))
@@ -404,7 +400,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func cgemv(_ order: Order, _ trans: Transpose, _ m: Int, _ n: Int, _ alpha: Complex<Float>, _ A: UnsafePointer<Complex<Float>>, _ lda: Int, _ x: UnsafePointer<Complex<Float>>, _ incx: Int, _ beta: Complex<Float>, _ y: UnsafeMutablePointer<Complex<Float>>, _ incy: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         withUnsafePointer(to: alpha) { alpha in
             withUnsafePointer(to: beta) { beta in 
                 cblas_cgemv(order.rawValue, trans.rawValue, blasint(m), blasint(n), .init(alpha), .init(A), blasint(lda), .init(x), blasint(incx), .init(beta), .init(y), blasint(incy))
@@ -418,7 +414,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func dgemm(_ order: Order, _ transA: Transpose, _ transB: Transpose, _ m: Int, _ n: Int, _ k: Int, _ alpha: Double, _ A: UnsafePointer<Double>, _ lda: Int, _ B: UnsafePointer<Double>, _ ldb: Int, _ beta: Double, _ C: UnsafeMutablePointer<Double>, _ ldc: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         cblas_dgemm(order.rawValue, transA.rawValue, transB.rawValue, blasint(m), blasint(n), blasint(k), alpha, A, blasint(lda), B, blasint(ldb), beta, C, blasint(ldc))
         #else
         fatalError("Not available on this platform")
@@ -428,7 +424,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func sgemm(_ order: Order, _ transA: Transpose, _ transB: Transpose, _ m: Int, _ n: Int, _ k: Int, _ alpha: Float, _ A: UnsafePointer<Float>, _ lda: Int, _ B: UnsafePointer<Float>, _ ldb: Int, _ beta: Float, _ C: UnsafeMutablePointer<Float>, _ ldc: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         cblas_sgemm(order.rawValue, transA.rawValue, transB.rawValue, blasint(m), blasint(n), blasint(k), alpha, A, blasint(lda), B, blasint(ldb), beta, C, blasint(ldc))
         #else
         fatalError("Not available on this platform")
@@ -438,7 +434,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func zgemm(_ order: Order, _ transA: Transpose, _ transB: Transpose, _ m: Int, _ n: Int, _ k: Int, _ alpha: Complex<Double>, _ A: UnsafePointer<Complex<Double>>, _ lda: Int, _ B: UnsafePointer<Complex<Double>>, _ ldb: Int, _ beta: Complex<Double>, _ C: UnsafeMutablePointer<Complex<Double>>, _ ldc: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         withUnsafePointer(to: alpha) { alpha in 
             withUnsafePointer(to: beta) { beta in 
                 cblas_zgemm(order.rawValue, transA.rawValue, transB.rawValue, blasint(m), blasint(n), blasint(k), .init(alpha), .init(A), blasint(lda), .init(B), blasint(ldb), .init(beta), .init(C), blasint(ldc))
@@ -452,7 +448,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func cgemm(_ order: Order, _ transA: Transpose, _ transB: Transpose, _ m: Int, _ n: Int, _ k: Int, _ alpha: Complex<Float>, _ A: UnsafePointer<Complex<Float>>, _ lda: Int, _ B: UnsafePointer<Complex<Float>>, _ ldb: Int, _ beta: Complex<Float>, _ C: UnsafeMutablePointer<Complex<Float>>, _ ldc: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         withUnsafePointer(to: alpha) { alpha in 
             withUnsafePointer(to: beta) { beta in 
                 cblas_cgemm(order.rawValue, transA.rawValue, transB.rawValue, blasint(m), blasint(n), blasint(k), .init(alpha), .init(A), blasint(lda), .init(B), blasint(ldb), .init(beta), .init(C), blasint(ldc))
@@ -466,7 +462,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func dsymv(_ order: Order, _ uplo: UpLo, _ n: Int, _ alpha: Double, _ A: UnsafePointer<Double>, _ lda: Int, _ x: UnsafePointer<Double>, _ incx: Int, _ beta: Double, _ y: UnsafeMutablePointer<Double>, _ incy: Int) {
-       #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+       #if canImport(COpenBLAS) || canImport(Accelerate)
         cblas_dsymv(order.rawValue, uplo.rawValue, blasint(n), alpha, A, blasint(lda), x, blasint(incx), beta, y, blasint(incy))
         #else
         fatalError("Not available on this platform")
@@ -476,7 +472,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func ssymv(_ order: Order, _ uplo: UpLo, _ n: Int, _ alpha: Float, _ A: UnsafePointer<Float>, _ lda: Int, _ x: UnsafePointer<Float>, _ incx: Int, _ beta: Float, _ y: UnsafeMutablePointer<Float>, _ incy: Int) {
-       #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+       #if canImport(COpenBLAS) || canImport(Accelerate)
         cblas_ssymv(order.rawValue, uplo.rawValue, blasint(n), alpha, A, blasint(lda), x, blasint(incx), beta, y, blasint(incy))
         #else
         fatalError("Not available on this platform")
@@ -486,7 +482,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func zhemv(_ order: Order, _ uplo: UpLo, _ n: Int, _ alpha: Complex<Double>, _ A: UnsafePointer<Complex<Double>>, _ lda: Int, _ x: UnsafePointer<Complex<Double>>, _ incx: Int, _ beta: Complex<Double>, _ y: UnsafeMutablePointer<Complex<Double>>, _ incy: Int) {
-       #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+       #if canImport(COpenBLAS) || canImport(Accelerate)
         withUnsafePointer(to: alpha) { alpha in 
             withUnsafePointer(to: beta) { beta in 
                 cblas_zhemv(order.rawValue, uplo.rawValue, blasint(n), .init(alpha), .init(A), blasint(lda), .init(x), blasint(incx), .init(beta), .init(y), blasint(incy))
@@ -500,7 +496,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func chemv(_ order: Order, _ uplo: UpLo, _ n: Int, _ alpha: Complex<Float>, _ A: UnsafePointer<Complex<Float>>, _ lda: Int, _ x: UnsafePointer<Complex<Float>>, _ incx: Int, _ beta: Complex<Float>, _ y: UnsafeMutablePointer<Complex<Float>>, _ incy: Int) {
-       #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+       #if canImport(COpenBLAS) || canImport(Accelerate)
         withUnsafePointer(to: alpha) { alpha in 
             withUnsafePointer(to: beta) { beta in 
                 cblas_chemv(order.rawValue, uplo.rawValue, blasint(n), .init(alpha), .init(A), blasint(lda), .init(x), blasint(incx), .init(beta), .init(y), blasint(incy))
@@ -514,7 +510,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func dsymm(_ order: Order, _ side: Side, _ uplo: UpLo, _ m: Int, _ n: Int, _ alpha: Double, _ A: UnsafePointer<Double>, _ lda: Int, _ B: UnsafePointer<Double>, _ ldb: Int, _ beta: Double, _ C: UnsafeMutablePointer<Double>, _ ldc: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         cblas_dsymm(order.rawValue, side.rawValue, uplo.rawValue, blasint(m), blasint(n), alpha, A, blasint(lda), B, blasint(ldb), beta, C, blasint(ldc))
         #else
         fatalError("Not available on this platform")
@@ -524,7 +520,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func ssymm(_ order: Order, _ side: Side, _ uplo: UpLo, _ m: Int, _ n: Int, _ alpha: Float, _ A: UnsafePointer<Float>, _ lda: Int, _ B: UnsafePointer<Float>, _ ldb: Int, _ beta: Float, _ C: UnsafeMutablePointer<Float>, _ ldc: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         cblas_ssymm(order.rawValue, side.rawValue, uplo.rawValue, blasint(m), blasint(n), alpha, A, blasint(lda), B, blasint(ldb), beta, C, blasint(ldc))
         #else
         fatalError("Not available on this platform")
@@ -534,7 +530,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func zsymm(_ order: Order, _ side: Side, _ uplo: UpLo, _ m: Int, _ n: Int, _ alpha: Complex<Double>, _ A: UnsafePointer<Complex<Double>>, _ lda: Int, _ B: UnsafePointer<Complex<Double>>, _ ldb: Int, _ beta: Complex<Double>, _ C: UnsafeMutablePointer<Complex<Double>>, _ ldc: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         withUnsafePointer(to: alpha) { alpha in 
             withUnsafePointer(to: beta) { beta in 
                 cblas_zsymm(order.rawValue, side.rawValue, uplo.rawValue, blasint(m), blasint(n), .init(alpha), .init(A), blasint(lda), .init(B), blasint(ldb), .init(beta), .init(C), blasint(ldc))
@@ -548,7 +544,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func csymm(_ order: Order, _ side: Side, _ uplo: UpLo, _ m: Int, _ n: Int, _ alpha: Complex<Float>, _ A: UnsafePointer<Complex<Float>>, _ lda: Int, _ B: UnsafePointer<Complex<Float>>, _ ldb: Int, _ beta: Complex<Float>, _ C: UnsafeMutablePointer<Complex<Float>>, _ ldc: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         withUnsafePointer(to: alpha) { alpha in 
             withUnsafePointer(to: beta) { beta in 
                 cblas_csymm(order.rawValue, side.rawValue, uplo.rawValue, blasint(m), blasint(n), .init(alpha), .init(A), blasint(lda), .init(B), blasint(ldb), .init(beta), .init(C), blasint(ldc))
@@ -562,7 +558,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func zhemm(_ order: Order, _ side: Side, _ uplo: UpLo, _ m: Int, _ n: Int, _ alpha: Complex<Double>, _ A: UnsafePointer<Complex<Double>>, _ lda: Int, _ B: UnsafePointer<Complex<Double>>, _ ldb: Int, _ beta: Complex<Double>, _ C: UnsafeMutablePointer<Complex<Double>>, _ ldc: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         withUnsafePointer(to: alpha) { alpha in 
             withUnsafePointer(to: beta) { beta in 
                 cblas_zhemm(order.rawValue, side.rawValue, uplo.rawValue, blasint(m), blasint(n), .init(alpha), .init(A), blasint(lda), .init(B), blasint(ldb), .init(beta), .init(C), blasint(ldc))
@@ -576,7 +572,7 @@ public extension BLAS {
     @inlinable
     @_transparent
     static func chemm(_ order: Order, _ side: Side, _ uplo: UpLo, _ m: Int, _ n: Int, _ alpha: Complex<Float>, _ A: UnsafePointer<Complex<Float>>, _ lda: Int, _ B: UnsafePointer<Complex<Float>>, _ ldb: Int, _ beta: Complex<Float>, _ C: UnsafeMutablePointer<Complex<Float>>, _ ldc: Int) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows) || canImport(Accelerate)
+        #if canImport(COpenBLAS) || canImport(Accelerate)
         withUnsafePointer(to: alpha) { alpha in 
             withUnsafePointer(to: beta) { beta in 
                 cblas_chemm(order.rawValue, side.rawValue, uplo.rawValue, blasint(m), blasint(n), .init(alpha), .init(A), blasint(lda), .init(B), blasint(ldb), .init(beta), .init(C), blasint(ldc))

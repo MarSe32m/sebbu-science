@@ -1,4 +1,0 @@
-module _CFFTWWindows {
-    header "include.h"
-    export *
-}

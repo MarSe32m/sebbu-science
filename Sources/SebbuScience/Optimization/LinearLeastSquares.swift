@@ -6,8 +6,6 @@
 //
 #if canImport(COpenBLAS)
 import COpenBLAS
-#elseif canImport(_COpenBLASWindows)
-import _COpenBLASWindows
 #elseif canImport(Accelerate)
 import Accelerate
 #endif
@@ -25,7 +23,7 @@ public extension Optimize {
 
     @inlinable
     static func linearLeastSquares(A: Matrix<Double>, _ B: Matrix<Double>) throws -> (result: Matrix<Double>, residuals: Matrix<Double>?) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS)
         let m = lapack_int(A.rows)
         let n = lapack_int(A.columns)
         let nrhs = lapack_int(B.columns)
@@ -126,7 +124,7 @@ public extension Optimize {
 
     @inlinable
     static func linearLeastSquares(A: Matrix<Float>, _ B: Matrix<Float>) throws -> (result: Matrix<Float>, residuals: Matrix<Float>?) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS)
         let m = lapack_int(A.rows)
         let n = lapack_int(A.columns)
         let nrhs = lapack_int(B.columns)
@@ -227,7 +225,7 @@ public extension Optimize {
 
     @inlinable
     static func linearLeastSquares(A: Matrix<Complex<Float>>, _ B: Matrix<Complex<Float>>) throws -> (result: Matrix<Complex<Float>>, residuals: Matrix<Complex<Float>>?) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS)
         let m = lapack_int(A.rows)
         let n = lapack_int(A.columns)
         let nrhs = lapack_int(B.columns)
@@ -328,7 +326,7 @@ public extension Optimize {
 
     @inlinable
     static func linearLeastSquares(A: Matrix<Complex<Double>>, _ B: Matrix<Complex<Double>>) throws -> (result: Matrix<Complex<Double>>, residuals: Matrix<Complex<Double>>?) {
-        #if canImport(COpenBLAS) || canImport(_COpenBLASWindows)
+        #if canImport(COpenBLAS)
         let m = lapack_int(A.rows)
         let n = lapack_int(A.columns)
         let nrhs = lapack_int(B.columns)
