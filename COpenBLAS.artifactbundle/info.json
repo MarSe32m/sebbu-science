@@ -3,7 +3,7 @@
     "artifacts": {
         "COpenBLAS": {
             "type": "staticLibrary",
-            "version": "0.3.30",
+            "version": "0.3.31",
             "variants": [
                 {
                     "path": "lib/linux/libopenblas-x86_64-gnu.a",
