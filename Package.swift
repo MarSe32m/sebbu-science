@@ -8,7 +8,6 @@ let package = Package(
     products: [
         .library(name: "SebbuScience", targets: ["SebbuScience"]),
         .library(name: "CFFTW", targets: ["CFFTW"]),
-        .library(name: "COpenBLAS", targets: ["COpenBLAS"]),
         .library(name: "FFT", targets: ["FFT"]),
         .library(name: "PythonKitUtilities", targets: ["PythonKitUtilities"])
     ],
@@ -17,6 +16,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-algorithms", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
         .package(url: "https://github.com/MarSe32m/sebbu-collections", branch: "main"),
+        .package(url: "https://github.com/MarSe32m/sebbu-copenblas", from: "0.3.32"),
         .package(url: "https://github.com/pvieito/PythonKit", branch: "master")
     ],
     targets: [
@@ -30,10 +30,6 @@ let package = Package(
         .binaryTarget(
             name: "CFFTW", 
             path: "CFFTW.artifactbundle"
-        ),
-        .binaryTarget(
-            name: "COpenBLAS", 
-            path: "COpenBLAS.artifactbundle"
         ),
         .target(
             name: "FFT",
@@ -63,11 +59,11 @@ let package = Package(
                 .target(name: "_SebbuScienceCommon"),
                 .target(name: "FFT"),
                 .target(name: "CFFTW", condition: .when(platforms: [.linux, .windows])),
-                .target(name: "COpenBLAS", condition: .when(platforms: [.linux, .windows])),
                 .target(name: "NumericsExtensions"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
                 .product(name: "Numerics", package: "swift-numerics"),
-                .product(name: "SebbuCollections", package: "sebbu-collections")
+                .product(name: "SebbuCollections", package: "sebbu-collections"),
+                .product(name: "COpenBLAS", package: "sebbu-copenblas", condition: .when(platforms: [.linux, .windows]))
             ],
             cSettings: [
                 .define("ACCELERATE_NEW_LAPACK", .when(platforms: [.macOS])),
