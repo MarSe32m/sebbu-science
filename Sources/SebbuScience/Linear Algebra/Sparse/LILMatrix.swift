@@ -8,7 +8,7 @@
 import RealModule
 import ComplexModule
 
-public struct LILMatrix<T: Sendable>: SparseMatrix, Sendable where T: AlgebraicField {
+public struct LILMatrix<T>: SparseMatrix where T: AlgebraicField {
     @usableFromInline
     var rowList: [[(column: Int, value: T)]]
     
@@ -76,3 +76,8 @@ public struct LILMatrix<T: Sendable>: SparseMatrix, Sendable where T: AlgebraicF
         }
     }
 }
+
+extension LILMatrix: Sendable where T: Sendable {}
+//extension LILMatrix: Equatable where T: Equatable {}
+//extension LILMatrix: Hashable where T: Hashable {}
+//extension LILMatrix: Codable where T: Codable {}

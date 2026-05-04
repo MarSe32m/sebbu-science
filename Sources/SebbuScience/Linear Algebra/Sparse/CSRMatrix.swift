@@ -152,6 +152,20 @@ public extension CSRMatrix where T: AlgebraicField {
 
 public extension CSRMatrix where T == Complex<Double> {
     @inlinable
+    init(from matrix: Matrix<T>, relativeTolerance: T.Magnitude = .ulpOfOne.squareRoot()) {
+        var rowColumnValueTuples: [(row: Int, column: Int, value: T)] = []
+        for i in 0..<matrix.rows {
+            for j in 0..<matrix.columns {
+                if matrix[i, j].isApproximatelyEqual(to: .zero)  {
+                    rowColumnValueTuples.append((i, j, matrix[i, j]))
+                }
+            }
+        }
+        self.init(rows: matrix.rows, columns: matrix.columns, values: [], rowIndices: [], columnIndices: [])
+        setValuesFromRowColumnValueTuples(tuples: rowColumnValueTuples)
+    }
+    
+    @inlinable
     var conjugate: CSRMatrix<T> {
         CSRMatrix(rows: rows, columns: columns, values: values.map { $0.conjugate }, rowIndices: rowIndices, columnIndices: columnIndices)
     }
