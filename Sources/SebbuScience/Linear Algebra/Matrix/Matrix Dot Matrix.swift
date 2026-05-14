@@ -64,11 +64,11 @@ public extension Matrix where T: AlgebraicField {
     @inlinable
     func _dot(_ other: Self, into: inout Self) {
         for i in 0..<rows {
-            for j in 0..<other.columns { into[i, j] = .zero }
+            for j in 0..<other.columns { into[unchecked: i, unchecked: j] = .zero }
             for k in 0..<columns {
-                let A = self[i, k]
+                let A = self[unchecked: i, unchecked: k]
                 for j in 0..<other.columns {
-                    into[i, j] = Relaxed.multiplyAdd(A, other[k, j], into[i, j])
+                    into[unchecked: i, unchecked: j] = Relaxed.multiplyAdd(A, other[unchecked: k, unchecked: j], into[unchecked: i, unchecked: j])
                 }
             }
         }
@@ -77,11 +77,11 @@ public extension Matrix where T: AlgebraicField {
     @inlinable
     func _dot(_ other: Self, multiplied: T, into: inout Self) {
         for i in 0..<rows {
-            for j in 0..<other.columns { into[i, j] = .zero }
+            for j in 0..<other.columns { into[unchecked: i, unchecked: j] = .zero }
             for k in 0..<columns {
-                let A = Relaxed.product(self[i, k], multiplied)
+                let A = Relaxed.product(self[unchecked: i, unchecked: k], multiplied)
                 for j in 0..<other.columns {
-                    into[i, j] = Relaxed.multiplyAdd(A, other[k, j], into[i, j])
+                    into[unchecked: i, unchecked: j] = Relaxed.multiplyAdd(A, other[unchecked: k, unchecked: j], into[unchecked: i, unchecked: j])
                 }
             }
         }
@@ -91,9 +91,9 @@ public extension Matrix where T: AlgebraicField {
     func _dot(_ other: Self, addingInto into: inout Self) {
         for i in 0..<rows {
             for k in 0..<columns {
-                let A = self[i, k]
+                let A = self[unchecked: i, unchecked: k]
                 for j in 0..<other.columns {
-                    into[i, j] = Relaxed.multiplyAdd(A, other[k, j], into[i, j])
+                    into[unchecked: i, unchecked: j] = Relaxed.multiplyAdd(A, other[unchecked: k, unchecked: j], into[unchecked: i, unchecked: j])
                 }
             }
         }
@@ -106,9 +106,9 @@ public extension Matrix where T: AlgebraicField {
         precondition(other.columns == into.columns)
         for i in 0..<rows {
             for k in 0..<columns {
-                let A = Relaxed.product(self[i, k], multiplied)
+                let A = Relaxed.product(self[unchecked: i, unchecked: k], multiplied)
                 for j in 0..<other.columns {
-                    into[i, j] = Relaxed.multiplyAdd(A, other[k, j], into[i, j])
+                    into[unchecked: i, unchecked: j] = Relaxed.multiplyAdd(A, other[unchecked: k, unchecked: j], into[unchecked: i, unchecked: j])
                 }
             }
         }

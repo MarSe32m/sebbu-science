@@ -52,6 +52,7 @@ public struct Matrix<T> {
     @inlinable
     public subscript(_ i: Int, _ j: Int) -> T {
         @_transparent
+        @inline(always)
         _read {
             let index = i &* columns &+ j
             precondition(index < elements.count)
@@ -59,6 +60,7 @@ public struct Matrix<T> {
         }
 
         @_transparent
+        @inline(always)
         _modify {
             let index = i &* columns &+ j
             precondition(index < elements.count)
@@ -69,15 +71,18 @@ public struct Matrix<T> {
     @inlinable
     public subscript(unchecked i: Int, unchecked j: Int) -> T {
         @_transparent
+        @inline(always)
         _read {
             let index = i &* columns &+ j
-            yield elements[index]
+            yield elements.span[unchecked: index]
         }
         
         @_transparent
+        @inline(always)
         _modify {
             let index = i &* columns &+ j
-            yield &elements[index]
+            var span = elements.mutableSpan
+            yield &span[unchecked: index]
         }
     }
     
