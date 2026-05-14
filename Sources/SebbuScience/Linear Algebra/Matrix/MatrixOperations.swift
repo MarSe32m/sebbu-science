@@ -568,6 +568,8 @@ public extension MatrixOperations {
             return .diagonal(from: (0..<A.rows).map { i in .exp(A[i, i]) })
         } else if A.isHermitian {
             return try expmHermitian(A)
+        } else if A.isAntiHermitian {
+            return try expmAntiHermitian(A)
         }
         let I: Matrix<Complex<Float>> = .identity(rows: A.rows)
         let normA = A.oneNormAsDouble
@@ -648,6 +650,38 @@ public extension MatrixOperations {
         return R.dot(U.conjugateTranspose)
     }
     
+    @inlinable
+    static func expmAntiHermitian(_ A: Matrix<Complex<Float>>) throws -> Matrix<Complex<Float>> {
+        let H = .i * A
+        let (eigenValues, eigenVectors) = try MatrixOperations.diagonalizeHermitian(H)
+        let U: Matrix<Complex<Float>> = .from(columns: eigenVectors.map { $0.components })
+        var R = U
+        for j in 0..<R.rows {
+            let theta = eigenValues[j]
+            let phase = Complex<Float>(length: 1.0, phase: -theta)
+            for i in 0..<R.rows {
+                R[i, j] *= phase
+            }
+        }
+        return R.dot(U.conjugateTranspose)
+    }
+    
+    @inlinable
+    static func expmIHt(_ H: Matrix<Complex<Float>>, t: Float) throws -> Matrix<Complex<Float>> {
+        guard H.isSquare else { throw MatrixExponentialError.nonSquareMatrix }
+        let (eigenValues, eigenVectors) = try MatrixOperations.diagonalizeHermitian(H)
+        let U: Matrix<Complex<Float>> = .from(columns: eigenVectors.map { $0.components })
+        var R = U
+        for j in 0..<R.rows {
+            let theta = eigenValues[j] * t
+            let phase = Complex<Float>(length: 1.0, phase: -theta)
+            for i in 0..<R.rows {
+                R[i, j] *= phase
+            }
+        }
+        return R.dot(U.conjugateTranspose)
+    }
+    
     /// Computes the matrix exponential `exp(A)`.
     ///
     /// This implementation uses the scaling-and-squaring method with the
@@ -677,6 +711,8 @@ public extension MatrixOperations {
             return .diagonal(from: (0..<A.rows).map { i in .exp(A[i, i]) })
         } else if A.isHermitian {
             return try expmHermitian(A)
+        } else if A.isAntiHermitian {
+            return try expmAntiHermitian(A)
         }
         let I: Matrix<Complex<Double>> = .identity(rows: A.rows)
         let normA = A.oneNorm
@@ -752,6 +788,38 @@ public extension MatrixOperations {
             let ew = Double.exp(eigenValues[j])
             for i in 0..<R.rows {
                 R[i, j] *= ew
+            }
+        }
+        return R.dot(U.conjugateTranspose)
+    }
+    
+    @inlinable
+    static func expmAntiHermitian(_ A: Matrix<Complex<Double>>) throws -> Matrix<Complex<Double>> {
+        let H = .i * A
+        let (eigenValues, eigenVectors) = try MatrixOperations.diagonalizeHermitian(H)
+        let U: Matrix<Complex<Double>> = .from(columns: eigenVectors.map { $0.components })
+        var R = U
+        for j in 0..<R.rows {
+            let theta = eigenValues[j]
+            let phase = Complex<Double>(length: 1.0, phase: -theta)
+            for i in 0..<R.rows {
+                R[i, j] *= phase
+            }
+        }
+        return R.dot(U.conjugateTranspose)
+    }
+    
+    @inlinable
+    static func expmIHt(_ H: Matrix<Complex<Double>>, t: Double) throws -> Matrix<Complex<Double>> {
+        guard H.isSquare else { throw MatrixExponentialError.nonSquareMatrix }
+        let (eigenValues, eigenVectors) = try MatrixOperations.diagonalizeHermitian(H)
+        let U: Matrix<Complex<Double>> = .from(columns: eigenVectors.map { $0.components })
+        var R = U
+        for j in 0..<R.rows {
+            let theta = eigenValues[j] * t
+            let phase = Complex<Double>(length: 1.0, phase: -theta)
+            for i in 0..<R.rows {
+                R[i, j] *= phase
             }
         }
         return R.dot(U.conjugateTranspose)

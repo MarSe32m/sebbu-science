@@ -865,10 +865,16 @@ struct MatrixExponentialTests {
         #expect(expA.dot(expA.conjugateTranspose).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-12))
         #expect(expA.conjugateTranspose.dot(expA).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-12))
         
+        expA = try MatrixOperations.expmAntiHermitian(A)
+        #expect(expA.dot(expA.conjugateTranspose).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-12))
+        #expect(expA.conjugateTranspose.dot(expA).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-12))
+        
         // Hermitian
         A = .init(elements: [.one, 2.0 * .i, -2.0 * .i, Complex(4.0)], rows: 2, columns: 2)
         expA = try MatrixOperations.expm(A)
         let result: Matrix<Complex<Double>> = .init(elements: [Complex(30.482631820515316, 0.0), Complex(0.0, 58.96526364103063), Complex(0.0, -58.96526364103063), Complex(118.93052728206126, 0.0)], rows: 2, columns: 2)
+        #expect(expA.isApproximatelyEqual(to: result, absoluteTolerance: 1e-12))
+        expA = try MatrixOperations.expmHermitian(A)
         #expect(expA.isApproximatelyEqual(to: result, absoluteTolerance: 1e-12))
     }
     
@@ -899,10 +905,16 @@ struct MatrixExponentialTests {
         #expect(expA.dot(expA.conjugateTranspose).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-6))
         #expect(expA.conjugateTranspose.dot(expA).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-6))
         
+        expA = try MatrixOperations.expmAntiHermitian(A)
+        #expect(expA.dot(expA.conjugateTranspose).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-6))
+        #expect(expA.conjugateTranspose.dot(expA).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-6))
+        
         // Hermitian
         A = .init(elements: [.one, 2.0 * .i, -2.0 * .i, Complex(4.0)], rows: 2, columns: 2)
         expA = try MatrixOperations.expm(A)
         let result: Matrix<Complex<Float>> = .init(elements: [Complex(30.482631820515316, 0.0), Complex(0.0, 58.96526364103063), Complex(0.0, -58.96526364103063), Complex(118.93052728206126, 0.0)], rows: 2, columns: 2)
-        #expect(expA.isApproximatelyEqual(to: result, absoluteTolerance: 1e-12))
+        #expect(expA.isApproximatelyEqual(to: result, absoluteTolerance: 1e-6))
+        expA = try MatrixOperations.expmHermitian(A)
+        #expect(expA.isApproximatelyEqual(to: result, absoluteTolerance: 1e-6))
     }
 }

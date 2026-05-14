@@ -270,6 +270,17 @@ public extension Matrix where T: AlgebraicField, T.Magnitude: FloatingPoint {
         }
         return true
     }
+    
+    @inlinable
+    var isAntiSymmetric: Bool {
+        if rows != columns { return false }
+        for i in 0..<rows {
+            for j in 0..<columns {
+                if !self[i, j].isApproximatelyEqual(to: -self[j, i]) { return false }
+            }
+        }
+        return true
+    }
 }
 
 public extension Matrix where T == Complex<Double> {
@@ -277,8 +288,21 @@ public extension Matrix where T == Complex<Double> {
     var isHermitian: Bool {
         if rows != columns { return false }
         for i in 0..<rows {
-            for j in 0..<columns where j != i {
+            for j in 0..<columns {
                 if !self[i, j].isApproximatelyEqual(to: self[j, i].conjugate) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+    
+    @inlinable
+    var isAntiHermitian: Bool {
+        if rows != columns { return false }
+        for i in 0..<rows {
+            for j in 0..<columns {
+                if !self[i, j].conjugate.isApproximatelyEqual(to: -self[j, i]) {
                     return false
                 }
             }
@@ -300,6 +324,18 @@ public extension Matrix where T == Complex<Float> {
         }
         return true
     }
+    @inlinable
+    var isAntiHermitian: Bool {
+        if rows != columns { return false }
+        for i in 0..<rows {
+            for j in 0..<columns {
+                if !self[i, j].conjugate.isApproximatelyEqual(to: -self[j, i]) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
 }
 
 public extension Matrix where T: AlgebraicField & Real, T.Magnitude: FloatingPoint {
@@ -309,6 +345,18 @@ public extension Matrix where T: AlgebraicField & Real, T.Magnitude: FloatingPoi
         for i in 0..<rows {
             for j in 0..<columns where j != i {
                 if !self[i, j].isApproximatelyEqual(to: self[j, i].conjugate) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+    @inlinable
+    var isAntiHermitian: Bool {
+        if rows != columns { return false }
+        for i in 0..<rows {
+            for j in 0..<columns {
+                if !self[i, j].conjugate.isApproximatelyEqual(to: -self[j, i]) {
                     return false
                 }
             }
