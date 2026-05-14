@@ -310,3 +310,470 @@ public enum MatrixOperations {
         }
     }
 }
+
+public extension MatrixOperations {
+    enum MatrixExponentialError: Error {
+        case nonSquareMatrix
+        case info(Int)
+    }
+    
+    /// Computes the matrix exponential `exp(A)` in single precision.
+    ///
+    /// This uses the same scaling-and-squaring Padé `[13/13]` algorithm as the
+    /// double-precision implementation, but all matrix operations are performed
+    /// in `Float`. The scaling exponent is selected from a `Double`-accumulated
+    /// 1-norm for improved robustness.
+    ///
+    /// - Important: Single-precision results should be expected to have
+    ///              significantly lower accuracy than the `Double` implementation,
+    ///              especially for non-normal or ill-conditioned matrices.
+    ///
+    /// - Parameter A: A square dense matrix.
+    /// - Returns: The matrix exponential `exp(A)`.
+    /// - Throws: `MatrixExponentialError.nonSquareMatrix` if `A` is not square.
+    ///          May also throw if the internal linear solve fails.
+    ///
+    /// - Complexity: `O(n^3)` for an `n × n` dense matrix.
+    /// - Note: The Padé step solves `(V - U) R = V + U` using LAPACK rather than
+    ///         explicitly forming an inverse.
+    ///
+    /// - References:
+    ///   N. J. Higham, "The Scaling and Squaring Method for the Matrix
+    ///   Exponential Revisited", SIAM J. Matrix Anal. Appl. 26(4), 1179–1193,
+    ///   2005. DOI: 10.1137/04061101X.
+    @inlinable
+    static func expm(_ A: Matrix<Float>) throws -> Matrix<Float> {
+        guard A.isSquare else { throw MatrixExponentialError.nonSquareMatrix }
+        if A.isDiagonal {
+            return .diagonal(from: (0..<A.rows).map { i in .exp(A[i, i]) })
+        } else if A.isSymmetric {
+            return try expmSymmetric(A)
+        }
+        let I: Matrix<Float> = .identity(rows: A.rows)
+        let normA = A.oneNormAsDouble
+        if normA == .zero { return I }
+        let s: Int = scalingExponent(normA)
+
+        let scale = Float(sign: .plus, exponent: -s, significand: 1.0)
+        let As = scale * A
+
+        let b: [_ of Float] = [
+            64764752532480000.0,
+            32382376266240000.0,
+            7771770303897600.0,
+            1187353796428800.0,
+            129060195264000.0,
+            10559470521600.0,
+            670442572800.0,
+            33522128640.0,
+            1323241920.0,
+            40840800.0,
+            960960.0,
+            16380.0,
+            182.0,
+            1.0
+        ]
+
+        var scratch = I
+
+        let A2 = As.dot(As)
+        let A4 = A2.dot(A2)
+        let A6 = A2.dot(A4)
+
+        var innerU = b[13] * A6
+        innerU.add(A4, multiplied: b[11])
+        innerU.add(A2, multiplied: b[9])
+
+        A6.dot(innerU, into: &scratch)
+        scratch.add(A6, multiplied: b[7])
+        scratch.add(A4, multiplied: b[5])
+        scratch.add(A2, multiplied: b[3])
+        scratch.add(I, multiplied: b[1])
+
+        let U = As.dot(scratch)
+
+        var innerV = b[12] * A6
+        innerV.add(A4, multiplied: b[10])
+        innerV.add(A2, multiplied: b[8])
+
+        var V = A6.dot(innerV)
+        V.add(A6, multiplied: b[6])
+        V.add(A4, multiplied: b[4])
+        V.add(A2, multiplied: b[2])
+        V.add(I, multiplied: b[0])
+
+        let P = V + U
+        let Q = V - U
+
+        var R = try MatrixOperations.solve(A: Q, B: P)
+
+        for _ in 0..<s {
+            R = R.dot(R)
+        }
+
+        return R
+    }
+    
+    @inlinable
+    static func expmSymmetric(_ A: Matrix<Float>) throws -> Matrix<Float> {
+        let (eigenValues, eigenVectors) = try MatrixOperations.diagonalizeSymmetric(A)
+        let U: Matrix<Float> = .from(columns: eigenVectors.map { $0.components })
+        var R = U
+        for j in 0..<R.rows {
+            let ew = Float.exp(eigenValues[j])
+            for i in 0..<R.rows {
+                R[i, j] *= ew
+            }
+        }
+        return R.dot(U.transpose)
+    }
+    
+    /// Computes the matrix exponential `exp(A)`.
+    ///
+    /// This implementation uses the scaling-and-squaring method with the
+    /// fixed `[13/13]` Padé approximant. The input matrix is first scaled as
+    /// `A / 2^s`, where `s` is chosen from the matrix 1-norm, then the Padé
+    /// approximant is evaluated, and the result is squared `s` times.
+    ///
+    /// For diagonal matrices, the exponential is computed elementwise.
+    ///
+    /// - Parameter A: A square dense matrix.
+    /// - Returns: The matrix exponential `exp(A)`.
+    /// - Throws: `MatrixExponentialError.nonSquareMatrix` if `A` is not square.
+    ///          May also throw if the internal linear solve fails.
+    ///
+    /// - Complexity: `O(n^3)` for an `n × n` dense matrix.
+    /// - Note: The Padé step solves `(V - U) R = V + U` using LAPACK rather than
+    ///         explicitly forming an inverse.
+    ///
+    /// - References:
+    ///   N. J. Higham, "The Scaling and Squaring Method for the Matrix
+    ///   Exponential Revisited", SIAM J. Matrix Anal. Appl. 26(4), 1179–1193,
+    ///   2005. DOI: 10.1137/04061101X.
+    @inlinable
+    static func expm(_ A: Matrix<Double>) throws -> Matrix<Double> {
+        guard A.isSquare else { throw MatrixExponentialError.nonSquareMatrix }
+        if A.isDiagonal {
+            return .diagonal(from: (0..<A.rows).map { i in .exp(A[i, i]) })
+        } else if A.isSymmetric {
+            return try expmSymmetric(A)
+        }
+        let I: Matrix<Double> = .identity(rows: A.rows)
+        let normA = A.oneNorm
+        if normA == .zero { return I }
+        let s: Int = scalingExponent(normA)
+
+        let scale = Double(sign: .plus, exponent: -s, significand: 1.0)
+        let As = scale * A
+
+        let b: [_ of Double] = [
+            64764752532480000.0,
+            32382376266240000.0,
+            7771770303897600.0,
+            1187353796428800.0,
+            129060195264000.0,
+            10559470521600.0,
+            670442572800.0,
+            33522128640.0,
+            1323241920.0,
+            40840800.0,
+            960960.0,
+            16380.0,
+            182.0,
+            1.0
+        ]
+
+        var scratch = I
+
+        let A2 = As.dot(As)
+        let A4 = A2.dot(A2)
+        let A6 = A2.dot(A4)
+
+        var innerU = b[13] * A6
+        innerU.add(A4, multiplied: b[11])
+        innerU.add(A2, multiplied: b[9])
+
+        A6.dot(innerU, into: &scratch)
+        scratch.add(A6, multiplied: b[7])
+        scratch.add(A4, multiplied: b[5])
+        scratch.add(A2, multiplied: b[3])
+        scratch.add(I, multiplied: b[1])
+
+        let U = As.dot(scratch)
+
+        var innerV = b[12] * A6
+        innerV.add(A4, multiplied: b[10])
+        innerV.add(A2, multiplied: b[8])
+
+        var V = A6.dot(innerV)
+        V.add(A6, multiplied: b[6])
+        V.add(A4, multiplied: b[4])
+        V.add(A2, multiplied: b[2])
+        V.add(I, multiplied: b[0])
+
+        let P = V + U
+        let Q = V - U
+
+        var R = try MatrixOperations.solve(A: Q, B: P)
+
+        for _ in 0..<s {
+            R = R.dot(R)
+        }
+
+        return R
+    }
+    
+    @inlinable
+    static func expmSymmetric(_ A: Matrix<Double>) throws -> Matrix<Double> {
+        let (eigenValues, eigenVectors) = try MatrixOperations.diagonalizeSymmetric(A)
+        let U: Matrix<Double> = .from(columns: eigenVectors.map { $0.components })
+        var R = U
+        for j in 0..<R.rows {
+            let ew = Double.exp(eigenValues[j])
+            for i in 0..<R.rows {
+                R[i, j] *= ew
+            }
+        }
+        return R.dot(U.transpose)
+    }
+    
+    /// Computes the matrix exponential `exp(A)` in single precision.
+    ///
+    /// This uses the same scaling-and-squaring Padé `[13/13]` algorithm as the
+    /// double-precision implementation, but all matrix operations are performed
+    /// in `Float`. The scaling exponent is selected from a `Double`-accumulated
+    /// 1-norm for improved robustness.
+    ///
+    /// - Important: Single-precision results should be expected to have
+    ///              significantly lower accuracy than the `Double` implementation,
+    ///              especially for non-normal or ill-conditioned matrices.
+    ///
+    /// - Parameter A: A square dense matrix.
+    /// - Returns: The matrix exponential `exp(A)`.
+    /// - Throws: `MatrixExponentialError.nonSquareMatrix` if `A` is not square.
+    ///          May also throw if the internal linear solve fails.
+    ///
+    /// - Complexity: `O(n^3)` for an `n × n` dense matrix.
+    /// - Note: The Padé step solves `(V - U) R = V + U` using LAPACK rather than
+    ///         explicitly forming an inverse.
+    ///
+    /// - References:
+    ///   N. J. Higham, "The Scaling and Squaring Method for the Matrix
+    ///   Exponential Revisited", SIAM J. Matrix Anal. Appl. 26(4), 1179–1193,
+    ///   2005. DOI: 10.1137/04061101X.
+    @inlinable
+    static func expm(_ A: Matrix<Complex<Float>>) throws -> Matrix<Complex<Float>> {
+        guard A.isSquare else { throw MatrixExponentialError.nonSquareMatrix }
+        if A.isDiagonal {
+            return .diagonal(from: (0..<A.rows).map { i in .exp(A[i, i]) })
+        } else if A.isHermitian {
+            return try expmHermitian(A)
+        }
+        let I: Matrix<Complex<Float>> = .identity(rows: A.rows)
+        let normA = A.oneNormAsDouble
+        if normA == .zero { return I }
+        let s: Int = scalingExponent(normA)
+
+        let scale = Float(sign: .plus, exponent: -s, significand: 1.0)
+        let As = scale * A
+
+        let b: [Float] = [
+            64764752532480000.0,
+            32382376266240000.0,
+            7771770303897600.0,
+            1187353796428800.0,
+            129060195264000.0,
+            10559470521600.0,
+            670442572800.0,
+            33522128640.0,
+            1323241920.0,
+            40840800.0,
+            960960.0,
+            16380.0,
+            182.0,
+            1.0
+        ]
+
+        var scratch = I
+
+        let A2 = As.dot(As)
+        let A4 = A2.dot(A2)
+        let A6 = A2.dot(A4)   // Important: A^6, not A^8
+
+        var innerU = b[13] * A6
+        innerU.add(A4, multiplied: b[11])
+        innerU.add(A2, multiplied: b[9])
+
+        A6.dot(innerU, into: &scratch)
+        scratch.add(A6, multiplied: b[7])
+        scratch.add(A4, multiplied: b[5])
+        scratch.add(A2, multiplied: b[3])
+        scratch.add(I, multiplied: b[1])
+
+        let U = As.dot(scratch)
+
+        var innerV = b[12] * A6
+        innerV.add(A4, multiplied: b[10])
+        innerV.add(A2, multiplied: b[8])
+
+        var V = A6.dot(innerV)
+        V.add(A6, multiplied: b[6])
+        V.add(A4, multiplied: b[4])
+        V.add(A2, multiplied: b[2])
+        V.add(I, multiplied: b[0])
+
+        let P = V + U
+        let Q = V - U
+
+        var R = try MatrixOperations.solve(A: Q, B: P)
+
+        for _ in 0..<s {
+            R = R.dot(R)
+        }
+
+        return R
+    }
+    
+    @inlinable
+    static func expmHermitian(_ A: Matrix<Complex<Float>>) throws -> Matrix<Complex<Float>> {
+        let (eigenValues, eigenVectors) = try MatrixOperations.diagonalizeHermitian(A)
+        let U: Matrix<Complex<Float>> = .from(columns: eigenVectors.map { $0.components })
+        var R = U
+        for j in 0..<R.rows {
+            let ew = Float.exp(eigenValues[j])
+            for i in 0..<R.rows {
+                R[i, j] *= ew
+            }
+        }
+        return R.dot(U.conjugateTranspose)
+    }
+    
+    /// Computes the matrix exponential `exp(A)`.
+    ///
+    /// This implementation uses the scaling-and-squaring method with the
+    /// fixed `[13/13]` Padé approximant. The input matrix is first scaled as
+    /// `A / 2^s`, where `s` is chosen from the matrix 1-norm, then the Padé
+    /// approximant is evaluated, and the result is squared `s` times.
+    ///
+    /// For diagonal matrices, the exponential is computed elementwise.
+    ///
+    /// - Parameter A: A square dense matrix.
+    /// - Returns: The matrix exponential `exp(A)`.
+    /// - Throws: `MatrixExponentialError.nonSquareMatrix` if `A` is not square.
+    ///          May also throw if the internal linear solve fails.
+    ///
+    /// - Complexity: `O(n^3)` for an `n × n` dense matrix.
+    /// - Note: The Padé step solves `(V - U) R = V + U` using LAPACK rather than
+    ///         explicitly forming an inverse.
+    ///
+    /// - References:
+    ///   N. J. Higham, "The Scaling and Squaring Method for the Matrix
+    ///   Exponential Revisited", SIAM J. Matrix Anal. Appl. 26(4), 1179–1193,
+    ///   2005. DOI: 10.1137/04061101X.
+    @inlinable
+    static func expm(_ A: Matrix<Complex<Double>>) throws -> Matrix<Complex<Double>> {
+        guard A.isSquare else { throw MatrixExponentialError.nonSquareMatrix }
+        if A.isDiagonal {
+            return .diagonal(from: (0..<A.rows).map { i in .exp(A[i, i]) })
+        } else if A.isHermitian {
+            return try expmHermitian(A)
+        }
+        let I: Matrix<Complex<Double>> = .identity(rows: A.rows)
+        let normA = A.oneNorm
+        if normA == .zero { return I }
+        let s: Int = scalingExponent(normA)
+
+        let scale = Double(sign: .plus, exponent: -s, significand: 1.0)
+        let As = scale * A
+
+        let b: [Double] = [
+            64764752532480000.0,
+            32382376266240000.0,
+            7771770303897600.0,
+            1187353796428800.0,
+            129060195264000.0,
+            10559470521600.0,
+            670442572800.0,
+            33522128640.0,
+            1323241920.0,
+            40840800.0,
+            960960.0,
+            16380.0,
+            182.0,
+            1.0
+        ]
+
+        var scratch = I
+
+        let A2 = As.dot(As)
+        let A4 = A2.dot(A2)
+        let A6 = A2.dot(A4)   // Important: A^6, not A^8
+
+        var innerU = b[13] * A6
+        innerU.add(A4, multiplied: b[11])
+        innerU.add(A2, multiplied: b[9])
+
+        A6.dot(innerU, into: &scratch)
+        scratch.add(A6, multiplied: b[7])
+        scratch.add(A4, multiplied: b[5])
+        scratch.add(A2, multiplied: b[3])
+        scratch.add(I, multiplied: b[1])
+
+        let U = As.dot(scratch)
+
+        var innerV = b[12] * A6
+        innerV.add(A4, multiplied: b[10])
+        innerV.add(A2, multiplied: b[8])
+
+        var V = A6.dot(innerV)
+        V.add(A6, multiplied: b[6])
+        V.add(A4, multiplied: b[4])
+        V.add(A2, multiplied: b[2])
+        V.add(I, multiplied: b[0])
+
+        let P = V + U
+        let Q = V - U
+
+        var R = try MatrixOperations.solve(A: Q, B: P)
+
+        for _ in 0..<s {
+            R = R.dot(R)
+        }
+
+        return R
+    }
+    
+    @inlinable
+    static func expmHermitian(_ A: Matrix<Complex<Double>>) throws -> Matrix<Complex<Double>> {
+        let (eigenValues, eigenVectors) = try MatrixOperations.diagonalizeHermitian(A)
+        let U: Matrix<Complex<Double>> = .from(columns: eigenVectors.map { $0.components })
+        var R = U
+        for j in 0..<R.rows {
+            let ew = Double.exp(eigenValues[j])
+            for i in 0..<R.rows {
+                R[i, j] *= ew
+            }
+        }
+        return R.dot(U.conjugateTranspose)
+    }
+    
+    @inline(always)
+    @inlinable
+    internal static func scalingExponent(_ norm: Double) -> Int {
+        let theta13 = 5.371920351148152
+
+        guard norm > theta13 else {
+            return 0
+        }
+
+        var scaledNorm = norm
+        var s = 0
+
+        while scaledNorm > theta13 {
+            scaledNorm *= 0.5
+            s += 1
+        }
+
+        return s
+    }
+}

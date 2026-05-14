@@ -768,3 +768,141 @@ struct SchurDecompositionTests {
         }
     }
 }
+
+struct MatrixExponentialTests {
+    @Test("MatrixOperations.expm(Matrix<Double>")
+    func expmDouble() throws {
+        // Diagonal matrix
+        let dim: Int = 10
+        let diagonal = (0..<dim).map { _ in Double.random(in: -10...10) }
+        var A: Matrix<Double> = .diagonal(from: diagonal)
+        var expA = try MatrixOperations.expm(A)
+        for i in 0..<A.rows {
+            #expect(Double.exp(diagonal[i]).isApproximatelyEqual(to: expA[i, i], relativeTolerance: 1e-9))
+        }
+        
+        // Nilpotent matrix
+        A = .init(elements: [.zero, .random(in: -10...10),
+                             .zero, .zero], rows: 2, columns: 2)
+        expA = try MatrixOperations.expm(A)
+        #expect(expA[0, 0].isApproximatelyEqual(to: 1.0))
+        #expect(expA[0, 1].isApproximatelyEqual(to: A[0, 1]))
+        #expect(expA[1, 0].isApproximatelyEqual(to: .zero))
+        #expect(expA[1, 1].isApproximatelyEqual(to: 1.0))
+        
+        // Anti-symmetric
+        A = .init(elements: [.zero,  3.0, -3.0, .zero], rows: 2, columns: 2)
+        expA = try MatrixOperations.expm(A)
+        let identity: Matrix<Double> = .identity(rows: A.rows)
+        #expect(expA.dot(expA.transpose).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-12))
+        #expect(expA.transpose.dot(expA).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-12))
+        
+        // Symmetric
+        A = .init(elements: [1.0, 2.0, 2.0, 4.0], rows: 2, columns: 2)
+        expA = try MatrixOperations.expm(A)
+        let result: Matrix<Double> = .init(elements: [30.482631820515316, 58.96526364103063, 58.96526364103063, 118.93052728206126], rows: 2, columns: 2)
+        #expect(expA.isApproximatelyEqual(to: result, absoluteTolerance: 1e-12))
+    }
+    
+    @Test("MatrixOperations.expm(Matrix<Float>")
+    func expmFloat() throws {
+        // Diagonal matrix
+        let dim: Int = 10
+        let diagonal = (0..<dim).map { _ in Float.random(in: -10...10) }
+        var A: Matrix<Float> = .diagonal(from: diagonal)
+        var expA = try MatrixOperations.expm(A)
+        for i in 0..<A.rows {
+            #expect(Float.exp(diagonal[i]).isApproximatelyEqual(to: expA[i, i], relativeTolerance: 1e-9))
+        }
+        
+        // Nilpotent matrix
+        A = .init(elements: [.zero, .random(in: -10...10),
+                             .zero, .zero], rows: 2, columns: 2)
+        expA = try MatrixOperations.expm(A)
+        #expect(expA[0, 0].isApproximatelyEqual(to: 1.0))
+        #expect(expA[0, 1].isApproximatelyEqual(to: A[0, 1]))
+        #expect(expA[1, 0].isApproximatelyEqual(to: .zero))
+        #expect(expA[1, 1].isApproximatelyEqual(to: 1.0))
+        
+        // Anti-symmetric
+        A = .init(elements: [.zero,  3.0, -3.0, .zero], rows: 2, columns: 2)
+        expA = try MatrixOperations.expm(A)
+        let identity: Matrix<Float> = .identity(rows: A.rows)
+        #expect(expA.dot(expA.transpose).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-6))
+        #expect(expA.transpose.dot(expA).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-6))
+        
+        // Symmetric
+        A = .init(elements: [1.0, 2.0, 2.0, 4.0], rows: 2, columns: 2)
+        expA = try MatrixOperations.expm(A)
+        let result: Matrix<Float> = .init(elements: [30.482631820515316, 58.96526364103063, 58.96526364103063, 118.93052728206126], rows: 2, columns: 2)
+        #expect(expA.isApproximatelyEqual(to: result, absoluteTolerance: 1e-12))
+    }
+    
+    @Test("MatrixOperations.expm(Matrix<Complex<Double>>")
+    func expmComplexDouble() throws {
+        // Diagonal matrix
+        let dim: Int = 10
+        let diagonal = (0..<dim).map { _ in Complex<Double>.random(in: -10...10) }
+        var A: Matrix<Complex<Double>> = .diagonal(from: diagonal)
+        var expA = try MatrixOperations.expm(A)
+        for i in 0..<A.rows {
+            #expect(Complex<Double>.exp(diagonal[i]).isApproximatelyEqual(to: expA[i, i], relativeTolerance: 1e-3))
+        }
+        
+        // Nilpotent matrix
+        A = .init(elements: [.zero, .random(in: -10...10),
+                             .zero, .zero], rows: 2, columns: 2)
+        expA = try MatrixOperations.expm(A)
+        #expect(expA[0, 0].isApproximatelyEqual(to: .one))
+        #expect(expA[0, 1].isApproximatelyEqual(to: A[0, 1]))
+        #expect(expA[1, 0].isApproximatelyEqual(to: .zero))
+        #expect(expA[1, 1].isApproximatelyEqual(to: .one))
+        
+        // Skew Hermitian
+        A = .init(elements: [-.i,  Complex(3.0), Complex(-3.0), 2.0 * .i], rows: 2, columns: 2)
+        expA = try MatrixOperations.expm(A)
+        let identity: Matrix<Complex<Double>> = .identity(rows: A.rows)
+        #expect(expA.dot(expA.conjugateTranspose).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-12))
+        #expect(expA.conjugateTranspose.dot(expA).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-12))
+        
+        // Hermitian
+        A = .init(elements: [.one, 2.0 * .i, -2.0 * .i, Complex(4.0)], rows: 2, columns: 2)
+        expA = try MatrixOperations.expm(A)
+        let result: Matrix<Complex<Double>> = .init(elements: [Complex(30.482631820515316, 0.0), Complex(0.0, 58.96526364103063), Complex(0.0, -58.96526364103063), Complex(118.93052728206126, 0.0)], rows: 2, columns: 2)
+        #expect(expA.isApproximatelyEqual(to: result, absoluteTolerance: 1e-12))
+    }
+    
+    @Test("MatrixOperations.expm(Matrix<Complex<Double>>")
+    func expmComplexFloat() throws {
+        // Diagonal matrix
+        let dim: Int = 10
+        let diagonal = (0..<dim).map { _ in Complex<Float>.random(in: -10...10) }
+        var A: Matrix<Complex<Float>> = .diagonal(from: diagonal)
+        var expA = try MatrixOperations.expm(A)
+        for i in 0..<A.rows {
+            #expect(Complex<Float>.exp(diagonal[i]).isApproximatelyEqual(to: expA[i, i], relativeTolerance: 1e-3))
+        }
+        
+        // Nilpotent matrix
+        A = .init(elements: [.zero, .random(in: -10...10),
+                             .zero, .zero], rows: 2, columns: 2)
+        expA = try MatrixOperations.expm(A)
+        #expect(expA[0, 0].isApproximatelyEqual(to: .one))
+        #expect(expA[0, 1].isApproximatelyEqual(to: A[0, 1]))
+        #expect(expA[1, 0].isApproximatelyEqual(to: .zero))
+        #expect(expA[1, 1].isApproximatelyEqual(to: .one))
+        
+        // Skew Hermitian
+        A = .init(elements: [-.i,  Complex(3.0), Complex(-3.0), 2.0 * .i], rows: 2, columns: 2)
+        expA = try MatrixOperations.expm(A)
+        let identity: Matrix<Complex<Float>> = .identity(rows: A.rows)
+        #expect(expA.dot(expA.conjugateTranspose).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-6))
+        #expect(expA.conjugateTranspose.dot(expA).isApproximatelyEqual(to: identity, absoluteTolerance: 1e-6))
+        
+        // Hermitian
+        A = .init(elements: [.one, 2.0 * .i, -2.0 * .i, Complex(4.0)], rows: 2, columns: 2)
+        expA = try MatrixOperations.expm(A)
+        let result: Matrix<Complex<Float>> = .init(elements: [Complex(30.482631820515316, 0.0), Complex(0.0, 58.96526364103063), Complex(0.0, -58.96526364103063), Complex(118.93052728206126, 0.0)], rows: 2, columns: 2)
+        #expect(expA.isApproximatelyEqual(to: result, absoluteTolerance: 1e-12))
+    }
+}

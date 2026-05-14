@@ -25,6 +25,13 @@ public struct Matrix<T> {
     }
     
     @inlinable
+    @inline(always)
+    @_transparent
+    public var isSquare: Bool {
+        rows == columns
+    }
+    
+    @inlinable
     public init(elements: [T], rows: Int, columns: Int) {
         precondition(elements.count == rows * columns)
         self.elements = elements

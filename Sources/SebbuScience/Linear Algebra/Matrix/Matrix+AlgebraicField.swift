@@ -148,6 +148,18 @@ public extension Matrix where T: Real {
         }
         return result.squareRoot()
     }
+    
+    @inlinable
+    var oneNorm: T {
+        elements.reduce(into: T.zero) { $0 += $1.magnitude }
+    }
+}
+
+public extension Matrix where T == Float {
+    @inlinable
+    var oneNormAsDouble: Double {
+        elements.reduce(into: .zero) { $0 += Double($1).magnitude }
+    }
 }
 
 public extension Matrix<Complex<Double>> {
@@ -176,6 +188,11 @@ public extension Matrix<Complex<Double>> {
             norm += element.lengthSquared
         }
         return norm.squareRoot()
+    }
+    
+    @inlinable
+    var oneNorm: Double {
+        elements.reduce(into: Double.zero) { $0 += $1.length }
     }
 }
 
@@ -206,6 +223,16 @@ public extension Matrix<Complex<Float>> {
         }
         return norm.squareRoot()
     }
+    
+    @inlinable
+    var oneNorm: Float {
+        elements.reduce(into: Float.zero) { $0 += $1.length }
+    }
+    
+    @inlinable
+    var oneNormAsDouble: Double {
+        elements.reduce(into: Double.zero) { $0 += Complex(Double($1.real), Double($1.imaginary)).length }
+    }
 }
 
 public extension Matrix where T: AlgebraicField, T.Magnitude: FloatingPoint {
@@ -214,6 +241,77 @@ public extension Matrix where T: AlgebraicField, T.Magnitude: FloatingPoint {
         if rows != other.rows || columns != other.columns { return false }
         for i in 0..<elements.count {
             if !elements[i].isApproximatelyEqual(to: other.elements[i], absoluteTolerance: absoluteTolerance, relativeTolerance: relativeTolerance, norm: \.magnitude) { return false }
+        }
+        return true
+    }
+    
+    @inlinable
+    var isDiagonal: Bool {
+        if rows != columns { return false }
+        for i in 0..<rows {
+            for j in 0..<columns where j != i {
+                if !self[i, j].isApproximatelyEqual(to: .zero) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+    
+    @inlinable
+    var isSymmetric: Bool {
+        if rows != columns { return false }
+        for i in 0..<rows {
+            for j in 0..<columns where j != i {
+                if !self[i, j].isApproximatelyEqual(to: self[j, i]) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+}
+
+public extension Matrix where T == Complex<Double> {
+    @inlinable
+    var isHermitian: Bool {
+        if rows != columns { return false }
+        for i in 0..<rows {
+            for j in 0..<columns where j != i {
+                if !self[i, j].isApproximatelyEqual(to: self[j, i].conjugate) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+}
+
+public extension Matrix where T == Complex<Float> {
+    @inlinable
+    var isHermitian: Bool {
+        if rows != columns { return false }
+        for i in 0..<rows {
+            for j in 0..<columns where j != i {
+                if !self[i, j].isApproximatelyEqual(to: self[j, i].conjugate) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+}
+
+public extension Matrix where T: AlgebraicField & Real, T.Magnitude: FloatingPoint {
+    @inlinable
+    var isHermitian: Bool {
+        if rows != columns { return false }
+        for i in 0..<rows {
+            for j in 0..<columns where j != i {
+                if !self[i, j].isApproximatelyEqual(to: self[j, i].conjugate) {
+                    return false
+                }
+            }
         }
         return true
     }
