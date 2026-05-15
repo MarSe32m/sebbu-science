@@ -150,15 +150,41 @@ public extension Matrix where T: Real {
     }
     
     @inlinable
-    var oneNorm: T {
+    var L1Norm: T {
         elements.reduce(into: T.zero) { $0 += $1.magnitude }
+    }
+    
+    @inlinable
+    var oneNorm: T {
+        var maxColumnSum: T = .zero
+        for j in 0..<columns {
+            var columnSum: T = .zero
+            for i in 0..<rows {
+                columnSum += self[i, j].magnitude
+            }
+            maxColumnSum = Swift.max(maxColumnSum, columnSum)
+        }
+        return maxColumnSum
     }
 }
 
 public extension Matrix where T == Float {
     @inlinable
-    var oneNormAsDouble: Double {
+    var L1NormAsDouble: Double {
         elements.reduce(into: .zero) { $0 += Double($1).magnitude }
+    }
+    
+    @inlinable
+    var oneNormAsDouble: Double {
+        var maxColumnSum: Double = .zero
+        for j in 0..<columns {
+            var columnSum: Double = .zero
+            for i in 0..<rows {
+                columnSum += Double(self[i, j].magnitude)
+            }
+            maxColumnSum = Swift.max(maxColumnSum, columnSum)
+        }
+        return maxColumnSum
     }
 }
 
@@ -191,8 +217,21 @@ public extension Matrix<Complex<Double>> {
     }
     
     @inlinable
-    var oneNorm: Double {
+    var L1Norm: Double {
         elements.reduce(into: Double.zero) { $0 += $1.length }
+    }
+    
+    @inlinable
+    var oneNorm: Double {
+        var maxColumnSum: Double = .zero
+        for j in 0..<columns {
+            var columnSum: Double = .zero
+            for i in 0..<rows {
+                columnSum += self[i, j].length
+            }
+            maxColumnSum = Swift.max(maxColumnSum, columnSum)
+        }
+        return maxColumnSum
     }
 }
 
@@ -225,13 +264,39 @@ public extension Matrix<Complex<Float>> {
     }
     
     @inlinable
-    var oneNorm: Float {
+    var L1Norm: Float {
         elements.reduce(into: Float.zero) { $0 += $1.length }
     }
     
     @inlinable
-    var oneNormAsDouble: Double {
+    var oneNorm: Float {
+        var maxColumnSum: Float = .zero
+        for j in 0..<columns {
+            var columnSum: Float = .zero
+            for i in 0..<rows {
+                columnSum += self[i, j].length
+            }
+            maxColumnSum = Swift.max(maxColumnSum, columnSum)
+        }
+        return maxColumnSum
+    }
+    
+    @inlinable
+    var L1NormAsDouble: Double {
         elements.reduce(into: Double.zero) { $0 += Complex(Double($1.real), Double($1.imaginary)).length }
+    }
+    
+    @inlinable
+    var oneNormAsDouble: Double {
+        var maxColumnSum: Double = .zero
+        for j in 0..<columns {
+            var columnSum: Double = .zero
+            for i in 0..<rows {
+                columnSum += Double(self[i, j].length)
+            }
+            maxColumnSum = Swift.max(maxColumnSum, columnSum)
+        }
+        return maxColumnSum
     }
 }
 
