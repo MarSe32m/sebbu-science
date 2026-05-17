@@ -28,6 +28,28 @@ public extension Vector where T: AlgebraicField {
             span[unchecked: i] = .zero
         }
     }
+    
+    @inlinable
+    mutating func copyComponents(from other: Self, adding: Self, multiplied: T) {
+        precondition(components.count == other.components.count)
+        precondition(components.count == adding.components.count)
+        var mutableSpan = components.mutableSpan
+        let otherSpan = other.components.span
+        let addingSpan = adding.components.span
+        for i in mutableSpan.indices {
+            mutableSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, addingSpan[unchecked: i], otherSpan[unchecked: i])
+        }
+    }
+    
+    @inlinable
+    mutating func copyComponents(from other: Self, multiplied: T) {
+        precondition(components.count == other.components.count)
+        var mutableSpan = components.mutableSpan
+        let otherSpan = other.components.span
+        for i in mutableSpan.indices {
+            mutableSpan[unchecked: i] = Relaxed.product(otherSpan[unchecked: i], multiplied)
+        }
+    }
 }
 
 public extension Vector where T: AlgebraicField, T.Magnitude: FloatingPoint {

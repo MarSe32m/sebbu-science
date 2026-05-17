@@ -26,18 +26,6 @@ public extension Vector<Complex<Double>> {
     
     @inlinable
     mutating func copyComponents(from other: Self) {
-        precondition(count == other.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _copyComponentsBLAS(from: other)
-        } else {
-            _copyComponents(from: other)
-        }
-    }
-
-    @inlinable
-    @_transparent
-    mutating func _copyComponents(from other: Self) {
         var span = components.mutableSpan
         let otherSpan = other.components.span
         for i in span.indices {
@@ -46,8 +34,46 @@ public extension Vector<Complex<Double>> {
     }
 
     @inlinable
+    mutating func copyComponents(from other: Self, adding: Self, multiplied: Complex<Double>) {
+        var mutableSpan = components.mutableSpan
+        let otherSpan = other.components.span
+        let addingSpan = adding.components.span
+        for i in mutableSpan.indices {
+            mutableSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, addingSpan[unchecked: i], otherSpan[unchecked: i])
+        }
+    }
+    
+    @inlinable
+    mutating func copyComponents(from other: Self, multiplied: Complex<Double>) {
+        var mutableSpan = components.mutableSpan
+        let otherSpan = other.components.span
+        for i in mutableSpan.indices {
+            mutableSpan[unchecked: i] = Relaxed.product(otherSpan[unchecked: i], multiplied)
+        }
+    }
+    
+    @inlinable
+    mutating func copyComponents(from other: Self, adding: Self, multiplied: Double) {
+        var mutableSpan = components.mutableSpan
+        let otherSpan = other.components.span
+        let addingSpan = adding.components.span
+        for i in mutableSpan.indices {
+            mutableSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, addingSpan[unchecked: i], otherSpan[unchecked: i])
+        }
+    }
+    
+    @inlinable
+    mutating func copyComponents(from other: Self, multiplied: Double) {
+        var mutableSpan = components.mutableSpan
+        let otherSpan = other.components.span
+        for i in mutableSpan.indices {
+            mutableSpan[unchecked: i] = Relaxed.product(otherSpan[unchecked: i], multiplied)
+        }
+    }
+    
+    @inlinable
     @_transparent
-    mutating func _copyComponentsBLAS(from other: Self) {
+    mutating func copyComponentsBLAS(from other: Self) {
         BLAS.zcopy(count, other.components, 1, &components, 1)
     }
     

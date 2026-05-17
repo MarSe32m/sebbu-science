@@ -1,5 +1,5 @@
 //
-//  RK23FixedStep.swift
+//  RK2FixedStep.swift
 //  sebbu-science
 //
 //  Created by Sebastian Toivonen on 4.5.2025.
@@ -8,7 +8,7 @@
 import Numerics
 import NumericsExtensions
 
-public struct RK23FixedStep<T> {
+public struct RK2FixedStep<T> {
     public var t: Double
     public let dt: Double
     

@@ -46,10 +46,10 @@ public func testFloatOperations() -> [BenchmarkResult] {
     results.append(
         benchmarkOperationFloat(name: "Vector<Float>.copyComponents(from: Vector<Float>)", runs: 20, iterations: 1000, maxDimension: 1000, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
-            x._copyComponents(from: y)
+            x.copyComponents(from: y)
         }, 
         blasFunc: { alpha, beta, x, y, A, B, C in 
-            x._copyComponentsBLAS(from: y)
+            x.copyComponentsBLAS(from: y)
         })
     )
 
@@ -236,10 +236,10 @@ public func testFloatOperations() -> [BenchmarkResult] {
     results.append(
         benchmarkOperationFloat(name: "Matrix<Float>.copyElements(from: Matrix<Float>)", runs: 20, iterations: 1000, maxDimension: 50, 
         naiveFunc: { alpha, beta, x, y, A, B, C in 
-            A._copyElements(from: B)
+            A.copyElements(from: B)
         }, 
         blasFunc: { alpha, beta, x, y, A, B, C in 
-            A._copyElementsBLAS(from: B)
+            A.copyElementsBLAS(from: B)
         })
     )
 

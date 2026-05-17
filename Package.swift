@@ -69,6 +69,9 @@ let package = Package(
                 .define("ACCELERATE_NEW_LAPACK", .when(platforms: [.macOS])),
                 .define("ACCELERATE_LAPACK_ILP64", .when(platforms: [.macOS]))
             ],
+            swiftSettings: [
+                .enableExperimentalFeature("Lifetimes")
+            ],
             linkerSettings: [
                 .linkedFramework("Accelerate", .when(platforms: [.macOS]))
             ]

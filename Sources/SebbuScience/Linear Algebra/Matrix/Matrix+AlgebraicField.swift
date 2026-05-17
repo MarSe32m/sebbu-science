@@ -55,6 +55,28 @@ public extension Matrix where T: AlgebraicField {
     }
     
     @inlinable
+    mutating func copyElements(from other: Self, adding: Self, multiplied: T) {
+        precondition(elements.count == other.elements.count)
+        precondition(elements.count == adding.elements.count)
+        var mutableSpan = elements.mutableSpan
+        let otherSpan = other.elements.span
+        let addingSpan = adding.elements.span
+        for i in mutableSpan.indices {
+            mutableSpan[unchecked: i] = Relaxed.multiplyAdd(multiplied, addingSpan[unchecked: i], otherSpan[unchecked: i])
+        }
+    }
+    
+    @inlinable
+    mutating func copyElements(from other: Self, multiplied: T) {
+        precondition(elements.count == other.elements.count)
+        var mutableSpan = elements.mutableSpan
+        let otherSpan = other.elements.span
+        for i in mutableSpan.indices {
+            mutableSpan[unchecked: i] = Relaxed.product(otherSpan[unchecked: i], multiplied)
+        }
+    }
+    
+    @inlinable
     func kronecker(_ other: Self) -> Self {
         var result: Self = .zeros(rows: rows * other.rows, columns: columns * other.columns)
         kronecker(other, into: &result)
