@@ -46,9 +46,12 @@ public struct UniqueRK4Solver<T: ~Copyable>: ~Copyable, ~Escapable {
     @usableFromInline
     internal var temporary: T
     
+#if swift(>=6.4)
+    #error("TODO: Use UniqueArray or RigidArray for scratch space")
+#endif
     @_lifetime(borrow owner)
     @inlinable
-    public init(t0: Double, initialState: consuming T, scratchSpace: UnsafeMutableBufferPointer<T>, dt: Double, owner: Void = ()) {
+    public init(t0: Double, initialState: consuming T, scratchSpace: consuming UnsafeMutableBufferPointer<T>, dt: Double, owner: Void = ()) {
         precondition(scratchSpace.count == 6, "Scratch space must have exactly 6 elements")
         self._t = t0
         self.dt = dt
@@ -61,6 +64,25 @@ public struct UniqueRK4Solver<T: ~Copyable>: ~Copyable, ~Escapable {
         scratchSpace.deallocate()
     }
     
+    @_lifetime(borrow owner)
+    @inlinable
+    public init(
+        t0: Double,
+        initialState: T,
+        dt: Double,
+        owner: Void = ()
+    ) where T: Copyable {
+        self._t = t0
+        self.dt = dt
+        self.y = initialState
+        self.k1 = copy initialState
+        self.k2 = copy initialState
+        self.k3 = copy initialState
+        self.k4 = copy initialState
+        self.temporary = copy initialState
+    }
+    
+    @inlinable
     public mutating func reset(initialState: consuming T, t0: Double) {
         self.y = initialState
         self._t = t0

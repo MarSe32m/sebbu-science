@@ -1,5 +1,5 @@
 //
-//  SRK2FixedStep.swift
+//  SRK2Solver.swift
 //  sebbu-science
 //
 //  Created by Sebastian Toivonen on 4.5.2025.
@@ -10,7 +10,7 @@ import NumericsExtensions
 
 // Method based on the improved Euler/Heun method: https://arxiv.org/pdf/1210.0933
 // This is the Stratonovich version!
-public struct SRK2FixedStep<T, NoiseType> {
+public struct SRK2Solver<T, NoiseType> {
     public var t: Double
     public let dt: Double
     
@@ -56,7 +56,7 @@ public struct SRK2FixedStep<T, NoiseType> {
     }
 }
 
-extension SRK2FixedStep<Double, Double> {
+extension SRK2Solver<Double, Double> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -78,7 +78,7 @@ extension SRK2FixedStep<Double, Double> {
     }
 }
 
-extension SRK2FixedStep<[Double], Double> {
+extension SRK2Solver<[Double], Double> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -110,7 +110,7 @@ extension SRK2FixedStep<[Double], Double> {
     }
 }
 
-extension SRK2FixedStep<Complex<Double>, Complex<Double>> {
+extension SRK2Solver<Complex<Double>, Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -134,7 +134,7 @@ extension SRK2FixedStep<Complex<Double>, Complex<Double>> {
     }
 }
 
-extension SRK2FixedStep<[Complex<Double>], Complex<Double>> {
+extension SRK2Solver<[Complex<Double>], Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -166,7 +166,7 @@ extension SRK2FixedStep<[Complex<Double>], Complex<Double>> {
     }
 }
 
-extension SRK2FixedStep<Vector<Double>, Double> {
+extension SRK2Solver<Vector<Double>, Double> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -200,7 +200,7 @@ extension SRK2FixedStep<Vector<Double>, Double> {
     }
 }
 
-extension SRK2FixedStep<[Vector<Double>], Double> {
+extension SRK2Solver<[Vector<Double>], Double> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -238,7 +238,7 @@ extension SRK2FixedStep<[Vector<Double>], Double> {
     }
 }
 
-extension SRK2FixedStep<Vector<Complex<Double>>, Complex<Double>> {
+extension SRK2Solver<Vector<Complex<Double>>, Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -273,7 +273,7 @@ extension SRK2FixedStep<Vector<Complex<Double>>, Complex<Double>> {
     }
 }
 
-extension SRK2FixedStep<[Vector<Complex<Double>>], Complex<Double>> {
+extension SRK2Solver<[Vector<Complex<Double>>], Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -311,7 +311,7 @@ extension SRK2FixedStep<[Vector<Complex<Double>>], Complex<Double>> {
     }
 }
 
-extension SRK2FixedStep<Matrix<Double>, Double> {
+extension SRK2Solver<Matrix<Double>, Double> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -347,7 +347,7 @@ extension SRK2FixedStep<Matrix<Double>, Double> {
     }
 }
 
-extension SRK2FixedStep<[Matrix<Double>], Double> {
+extension SRK2Solver<[Matrix<Double>], Double> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -385,7 +385,7 @@ extension SRK2FixedStep<[Matrix<Double>], Double> {
     }
 }
 
-extension SRK2FixedStep<Matrix<Complex<Double>>, Complex<Double>> {
+extension SRK2Solver<Matrix<Complex<Double>>, Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -421,7 +421,7 @@ extension SRK2FixedStep<Matrix<Complex<Double>>, Complex<Double>> {
     }
 }
 
-extension SRK2FixedStep<[Matrix<Complex<Double>>], Complex<Double>> {
+extension SRK2Solver<[Matrix<Complex<Double>>], Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }

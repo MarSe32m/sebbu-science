@@ -1,5 +1,5 @@
 //
-//  SRK2FixedStepMultiNoise.swift
+//  SRK2MultiNoiseSolver.swift
 //  sebbu-science
 //
 //  Created by Sebastian Toivonen on 4.5.2025.
@@ -11,7 +11,7 @@ import DequeModule
 
 // Method based on the improved Euler/Heun method: https://arxiv.org/pdf/1210.0933
 // This is the Stratonovich version!
-public struct SRK2FixedStepMultiNoise<T, NoiseType> {
+public struct SRK2MultiNoiseSolver<T, NoiseType> {
     public var t: Double
     public let dt: Double
     
@@ -62,7 +62,7 @@ public struct SRK2FixedStepMultiNoise<T, NoiseType> {
     }
 }
 
-extension SRK2FixedStepMultiNoise<Double, Double> {
+extension SRK2MultiNoiseSolver<Double, Double> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -91,7 +91,7 @@ extension SRK2FixedStepMultiNoise<Double, Double> {
     }
 }
 
-extension SRK2FixedStepMultiNoise<[Double], Double> {
+extension SRK2MultiNoiseSolver<[Double], Double> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -140,7 +140,7 @@ extension SRK2FixedStepMultiNoise<[Double], Double> {
     }
 }
 
-extension SRK2FixedStepMultiNoise<Complex<Double>, Complex<Double>> {
+extension SRK2MultiNoiseSolver<Complex<Double>, Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -169,7 +169,7 @@ extension SRK2FixedStepMultiNoise<Complex<Double>, Complex<Double>> {
     }
 }
 
-extension SRK2FixedStepMultiNoise<[Complex<Double>], Complex<Double>> {
+extension SRK2MultiNoiseSolver<[Complex<Double>], Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -216,7 +216,7 @@ extension SRK2FixedStepMultiNoise<[Complex<Double>], Complex<Double>> {
     }
 }
 
-extension SRK2FixedStepMultiNoise<Vector<Double>, Double> {
+extension SRK2MultiNoiseSolver<Vector<Double>, Double> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -256,7 +256,7 @@ extension SRK2FixedStepMultiNoise<Vector<Double>, Double> {
     }
 }
 
-extension SRK2FixedStepMultiNoise<[Vector<Double>], Double> {
+extension SRK2MultiNoiseSolver<[Vector<Double>], Double> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -307,7 +307,7 @@ extension SRK2FixedStepMultiNoise<[Vector<Double>], Double> {
     }
 }
 
-extension SRK2FixedStepMultiNoise<Vector<Complex<Double>>, Complex<Double>> {
+extension SRK2MultiNoiseSolver<Vector<Complex<Double>>, Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -347,7 +347,7 @@ extension SRK2FixedStepMultiNoise<Vector<Complex<Double>>, Complex<Double>> {
     }
 }
 
-extension SRK2FixedStepMultiNoise<[Vector<Complex<Double>>], Complex<Double>> {
+extension SRK2MultiNoiseSolver<[Vector<Complex<Double>>], Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -398,7 +398,7 @@ extension SRK2FixedStepMultiNoise<[Vector<Complex<Double>>], Complex<Double>> {
     }
 }
 
-extension SRK2FixedStepMultiNoise<Matrix<Double>, Double> {
+extension SRK2MultiNoiseSolver<Matrix<Double>, Double> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -439,7 +439,7 @@ extension SRK2FixedStepMultiNoise<Matrix<Double>, Double> {
     }
 }
 
-extension SRK2FixedStepMultiNoise<[Matrix<Double>], Double> {
+extension SRK2MultiNoiseSolver<[Matrix<Double>], Double> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -490,7 +490,7 @@ extension SRK2FixedStepMultiNoise<[Matrix<Double>], Double> {
     }
 }
 
-extension SRK2FixedStepMultiNoise<Matrix<Complex<Double>>, Complex<Double>> {
+extension SRK2MultiNoiseSolver<Matrix<Complex<Double>>, Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -530,7 +530,7 @@ extension SRK2FixedStepMultiNoise<Matrix<Complex<Double>>, Complex<Double>> {
     }
 }
 
-extension SRK2FixedStepMultiNoise<[Matrix<Complex<Double>>], Complex<Double>> {
+extension SRK2MultiNoiseSolver<[Matrix<Complex<Double>>], Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }

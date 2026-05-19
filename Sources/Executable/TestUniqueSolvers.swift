@@ -32,18 +32,21 @@ func testUniqueRK4FixedStep() {
 
 func testUniqueRK4AdaptiveStep() {
     let endTime = 100.0
-    var solver = UniqueDOPRISolver(t0: 0.0, initialState: 1.0, scratchSpace: .allocate(capacity: 9), dt: 0.1, maxStep: 0.1)
+    var solver = UniqueDOPRISolver(t0: 0.0, initialState: 1.0, dt: 0.1, maxStep: 0.1)
     var tSpace: [Double] = []
     var y: [Double] = []
-    while solver.t < endTime {
-        solver.step { t, state, result in
-            result = -.sin(t)
-        } yielding: { t, state in
-            tSpace.append(t)
-            y.append(state)
+    let time = ContinuousClock().measure {
+        while solver.t < endTime {
+            solver.step { t, state, result in
+                result = -.sin(t)
+            } yielding: { t, state in
+                tSpace.append(t)
+                y.append(state)
+            }
         }
     }
-    print(tSpace.count)
+    
+    print(time, tSpace.count)
     plt.figure()
     plt.plot(x: tSpace, y: y)
     //plt.plot(x: .linearSpace(0, endTime, 1000), y: .linearSpace(0, endTime, 1000).map { .exp(-$0) })
@@ -53,12 +56,8 @@ func testUniqueRK4AdaptiveStep() {
 
 func testUniqueSolverWithCustomState() {
     let endTime = 100.0
-    let scratchSpace = UnsafeMutableBufferPointer<State>.allocate(capacity: 9)
-    scratchSpace.initialize(repeating: .init(state: 0.0))
-    var adaptiveSolver = UniqueDOPRISolver(t0: 0.0, initialState: State(state: 1.0), scratchSpace: scratchSpace, dt: 0.01, maxStep: 0.01)
-    let fixedScratchSpace = UnsafeMutableBufferPointer<State>.allocate(capacity: 6)
-    fixedScratchSpace.initialize(repeating: .init(state: 0.0))
-    var fixedSolver = UniqueRK4Solver(t0: 0.0, initialState: State(state: 1.0), scratchSpace: fixedScratchSpace, dt: 0.001)
+    var adaptiveSolver = UniqueDOPRISolver(t0: 0.0, initialState: State(state: 1.0), dt: 0.01, maxStep: 0.01)
+    var fixedSolver = UniqueRK4Solver(t0: 0.0, initialState: State(state: 1.0), dt: 0.001)
     var adaptiveTSpace: [Double] = []
     var adaptiveY: [Double] = []
     while adaptiveSolver.t < endTime {
@@ -84,6 +83,31 @@ func testUniqueSolverWithCustomState() {
     plt.figure()
     plt.plot(x: fixedTSpace, y: fixedY)
     plt.plot(x: adaptiveTSpace, y: adaptiveY)
+    plt.show()
+    plt.close()
+}
+
+func testUniqueSRK2SolverWithCustomState() {
+    let endTime = 100.0
+    var solver = UniqueSRK2Solver<State, Double>(t0: 0.0, initialState: State(state: 1.0), diffusionSpace: .allocate(capacity: 1), noiseSpace: .allocate(capacity: 1), dt: 0.001)
+    var tSpace: [Double] = []
+    var y: [Double] = []
+    while solver.t < endTime {
+        solver.step { t, state, result in
+            result.state = -.sin(t)
+        } _: { t, state, result in
+            result[0].state = .zero
+        } _: { t, result in
+            result[0] = .zero
+        } yielding: { t, state in
+            tSpace.append(t)
+            y.append(state.state)
+        }
+    }
+    print(tSpace.count)
+    plt.figure()
+    plt.plot(x: tSpace, y: y)
+    //plt.plot(x: tSpace, y: tSpace.map { .exp(-$0) })
     plt.show()
     plt.close()
 }
@@ -127,5 +151,29 @@ extension State: UniqueODESolverState {
     @inlinable
     func distance(to: borrowing State) -> Double {
         (self.state - to.state).magnitude
+    }
+}
+
+extension State: UniqueSDESolverState {
+    mutating func scale(by: Double) {
+        state *= by
+    }
+    
+    typealias NoiseType = Double
+    
+    mutating func add(_ a: borrowing State) {
+        state += a.state
+    }
+    
+    mutating func add(_ a: borrowing State, multiplied dtSqrt: Double, noise: borrowing Double) {
+        state += a.state * dtSqrt * noise
+    }
+    
+    mutating func assign(_ base: borrowing State, adding direction: borrowing State) {
+        state = base.state + direction.state
+    }
+    
+    mutating func assign(_ base: borrowing State, adding direction: borrowing State, multipliedBy dtSqrt: Double, noise: borrowing Double) {
+        state = base.state + direction.state * dtSqrt * noise
     }
 }

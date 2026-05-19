@@ -19,6 +19,25 @@ public extension Vector<Float> {
     }
     
     @inlinable
+    func distanceSquared(to other: Self) -> Float {
+        assert(count == other.count, "The vectors must have the same size")
+        let span = components.span
+        let otherSpan = other.components.span
+        var result: Double = .zero
+        for i in 0..<count {
+            let diff = Double(Relaxed.sum(span[unchecked: i], -otherSpan[unchecked: i]))
+            result = Relaxed.sum(Relaxed.product(diff, diff), result)
+        }
+        return Float(result)
+    }
+    
+    @inlinable
+    @inline(always)
+    func distance(to other: Self) -> Float {
+        distanceSquared(to: other).squareRoot()
+    }
+    
+    @inlinable
     mutating func copyComponents(from other: Self) {
         var span = components.mutableSpan
         let otherSpan = other.components.span

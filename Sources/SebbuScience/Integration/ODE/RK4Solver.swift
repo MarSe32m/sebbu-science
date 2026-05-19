@@ -1,5 +1,5 @@
 //
-//  RK45FixedStep.swift
+//  RK4Solver.swift
 //  sebbu-science
 //
 //  Created by Sebastian Toivonen on 4.5.2025.
@@ -8,7 +8,7 @@
 import Numerics
 import NumericsExtensions
 
-public struct RK45FixedStep<T> {
+public struct RK4Solver<T> {
     public var t: Double
     public let dt: Double
     
@@ -48,7 +48,7 @@ public struct RK45FixedStep<T> {
     }
 }
 
-extension RK45FixedStep<Double> {
+extension RK4Solver<Double> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -71,7 +71,7 @@ extension RK45FixedStep<Double> {
     }
 }
 
-extension RK45FixedStep<[Double]> {
+extension RK4Solver<[Double]> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -112,7 +112,7 @@ extension RK45FixedStep<[Double]> {
     }
 }
 
-extension RK45FixedStep<Complex<Double>> {
+extension RK4Solver<Complex<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -136,7 +136,7 @@ extension RK45FixedStep<Complex<Double>> {
     }
 }
 
-extension RK45FixedStep<[Complex<Double>]> {
+extension RK4Solver<[Complex<Double>]> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -177,7 +177,7 @@ extension RK45FixedStep<[Complex<Double>]> {
     }
 }
 
-extension RK45FixedStep<Vector<Double>> {
+extension RK4Solver<Vector<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -223,7 +223,7 @@ extension RK45FixedStep<Vector<Double>> {
     }
 }
 
-extension RK45FixedStep<[Vector<Double>]> {
+extension RK4Solver<[Vector<Double>]> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -267,7 +267,7 @@ extension RK45FixedStep<[Vector<Double>]> {
     }
 }
 
-extension RK45FixedStep<Vector<Complex<Double>>> {
+extension RK4Solver<Vector<Complex<Double>>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -313,7 +313,7 @@ extension RK45FixedStep<Vector<Complex<Double>>> {
     }
 }
 
-extension RK45FixedStep<[Vector<Complex<Double>>]> {
+extension RK4Solver<[Vector<Complex<Double>>]> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -357,7 +357,7 @@ extension RK45FixedStep<[Vector<Complex<Double>>]> {
     }
 }
 
-extension RK45FixedStep<Matrix<Double>> {
+extension RK4Solver<Matrix<Double>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -403,7 +403,7 @@ extension RK45FixedStep<Matrix<Double>> {
     }
 }
 
-extension RK45FixedStep<[Matrix<Double>]> {
+extension RK4Solver<[Matrix<Double>]> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -447,7 +447,7 @@ extension RK45FixedStep<[Matrix<Double>]> {
     }
 }
 
-extension RK45FixedStep<Matrix<Complex<Double>>> {
+extension RK4Solver<Matrix<Complex<Double>>> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }
@@ -493,7 +493,7 @@ extension RK45FixedStep<Matrix<Complex<Double>>> {
     }
 }
 
-extension RK45FixedStep<[Matrix<Complex<Double>>]> {
+extension RK4Solver<[Matrix<Complex<Double>>]> {
     @inlinable
     public mutating func step() -> (t: Double, state: T) {
         defer { stepCount &+= 1 }

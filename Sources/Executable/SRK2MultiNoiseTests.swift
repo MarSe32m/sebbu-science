@@ -53,8 +53,8 @@ private func testDouble() {
         0.5 * g(t, currentState)
     }
     let w = noise
-    var singleNoiseSolver = SRK2FixedStep(initialState: 1.0, t0: 0.0, dt: dt, f: f, g: g, w: w)
-    var multiNoiseSolver = SRK2FixedStepMultiNoise(initialState: 1.0, t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
+    var singleNoiseSolver = SRK2Solver(initialState: 1.0, t0: 0.0, dt: dt, f: f, g: g, w: w)
+    var multiNoiseSolver = SRK2MultiNoiseSolver(initialState: 1.0, t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
     
     var singleNoiseTSpace: [Double] = []
     var singleNoiseSolution: [Double] = []
@@ -98,8 +98,8 @@ private func testDoubleArray() {
          0.5 * g(t, currentState)[1]]
     }
     let w = noise
-    var singleNoiseSolver =          SRK2FixedStep(initialState: [1.0, 1.0], t0: 0.0, dt: dt, f: f, g: g, w: w)
-    var multiNoiseSolver = SRK2FixedStepMultiNoise(initialState: [1.0, 1.0], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
+    var singleNoiseSolver =          SRK2Solver(initialState: [1.0, 1.0], t0: 0.0, dt: dt, f: f, g: g, w: w)
+    var multiNoiseSolver = SRK2MultiNoiseSolver(initialState: [1.0, 1.0], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
     
     var singleNoiseTSpace: [Double] = []
     var singleNoiseSolution: [[Double]] = []
@@ -143,8 +143,8 @@ private func testComplex() {
         0.5 * g(t, currentState)
     }
     let w = noise
-    var singleNoiseSolver = SRK2FixedStep(initialState: .one + 2.0 * .i, t0: .zero, dt: dt, f: f, g: g, w: w)
-    var multiNoiseSolver = SRK2FixedStepMultiNoise(initialState: .one + 2.0 * .i, t0: .zero, dt: dt, f: f, g: [g2, g2], w: [w, w])
+    var singleNoiseSolver = SRK2Solver(initialState: .one + 2.0 * .i, t0: .zero, dt: dt, f: f, g: g, w: w)
+    var multiNoiseSolver = SRK2MultiNoiseSolver(initialState: .one + 2.0 * .i, t0: .zero, dt: dt, f: f, g: [g2, g2], w: [w, w])
     
     var singleNoiseTSpace: [Double] = []
     var singleNoiseSolution: [Complex<Double>] = []
@@ -190,8 +190,8 @@ private func testComplexArray() {
          0.5 * g(t, currentState)[1]]
     }
     let w = noise
-    var singleNoiseSolver = SRK2FixedStep(initialState: [.one + 2.0 * .i, .one - 2.0 * .i], t0: 0.0, dt: dt, f: f, g: g, w: w)
-    var multiNoiseSolver = SRK2FixedStepMultiNoise(initialState: [.one + 2.0 * .i, .one - 2.0 * .i], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
+    var singleNoiseSolver = SRK2Solver(initialState: [.one + 2.0 * .i, .one - 2.0 * .i], t0: 0.0, dt: dt, f: f, g: g, w: w)
+    var multiNoiseSolver = SRK2MultiNoiseSolver(initialState: [.one + 2.0 * .i, .one - 2.0 * .i], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
     
     var singleNoiseTSpace: [Double] = []
     var singleNoiseSolution: [[Complex<Double>]] = []
@@ -242,8 +242,8 @@ private func testVectorDouble() {
     }
     let w = noise
     
-    var singleNoiseSolver = SRK2FixedStep(initialState: [0.5, 0.5], t0: 0.0, dt: dt, f: f, g: g, w: w)
-    var multiNoiseSolver = SRK2FixedStepMultiNoise(initialState: [0.5, 0.5], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
+    var singleNoiseSolver = SRK2Solver(initialState: [0.5, 0.5], t0: 0.0, dt: dt, f: f, g: g, w: w)
+    var multiNoiseSolver = SRK2MultiNoiseSolver(initialState: [0.5, 0.5], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
     
     var singleNoiseTSpace: [Double] = []
     var singleNoiseSolution: [Vector<Double>] = []
@@ -290,8 +290,8 @@ private func testVectorDoubleArray() {
     }
     let w = noise
     
-    var singleNoiseSolver = SRK2FixedStep(initialState: [[0.5, 0.5], [0.5, 0.5]], t0: 0.0, dt: dt, f: f, g: g, w: w)
-    var multiNoiseSolver = SRK2FixedStepMultiNoise(initialState: [[0.5, 0.5], [0.5, 0.5]], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
+    var singleNoiseSolver = SRK2Solver(initialState: [[0.5, 0.5], [0.5, 0.5]], t0: 0.0, dt: dt, f: f, g: g, w: w)
+    var multiNoiseSolver = SRK2MultiNoiseSolver(initialState: [[0.5, 0.5], [0.5, 0.5]], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
     
     var singleNoiseTSpace: [Double] = []
     var singleNoiseSolution: [[Vector<Double>]] = []
@@ -342,8 +342,8 @@ private func testVectorComplex() {
     }
     let w = noise
     
-    var singleNoiseSolver = SRK2FixedStep(initialState: [Complex(0.5), Complex(0.5)], t0: 0.0, dt: dt, f: f, g: g, w: w)
-    var multiNoiseSolver = SRK2FixedStepMultiNoise(initialState: [Complex(0.5), Complex(0.5)], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
+    var singleNoiseSolver = SRK2Solver(initialState: [Complex(0.5), Complex(0.5)], t0: 0.0, dt: dt, f: f, g: g, w: w)
+    var multiNoiseSolver = SRK2MultiNoiseSolver(initialState: [Complex(0.5), Complex(0.5)], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
     
     var singleNoiseTSpace: [Double] = []
     var singleNoiseSolution: [Vector<Complex<Double>>] = []
@@ -394,8 +394,8 @@ private func testVectorComplexArray() {
     }
     let w = noise
     
-    var singleNoiseSolver = SRK2FixedStep(initialState: [[Complex(0.5), Complex(0.5)], [Complex(0.5), Complex(0.5)]], t0: 0.0, dt: dt, f: f, g: g, w: w)
-    var multiNoiseSolver = SRK2FixedStepMultiNoise(initialState: [[Complex(0.5), Complex(0.5)], [Complex(0.5), Complex(0.5)]], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
+    var singleNoiseSolver = SRK2Solver(initialState: [[Complex(0.5), Complex(0.5)], [Complex(0.5), Complex(0.5)]], t0: 0.0, dt: dt, f: f, g: g, w: w)
+    var multiNoiseSolver = SRK2MultiNoiseSolver(initialState: [[Complex(0.5), Complex(0.5)], [Complex(0.5), Complex(0.5)]], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
     
     var singleNoiseTSpace: [Double] = []
     var singleNoiseSolution: [[Vector<Complex<Double>>]] = []
@@ -460,8 +460,8 @@ private func testMatrixDouble() {
     }
     let w = noise
     let initialState = Matrix(elements: [0.0, 1.0, 1.0, 0.0], rows: 2, columns: 2)
-    var singleNoiseSolver = SRK2FixedStep(initialState: initialState, t0: 0.0, dt: dt, f: f, g: g, w: w)
-    var multiNoiseSolver = SRK2FixedStepMultiNoise(initialState: initialState, t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
+    var singleNoiseSolver = SRK2Solver(initialState: initialState, t0: 0.0, dt: dt, f: f, g: g, w: w)
+    var multiNoiseSolver = SRK2MultiNoiseSolver(initialState: initialState, t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
     
     var singleNoiseTSpace: [Double] = []
     var singleNoiseSolution: [Matrix<Double>] = []
@@ -515,8 +515,8 @@ private func testMatrixDoubleArray() {
     }
     let w = noise
     let initialState = Matrix(elements: [0.0, 1.0, 1.0, 0.0], rows: 2, columns: 2)
-    var singleNoiseSolver = SRK2FixedStep(initialState: [initialState, initialState], t0: 0.0, dt: dt, f: f, g: g, w: w)
-    var multiNoiseSolver = SRK2FixedStepMultiNoise(initialState: [initialState, initialState], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
+    var singleNoiseSolver = SRK2Solver(initialState: [initialState, initialState], t0: 0.0, dt: dt, f: f, g: g, w: w)
+    var multiNoiseSolver = SRK2MultiNoiseSolver(initialState: [initialState, initialState], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
     
     var singleNoiseTSpace: [Double] = []
     var singleNoiseSolution: [[Matrix<Double>]] = []
@@ -581,8 +581,8 @@ private func testMatrixComplex() {
     }
     let w = noise
     let initialState = Matrix(elements: [Complex(0.5), .zero, .zero, Complex(0.5)], rows: 2, columns: 2)
-    var singleNoiseSolver = SRK2FixedStep(initialState: initialState, t0: 0.0, dt: dt, f: f, g: g, w: w)
-    var multiNoiseSolver = SRK2FixedStepMultiNoise(initialState: initialState, t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
+    var singleNoiseSolver = SRK2Solver(initialState: initialState, t0: 0.0, dt: dt, f: f, g: g, w: w)
+    var multiNoiseSolver = SRK2MultiNoiseSolver(initialState: initialState, t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
     
     var singleNoiseTSpace: [Double] = []
     var singleNoiseSolution: [Matrix<Complex<Double>>] = []
@@ -650,8 +650,8 @@ private func testMatrixComplexArray() {
     }
     let w = noise
     let initialState = Matrix(elements: [Complex(0.5), .zero, .zero, Complex(0.5)], rows: 2, columns: 2)
-    var singleNoiseSolver = SRK2FixedStep(initialState: [initialState, initialState], t0: 0.0, dt: dt, f: f, g: g, w: w)
-    var multiNoiseSolver = SRK2FixedStepMultiNoise(initialState: [initialState, initialState], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
+    var singleNoiseSolver = SRK2Solver(initialState: [initialState, initialState], t0: 0.0, dt: dt, f: f, g: g, w: w)
+    var multiNoiseSolver = SRK2MultiNoiseSolver(initialState: [initialState, initialState], t0: 0.0, dt: dt, f: f, g: [g2, g2], w: [w, w])
     
     var singleNoiseTSpace: [Double] = []
     var singleNoiseSolution: [[Matrix<Complex<Double>>]] = []

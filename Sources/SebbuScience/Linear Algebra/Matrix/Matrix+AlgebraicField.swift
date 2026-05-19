@@ -188,6 +188,24 @@ public extension Matrix where T: Real {
         }
         return maxColumnSum
     }
+    
+    @inlinable
+    func frobeniusDistanceSquared(to other: Self) -> T {
+        assert(rows == other.rows && columns == other.columns, "The matrices must have the same dimensions")
+        let span = elements.span
+        let otherSpan = other.elements.span
+        var result: T = .zero
+        for i in 0..<span.count {
+            let diff = Relaxed.sum(span[unchecked: i], -otherSpan[unchecked: i])
+            result = Relaxed.sum(Relaxed.product(diff, diff), result)
+        }
+        return result
+    }
+    
+    @inlinable
+    func frobeniusDistance(to other: Self) -> T {
+        frobeniusDistanceSquared(to: other).squareRoot()
+    }
 }
 
 public extension Matrix where T == Float {
@@ -207,6 +225,16 @@ public extension Matrix where T == Float {
             maxColumnSum = Swift.max(maxColumnSum, columnSum)
         }
         return maxColumnSum
+    }
+    
+    @inlinable
+    func frobeniusDistanceSquaredAsDouble(to other: Self) -> Double {
+        Double(frobeniusDistanceSquared(to: other))
+    }
+    
+    @inlinable
+    func frobeniusDistanceAsDouble(to other: Self) -> Double {
+        Double(frobeniusDistance(to: other))
     }
 }
 
@@ -254,6 +282,24 @@ public extension Matrix<Complex<Double>> {
             maxColumnSum = Swift.max(maxColumnSum, columnSum)
         }
         return maxColumnSum
+    }
+    
+    @inlinable
+    func frobeniusDistanceSquared(to other: Self) -> Double {
+        assert(rows == other.rows && columns == other.columns, "The matrices must have the same dimensions")
+        let span = elements.span
+        let otherSpan = other.elements.span
+        var result: Double = .zero
+        for i in 0..<span.count {
+            let diff = Relaxed.sum(span[unchecked: i], -otherSpan[unchecked: i])
+            result = Relaxed.sum(diff.lengthSquared, result)
+        }
+        return result
+    }
+    
+    @inlinable
+    func frobeniusDistance(to other: Self) -> Double {
+        frobeniusDistanceSquared(to: other).squareRoot()
     }
 }
 
@@ -319,6 +365,42 @@ public extension Matrix<Complex<Float>> {
             maxColumnSum = Swift.max(maxColumnSum, columnSum)
         }
         return maxColumnSum
+    }
+    
+    @inlinable
+    func frobeniusDistanceSquared(to other: Self) -> Float {
+        assert(rows == other.rows && columns == other.columns, "The matrices must have the same dimensions")
+        let span = elements.span
+        let otherSpan = other.elements.span
+        var result: Double = .zero
+        for i in 0..<span.count {
+            let diff = Relaxed.sum(span[unchecked: i], -otherSpan[unchecked: i])
+            result = Relaxed.sum(Double(diff.lengthSquared), result)
+        }
+        return Float(result)
+    }
+    
+    @inlinable
+    func frobeniusDistance(to other: Self) -> Float {
+        frobeniusDistanceSquared(to: other).squareRoot()
+    }
+    
+    @inlinable
+    func frobeniusDistanceSquaredAsDouble(to other: Self) -> Double {
+        assert(rows == other.rows && columns == other.columns, "The matrices must have the same dimensions")
+        let span = elements.span
+        let otherSpan = other.elements.span
+        var result: Double = .zero
+        for i in 0..<span.count {
+            let diff = Relaxed.sum(span[unchecked: i], -otherSpan[unchecked: i])
+            result = Relaxed.sum(Double(diff.lengthSquared), result)
+        }
+        return result
+    }
+    
+    @inlinable
+    func frobeniusDistanceAsDouble(to other: Self) -> Double {
+        frobeniusDistanceSquaredAsDouble(to: other).squareRoot()
     }
 }
 
