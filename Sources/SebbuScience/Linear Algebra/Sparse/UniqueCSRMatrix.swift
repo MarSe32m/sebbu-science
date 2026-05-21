@@ -5,14 +5,13 @@
 //  Created by Sebastian Toivonen on 23.8.2023.
 //
 
-#if canImport(COpenBLAS)
-import COpenBLAS
-#elseif canImport(Accelerate)
-import Accelerate
-#endif
+//#if canImport(COpenBLAS)
+//import COpenBLAS
+//#elseif canImport(Accelerate)
+//import Accelerate
+//#endif
 
 import NumericsExtensions
-import SebbuCollections
 import BasicContainers
 
 public struct UniqueCSRMatrix<T>: ~Copyable {
@@ -119,12 +118,11 @@ public struct UniqueCSRMatrix<T>: ~Copyable {
         try body(rowIndices)
     }
 }
-/*
-public extension CSRMatrix where T: AlgebraicField {
+
+public extension UniqueCSRMatrix where T: AlgebraicField {
     @inlinable
     @_optimize(speed)
-    func dot(_ matrix: CSRMatrix<T>) -> Matrix<T> {
-        var _ = CSRMatrix<T>(rows: self.rows, columns: self.columns, values: [], rowIndices: [], columnIndices: [])
+    func dot(_ matrix: borrowing UniqueCSRMatrix<T>) -> Matrix<T> {
         fatalError("TODO: Implement")
     }
     
@@ -154,7 +152,7 @@ public extension CSRMatrix where T: AlgebraicField {
     }
 }
 
-public extension CSRMatrix where T == Complex<Double> {
+public extension UniqueCSRMatrix where T == Complex<Double> {
     @inlinable
     init(from matrix: Matrix<T>, relativeTolerance: T.Magnitude = .ulpOfOne.squareRoot()) {
         var rowColumnValueTuples: [(row: Int, column: Int, value: T)] = []
@@ -165,44 +163,81 @@ public extension CSRMatrix where T == Complex<Double> {
                 }
             }
         }
-        self.init(rows: matrix.rows, columns: matrix.columns, values: [], rowIndices: [], columnIndices: [])
+        self = .zero(rows: matrix.rows, columns: matrix.columns)
         setValuesFromRowColumnValueTuples(tuples: rowColumnValueTuples)
     }
     
     @inlinable
-    var conjugate: CSRMatrix<T> {
-        CSRMatrix(rows: rows, columns: columns, values: values.map { $0.conjugate }, rowIndices: rowIndices, columnIndices: columnIndices)
-    }
-    
-    @inlinable
-    var conjugateTranspose: CSRMatrix<T> {
-        //TODO: Is there a way to optimize this?
-        var tuples = rowColumnValueTuples()
-        tuples = tuples.betterMap { ($0.column, $0.row, $0.value.conjugate) }
-        var result = self
-        result.setValuesFromRowColumnValueTuples(tuples: tuples)
-        return result
-    }
-}
+    var conjugate: UniqueCSRMatrix<T> {
+        let newValues: UniqueArray<T> = .init(capacity: values.count) { span in
+            for i in values.indices {
+                span.append(values[i].conjugate)
+            }
+        }
+        let newRowIndices: UniqueArray<Int> = .init(capacity: rowIndices.count) { span in
+            for i in rowIndices.indices {
+                span.append(rowIndices[i])
+            }
+        }
+        let newColumnIndices: UniqueArray<Int> = .init(capacity: columnIndices.count) { span in
+            for i in columnIndices.indices {
+                span.append(columnIndices[i])
+            }
+        }
 
-public extension CSRMatrix where T == Complex<Float> {
-    @inlinable
-    var conjugate: CSRMatrix<T> {
-        CSRMatrix(rows: rows, columns: columns, values: values.map { $0.conjugate }, rowIndices: rowIndices, columnIndices: columnIndices)
+        return UniqueCSRMatrix(rows: rows, columns: columns, values: newValues, rowIndices: newRowIndices, columnIndices: newColumnIndices)
     }
     
     @inlinable
-    var conjugateTranspose: CSRMatrix<T> {
+    var conjugateTranspose: UniqueCSRMatrix<T> {
         //TODO: Is there a way to optimize this?
         var tuples = rowColumnValueTuples()
         tuples = tuples.map { ($0.column, $0.row, $0.value.conjugate) }
-        var result = self
+        var result: Self = .zero(rows: columns, columns: rows)
         result.setValuesFromRowColumnValueTuples(tuples: tuples)
         return result
     }
 }
 
-public extension CSRMatrix where T: AlgebraicField {
+public extension UniqueCSRMatrix where T == Complex<Float> {
+    
+    @inlinable
+    var conjugate: UniqueCSRMatrix<T> {
+        let newValues: UniqueArray<T> = .init(capacity: values.count) { span in
+            for i in values.indices {
+                span.append(values[i].conjugate)
+            }
+        }
+        let newRowIndices: UniqueArray<Int> = .init(capacity: rowIndices.count) { span in
+            for i in rowIndices.indices {
+                span.append(rowIndices[i])
+            }
+        }
+        let newColumnIndices: UniqueArray<Int> = .init(capacity: columnIndices.count) { span in
+            for i in columnIndices.indices {
+                span.append(columnIndices[i])
+            }
+        }
+
+        return UniqueCSRMatrix(rows: rows, columns: columns, values: newValues, rowIndices: newRowIndices, columnIndices: newColumnIndices)
+    }
+    
+    @inlinable
+    var conjugateTranspose: UniqueCSRMatrix<T> {
+        //TODO: Is there a way to optimize this?
+        var tuples = rowColumnValueTuples()
+        tuples = tuples.map { ($0.column, $0.row, $0.value.conjugate) }
+        var result: Self = .zero(rows: columns, columns: rows)
+        result.setValuesFromRowColumnValueTuples(tuples: tuples)
+        return result
+    }
+}
+
+public extension UniqueCSRMatrix where T: AlgebraicField {
+    @inlinable
+    static func zero(rows: Int, columns: Int) -> Self {
+        .init(rows: rows, columns: columns, values: .init(), rowIndices: .init(), columnIndices: .init())
+    }
     @inlinable
     @_optimize(speed)
     func dot(_ vector: Vector<T>) -> Vector<T> {
@@ -246,9 +281,9 @@ public extension CSRMatrix where T: AlgebraicField {
     @inlinable
     @_optimize(speed)
     func dot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
-        rowIndices.withUnsafeBufferPointer { rowIndices in
-            columnIndices.withUnsafeBufferPointer { columnIndices in
-                values.withUnsafeBufferPointer { values in
+        rowIndices.span.withUnsafeBufferPointer { rowIndices in
+            columnIndices.span.withUnsafeBufferPointer { columnIndices in
+                values.span.withUnsafeBufferPointer { values in
                     var tempValue: T = .zero
                     var i = 0
                     var j = 0
@@ -292,9 +327,9 @@ public extension CSRMatrix where T: AlgebraicField {
     @inlinable
     @_optimize(speed)
     func dot(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
-        rowIndices.withUnsafeBufferPointer { rowIndices in
-            columnIndices.withUnsafeBufferPointer { columnIndices in
-                values.withUnsafeBufferPointer { values in
+        rowIndices.span.withUnsafeBufferPointer { rowIndices in
+            columnIndices.span.withUnsafeBufferPointer { columnIndices in
+                values.span.withUnsafeBufferPointer { values in
                     var tempValue: T = .zero
                     var i = 0
                     var j = 0
@@ -325,15 +360,29 @@ public extension CSRMatrix where T: AlgebraicField {
     
     @_optimize(speed)
     @inlinable
-    static func *(lhs: T, rhs: CSRMatrix<T>) -> CSRMatrix<T> {
-        let newValues = rhs.values.betterMap { Relaxed.product($0, lhs) }
-        return CSRMatrix(rows: rhs.rows, columns: rhs.columns, values: newValues, rowIndices: rhs.rowIndices, columnIndices: rhs.columnIndices)
+    static func *(lhs: T, rhs: borrowing UniqueCSRMatrix<T>) -> UniqueCSRMatrix<T> {
+        let newValues: UniqueArray<T> = .init(capacity: rhs.values.count) { span in
+            for i in rhs.values.indices {
+                span.append(Relaxed.product(lhs, rhs.values[i]))
+            }
+        }
+        let newRowIndices: UniqueArray<Int> = .init(capacity: rhs.rowIndices.count) { span in
+            for i in rhs.rowIndices.indices {
+                span.append(rhs.rowIndices[i])
+            }
+        }
+        let newColumnIndices: UniqueArray<Int> = .init(capacity: rhs.columnIndices.count) { span in
+            for i in rhs.columnIndices.indices {
+                span.append(rhs.columnIndices[i])
+            }
+        }
+        return UniqueCSRMatrix(rows: rhs.rows, columns: rhs.columns, values: newValues, rowIndices: newRowIndices, columnIndices: newColumnIndices)
     }
     
     
     @_optimize(speed)
     @inlinable
-    static func *=(lhs: inout CSRMatrix<T>, rhs: T)  {
+    static func *=(lhs: inout UniqueCSRMatrix<T>, rhs: T)  {
         lhs.multiply(by: rhs)
     }
     
@@ -347,8 +396,8 @@ public extension CSRMatrix where T: AlgebraicField {
     
     @_optimize(speed)
     @inlinable
-    static func /(lhs: CSRMatrix<T>, rhs: T) -> CSRMatrix<T> {
-        var result = copy lhs
+    static func /(lhs: borrowing UniqueCSRMatrix<T>, rhs: T) -> UniqueCSRMatrix<T> {
+        var result: UniqueCSRMatrix<T> = .zero(rows: lhs.rows, columns: lhs.columns)
         result.divide(by: rhs)
         return result
     }
@@ -356,7 +405,7 @@ public extension CSRMatrix where T: AlgebraicField {
     
     @_optimize(speed)
     @inlinable
-    static func /=(lhs: inout CSRMatrix<T>, rhs: T)  {
+    static func /=(lhs: inout UniqueCSRMatrix<T>, rhs: T)  {
         lhs.divide(by: rhs)
     }
     
@@ -367,65 +416,78 @@ public extension CSRMatrix where T: AlgebraicField {
         if let recip = by.reciprocal {
             multiply(by: recip)
         } else {
-            for i in values.indices {
-                values[i] /= by
+            var mutableSpan = values.mutableSpan
+            for i in mutableSpan.indices {
+                mutableSpan[unchecked: i] /= by
             }
         }
     }
 }
 
-public extension CSRMatrix<Complex<Double>> {
+public extension UniqueCSRMatrix<Complex<Double>> {
     @_optimize(speed)
     @inlinable
-    static func *(lhs: Double, rhs: CSRMatrix<T>) -> Self {
-        var result = CSRMatrix(rows: rhs.rows, columns: rhs.columns, values: rhs.values, rowIndices: rhs.rowIndices, columnIndices: rhs.columnIndices)
-        result.multiply(by: lhs)
-        return result
+    static func *(lhs: Double, rhs: borrowing UniqueCSRMatrix<T>) -> Self {
+        let newValues: UniqueArray<T> = .init(capacity: rhs.values.count) { span in
+            for i in rhs.values.indices {
+                span.append(Relaxed.product(lhs, rhs.values[i]))
+            }
+        }
+        let newRowIndices: UniqueArray<Int> = .init(capacity: rhs.rowIndices.count) { span in
+            for i in rhs.rowIndices.indices {
+                span.append(rhs.rowIndices[i])
+            }
+        }
+        let newColumnIndices: UniqueArray<Int> = .init(capacity: rhs.columnIndices.count) { span in
+            for i in rhs.columnIndices.indices {
+                span.append(rhs.columnIndices[i])
+            }
+        }
+        return UniqueCSRMatrix(rows: rhs.rows, columns: rhs.columns, values: newValues, rowIndices: newRowIndices, columnIndices: newColumnIndices)
     }
     
     
     @_optimize(speed)
     @inlinable
-    static func *=(lhs: inout CSRMatrix<T>, rhs: Double)  {
+    static func *=(lhs: inout UniqueCSRMatrix<T>, rhs: Double)  {
         lhs.multiply(by: rhs)
     }
     
     @_optimize(speed)
     @inlinable
     mutating func multiply(by: Double) {
-        #if canImport(COpenBLAS)
-        let N = blasint(values.count)
-        withUnsafePointer(to: by) { alpha in
-            cblas_zscal(N, alpha, &values, 1)
-        }
-        #elseif canImport(Accelerate)
-        let N = blasint(values.count)
-        withUnsafePointer(to: by) { alpha in
-            values.withUnsafeMutableBufferPointer { values in 
-                cblas_zscal(N, .init(alpha), .init(values.baseAddress), 1)
-            }
-        }
-        #else
         var span = values.mutableSpan
         for i in 0..<span.count {
             span[unchecked: i] = Relaxed.product(span[unchecked: i], by)
         }
-        #endif
     }
     
     
     @_optimize(speed)
     @inlinable
-    static func /(lhs: CSRMatrix<T>, rhs: Double) -> CSRMatrix<T> {
-        var result = CSRMatrix(rows: lhs.rows, columns: lhs.columns, values: lhs.values, rowIndices: lhs.rowIndices, columnIndices: lhs.columnIndices)
-        result.divide(by: rhs)
-        return result
+    static func /(lhs: borrowing UniqueCSRMatrix<T>, rhs: Double) -> UniqueCSRMatrix<T> {
+        let newValues: UniqueArray<T> = .init(capacity: lhs.values.count) { span in
+            for i in lhs.values.indices {
+                span.append(lhs.values[i] / rhs)
+            }
+        }
+        let newRowIndices: UniqueArray<Int> = .init(capacity: lhs.rowIndices.count) { span in
+            for i in lhs.rowIndices.indices {
+                span.append(lhs.rowIndices[i])
+            }
+        }
+        let newColumnIndices: UniqueArray<Int> = .init(capacity: lhs.columnIndices.count) { span in
+            for i in lhs.columnIndices.indices {
+                span.append(lhs.columnIndices[i])
+            }
+        }
+        return UniqueCSRMatrix(rows: lhs.rows, columns: lhs.columns, values: newValues, rowIndices: newRowIndices, columnIndices: newColumnIndices)
     }
     
     
     @_optimize(speed)
     @inlinable
-    static func /=(lhs: inout CSRMatrix<T>, rhs: Double)  {
+    static func /=(lhs: inout UniqueCSRMatrix<T>, rhs: Double)  {
         lhs.divide(by: Complex(rhs))
     }
     
@@ -443,8 +505,8 @@ public extension CSRMatrix<Complex<Double>> {
     }
 }
 
-extension CSRMatrix: Sendable where T: Sendable {}
-extension CSRMatrix: Equatable where T: Equatable {}
-extension CSRMatrix: Hashable where T: Hashable {}
-extension CSRMatrix: Codable where T: Codable {}
-*/
+extension UniqueCSRMatrix: Sendable where T: Sendable {}
+//extension UniqueCSRMatrix: Equatable where T: Equatable {}
+//extension UniqueCSRMatrix: Hashable where T: Hashable {}
+//extension UniqueCSRMatrix: Codable where T: Codable {}
+
