@@ -9,18 +9,50 @@ import SebbuScience
 import Numerics
 import PythonKitUtilities
 
+struct DecayingRHS: ODERHSFunction {
+    @inlinable
+    func evaluate(t: Double, y: borrowing Double, dy: inout Double) {
+        dy = -y
+    }
+}
+
+extension Double: FixedStepODESolverState {
+    @inlinable
+    public mutating func add(_ a: borrowing Double, multiplied: Double) {
+        self += a * multiplied
+    }
+    
+    @inlinable
+    public mutating func assign(_ base: borrowing Double, adding direction: borrowing Double, multipliedBy c: Double) {
+        self = base + direction * c
+    }
+}
+
+extension Double: AdaptiveStepODESolverState {
+    public var norm: Double {
+        magnitude
+    }
+    
+    public mutating func assign(_ a: borrowing Double) {
+        self = Double(a)
+    }
+    
+    public mutating func assign(_ a: borrowing Double, multiplied: Double) {
+        self = a * multiplied
+    }
+    
+}
+
 func testUniqueRK4FixedStep() {
     let endTime = 100.0
-    var solver = UniqueRK4Solver(t0: 0.0, initialState: 1.0, dt: 0.001)
-    var tSpace: [Double] = []
-    var y: [Double] = []
+    var solver = UniqueRK4Solver(t: 0.0, dt: 0.01, rhs: DecayingRHS(), k1: 0.0, k2: 0.0, k3: 0.0, k4: 0.0, temporary: 0.0)
+    var currentState = 1.0
+    var tSpace: [Double] = [0.0]
+    var y: [Double] = [currentState]
     while solver.t < endTime {
-        solver.step { t, state, result in
-            result = -.sin(t)
-        } yielding: { t, state in
-            tSpace.append(t)
-            y.append(state)
-        }
+        let t = solver.step(y: &currentState)
+        tSpace.append(t)
+        y.append(currentState)
     }
     print(tSpace.count)
     plt.figure()
@@ -32,17 +64,15 @@ func testUniqueRK4FixedStep() {
 
 func testUniqueRK4AdaptiveStep() {
     let endTime = 100.0
-    var solver = UniqueDOPRISolver(t0: 0.0, initialState: 1.0, dt: 0.1, maxStep: 0.1)
-    var tSpace: [Double] = []
-    var y: [Double] = []
+    var solver = UniqueDOPRISolver(t: 0.0, dt: 0.1, maxStep: 0.1, rhs: DecayingRHS(), y4: 0.0, k1: 0.0, k2: 0.0, k3: 0.0, k4: 0.0, k5: 0.0, k6: 0.0, k7: 0.0, temporary: 0.0)
+    var currentState = 1.0
+    var tSpace: [Double] = [0.0]
+    var y: [Double] = [currentState]
     let time = ContinuousClock().measure {
         while solver.t < endTime {
-            solver.step { t, state, result in
-                result = -.sin(t)
-            } yielding: { t, state in
-                tSpace.append(t)
-                y.append(state)
-            }
+            let t = solver.step(y5: &currentState)
+            tSpace.append(t)
+            y.append(currentState)
         }
     }
     
@@ -56,53 +86,44 @@ func testUniqueRK4AdaptiveStep() {
 
 func testUniqueSolverWithCustomState() {
     let endTime = 100.0
-    var adaptiveSolver = UniqueDOPRISolver(t0: 0.0, initialState: State(state: 1.0), dt: 0.01, maxStep: 0.01)
-    var fixedSolver = UniqueRK4Solver(t0: 0.0, initialState: State(state: 1.0), dt: 0.001)
-    var adaptiveTSpace: [Double] = []
-    var adaptiveY: [Double] = []
+    var adaptiveSolver = UniqueDOPRISolver(t: 0.0, dt: 0.01, maxStep: 0.01, rhs: DecayingStateFunc(), y4: .init(state: 0.0), k1: .init(state: 0.0), k2: .init(state: 0.0), k3: .init(state: 0.0), k4: .init(state: 0.0), k5: .init(state: 0.0), k6: .init(state: 0.0), k7: .init(state: 0.0), temporary: .init(state: 0.0))
+    var fixedSolver = UniqueRK4Solver(t: 0.0, dt: 0.001, rhs: DecayingStateFunc(), k1: .init(state: 0.0), k2: .init(state: 0.0), k3: .init(state: 0.0), k4: .init(state: 0.0), temporary: .init(state: 0.0))
+    var y5: State = .init(state: 1.0)
+    var adaptiveTSpace: [Double] = [0.0]
+    var adaptiveY: [Double] = [y5.state]
     while adaptiveSolver.t < endTime {
-        adaptiveSolver.step { t, state, result in
-            result.state = -.sin(100 * t)
-        } yielding: { t, state in
-            adaptiveTSpace.append(t)
-            adaptiveY.append(state.state)
-        }
+        let t = adaptiveSolver.step(y5: &y5)
+        adaptiveTSpace.append(t)
+        adaptiveY.append(y5.state)
     }
+    var y: State = .init(state: 1.0)
     var fixedTSpace: [Double] = []
     var fixedY: [Double] = []
     while fixedSolver.t < endTime {
-        fixedSolver.step { t, state, result in
-            result.state = -.sin(100 * t)
-        } yielding: { t, state in
-            fixedTSpace.append(t)
-            fixedY.append(state.state)
-        }
-
+        let t = fixedSolver.step(y: &y)
+        fixedTSpace.append(t)
+        fixedY.append(y.state)
     }
     print(adaptiveTSpace.count, fixedTSpace.count)
     plt.figure()
     plt.plot(x: fixedTSpace, y: fixedY)
-    plt.plot(x: adaptiveTSpace, y: adaptiveY)
+    plt.plot(x: adaptiveTSpace, y: adaptiveY, linestyle: "--")
     plt.show()
     plt.close()
 }
 
 func testUniqueSRK2SolverWithCustomState() {
     let endTime = 100.0
-    var solver = UniqueSRK2Solver<State, Double>(t0: 0.0, initialState: State(state: 1.0), diffusionSpace: .allocate(capacity: 1), noiseSpace: .allocate(capacity: 1), dt: 0.001)
-    var tSpace: [Double] = []
-    var y: [Double] = []
+    var noises: [Double] = []
+    let span = noises.mutableSpan
+    var solver = UniqueSRK2Solver(t: 0.0, dt: 0.001, rhs: DecayingSDEFunc(), drift0: .init(state: 0.0), drift1: .init(state: 0.0), noise0: .init(state: 0.0), noise1: .init(state: 0.0), temporary: .init(state: 0.0), noises: span)
+    var state: State = .init(state: 1.0)
+    var tSpace: [Double] = [0.0]
+    var y: [Double] = [state.state]
     while solver.t < endTime {
-        solver.step { t, state, result in
-            result.state = -.sin(t)
-        } _: { t, state, result in
-            result[0].state = .zero
-        } _: { t, result in
-            result[0] = .zero
-        } yielding: { t, state in
-            tSpace.append(t)
-            y.append(state.state)
-        }
+        let t = solver.step(y: &state)
+        tSpace.append(t)
+        y.append(state.state)
     }
     print(tSpace.count)
     plt.figure()
@@ -112,7 +133,30 @@ func testUniqueSRK2SolverWithCustomState() {
     plt.close()
 }
 
-private struct State {
+struct DecayingStateFunc: ODERHSFunction {
+    func evaluate(t: Double, y: borrowing State, dy: inout State) {
+        dy.state = -.sin(t)
+    }
+}
+
+struct DecayingSDEFunc: SDERHSFunction {
+    typealias NoiseType = Double
+    func drift(t: Double, y: borrowing State, into dy: inout State) {
+        dy.state = -.sin(t)
+    }
+    
+    func diffusion(t: Double, y: borrowing State, channel: Int, into dy: inout State) {
+        dy.state = .zero
+    }
+    
+    func sampleWhiteNoise(t: Double, noises: inout MutableSpan<NoiseType>) {
+        for i in noises.indices {
+            noises[unchecked: i] = .zero
+        }
+    }
+}
+
+struct State {
     @usableFromInline
     var state: Double
     
@@ -122,7 +166,7 @@ private struct State {
     }
 }
 
-extension State: UniqueODESolverState {
+extension State: AdaptiveStepODESolverState {
     @inlinable
     var norm: Double {
         state.magnitude
@@ -154,7 +198,11 @@ extension State: UniqueODESolverState {
     }
 }
 
-extension State: UniqueSDESolverState {
+extension State: FixedStepSDESolverState {
+    mutating func zero() {
+        state = .zero
+    }
+    
     mutating func scale(by: Double) {
         state *= by
     }
