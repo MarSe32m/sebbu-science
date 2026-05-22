@@ -76,36 +76,36 @@ public struct UniqueDOPRISolver<State: AdaptiveStepODESolverState, RHS: ODERHSFu
     }
     
     @inlinable
-    public mutating func step(y5: inout State) -> Double {
+    public mutating func step(y: inout State) -> Double {
         while true {
-            if hasCachedK1 { rhs.evaluate(t: t, y: y5, dy: &k1) }
-            temporary.assign(y5, adding: k1, multipliedBy: Relaxed.product(1.0 / 5.0, dt))
+            if hasCachedK1 { rhs.evaluate(t: t, y: y, dy: &k1) }
+            temporary.assign(y, adding: k1, multipliedBy: Relaxed.product(1.0 / 5.0, dt))
             rhs.evaluate(t: Relaxed.multiplyAdd(1.0 / 5.0, dt, t), y: temporary, dy: &k2)
             
-            temporary.assign(y5, adding: k1, multipliedBy: Relaxed.product(3.0 / 40.0, dt))
+            temporary.assign(y, adding: k1, multipliedBy: Relaxed.product(3.0 / 40.0, dt))
             temporary.add(k2, multiplied: Relaxed.product(9.0 / 40.0, dt))
             rhs.evaluate(t: Relaxed.multiplyAdd(3.0 / 10.0, dt, t), y: temporary, dy: &k3)
             
             
-            temporary.assign(y5, adding: k1, multipliedBy: Relaxed.product(44.0 / 45.0, dt))
+            temporary.assign(y, adding: k1, multipliedBy: Relaxed.product(44.0 / 45.0, dt))
             temporary.add(k2, multiplied: Relaxed.product(-56.0 / 15.0, dt))
             temporary.add(k3, multiplied: Relaxed.product(32.0 / 9.0, dt))
             rhs.evaluate(t: Relaxed.multiplyAdd(4.0 / 5.0, dt, t), y: temporary, dy: &k4)
             
-            temporary.assign(y5, adding: k1, multipliedBy: Relaxed.product(19372.0 / 6561.0, dt))
+            temporary.assign(y, adding: k1, multipliedBy: Relaxed.product(19372.0 / 6561.0, dt))
             temporary.add(k2, multiplied: Relaxed.product(-25360.0 / 2187.0, dt))
             temporary.add(k3, multiplied: Relaxed.product(64448.0 / 6561.0, dt))
             temporary.add(k4, multiplied: Relaxed.product(-212.0 / 729.0, dt))
             rhs.evaluate(t: Relaxed.multiplyAdd(8.0 / 9.0, dt, t), y: temporary, dy: &k5)
             
-            temporary.assign(y5, adding: k1, multipliedBy: Relaxed.product(9017.0 / 3168.0, dt))
+            temporary.assign(y, adding: k1, multipliedBy: Relaxed.product(9017.0 / 3168.0, dt))
             temporary.add(k2, multiplied: Relaxed.product(-355.0 / 33.0, dt))
             temporary.add(k3, multiplied: Relaxed.product(46732.0 / 5247.0, dt))
             temporary.add(k4, multiplied: Relaxed.product(49.0 / 176.0, dt))
             temporary.add(k5, multiplied: Relaxed.product(-5103.0 / 18656.0, dt))
             rhs.evaluate(t: Relaxed.sum(dt, t), y: temporary, dy: &k6)
             
-            temporary.assign(y5, adding: k1, multipliedBy: Relaxed.product(35.0 / 384.0, dt))
+            temporary.assign(y, adding: k1, multipliedBy: Relaxed.product(35.0 / 384.0, dt))
             //temporary.add(k2, multiplied: 0.0 * dt)
             temporary.add(k3, multiplied: Relaxed.product(500.0 / 1113.0, dt))
             temporary.add(k4, multiplied: Relaxed.product(125.0 / 192.0, dt))
@@ -113,7 +113,7 @@ public struct UniqueDOPRISolver<State: AdaptiveStepODESolverState, RHS: ODERHSFu
             temporary.add(k6, multiplied: Relaxed.product(11.0 / 84.0, dt))
             rhs.evaluate(t: Relaxed.sum(dt, t), y: temporary, dy: &k7)
             
-            y4.assign(y5, adding: k1, multipliedBy: Relaxed.product(5179.0 / 57600.0, dt))
+            y4.assign(y, adding: k1, multipliedBy: Relaxed.product(5179.0 / 57600.0, dt))
             //y4.add(k2, multiplied: 0.0)
             y4.add(k3, multiplied: Relaxed.product(7571.0 / 16695.0, dt))
             y4.add(k4, multiplied: Relaxed.product(393.0 / 640.0, dt))
@@ -121,7 +121,7 @@ public struct UniqueDOPRISolver<State: AdaptiveStepODESolverState, RHS: ODERHSFu
             y4.add(k6, multiplied: Relaxed.product(187.0 / 2100.0, dt))
             y4.add(k7, multiplied: Relaxed.product(1.0 / 40.0, dt))
             
-            temporary.assign(y5, adding: k1, multipliedBy: Relaxed.product(35.0 / 384.0, dt))
+            temporary.assign(y, adding: k1, multipliedBy: Relaxed.product(35.0 / 384.0, dt))
             //temporary.add(k2, multiplied: 0.0 * dt)
             temporary.add(k3, multiplied: Relaxed.product(500.0 / 1113.0, dt))
             temporary.add(k4, multiplied: Relaxed.product(125.0 / 192.0, dt))
@@ -141,7 +141,7 @@ public struct UniqueDOPRISolver<State: AdaptiveStepODESolverState, RHS: ODERHSFu
             }
             // Accept step
             t += dt
-            y5.assign(temporary)
+            y.assign(temporary)
             k1.assign(k7)
             hasCachedK1 = true
             let scale = error <= 1e-10 ? 2.0 : 0.9 * .pow(errorScale / error, 0.2)

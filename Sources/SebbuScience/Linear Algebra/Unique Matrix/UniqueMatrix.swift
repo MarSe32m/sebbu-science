@@ -9,9 +9,30 @@ import RealModule
 import ComplexModule
 
 public struct UniqueMatrix<T: ~Copyable>: ~Copyable {
-    public let elements: UnsafeMutableBufferPointer<T>
+    public let elements: UnsafeMutablePointer<T>
     public let rows: Int
     public let columns: Int
+    
+    @usableFromInline
+    internal var count: Int { rows &* columns }
+    
+    @inlinable
+    @inline(always)
+    @_transparent
+    public var span: Span<T> {
+        _read { yield Span(_unsafeStart: elements, count: count) }
+    }
+    
+    @inlinable
+    @inline(always)
+    @_transparent
+    public var mutableSpan: MutableSpan<T> {
+        _read { yield MutableSpan(_unsafeStart: elements, count: count) }
+        _modify {
+            var span = MutableSpan(_unsafeStart: elements, count: count)
+            yield &span
+        }
+    }
     
     @inlinable
     @inline(always)
@@ -22,17 +43,31 @@ public struct UniqueMatrix<T: ~Copyable>: ~Copyable {
     
     @inlinable
     public init(elements: [T], rows: Int, columns: Int) where T: Copyable {
-        precondition(elements.count == rows * columns)
-        self.elements = .allocate(capacity: rows * columns)
+        precondition(elements.count == rows &* columns)
+        self.elements = .allocate(capacity: rows &* columns)
+        self.elements.initialize(from: elements, count: rows &* columns)
         self.rows = rows
         self.columns = columns
-        let lastIndex = self.elements.initialize(fromContentsOf: elements)
-        precondition(lastIndex == self.elements.count)
+    }
+    
+    @inlinable
+    public init(copying: borrowing Self) where T: Copyable {
+        let newElements = UnsafeMutablePointer<T>.allocate(capacity: copying.count)
+        newElements._unsafeCopy(from: copying.elements, count: copying.count)
+        self.init(_unsafeElements: newElements, rows: copying.rows, columns: copying.columns)
+    }
+    
+    @inlinable
+    @_disfavoredOverload
+    public init(_unsafeElements: UnsafeMutablePointer<T>, rows: Int, columns: Int) {
+        self.elements = _unsafeElements
+        self.rows = rows
+        self.columns = columns
     }
     
     @inlinable
     deinit {
-        elements.deinitialize()
+        elements.deinitialize(count: rows * columns)
         elements.deallocate()
     }
     
@@ -40,8 +75,8 @@ public struct UniqueMatrix<T: ~Copyable>: ~Copyable {
     public init(rows: Int, columns: Int, _ initializingElementsWith: (UnsafeMutableBufferPointer<T>) throws -> Void) rethrows {
         self.rows = rows
         self.columns = columns
-        self.elements = .allocate(capacity: rows * columns)
-        try initializingElementsWith(self.elements)
+        self.elements = .allocate(capacity: rows &* columns)
+        try initializingElementsWith(.init(start: elements, count: count))
     }
     
     @inlinable
@@ -50,7 +85,7 @@ public struct UniqueMatrix<T: ~Copyable>: ~Copyable {
         @inline(always)
         _read {
             let index = i &* columns &+ j
-            precondition(index < elements.count)
+            precondition(index < count)
             yield elements[index]
         }
 
@@ -58,7 +93,7 @@ public struct UniqueMatrix<T: ~Copyable>: ~Copyable {
         @inline(always)
         _modify {
             let index = i &* columns &+ j
-            precondition(index < elements.count)
+            precondition(index < count)
             yield &elements[index]
         }
     }
@@ -82,19 +117,15 @@ public struct UniqueMatrix<T: ~Copyable>: ~Copyable {
     
     @inlinable
     public mutating func copyElements(from other: borrowing Self) where T: Copyable {
-        precondition(elements.count == other.elements.count)
-        var mutableSpan = elements.mutableSpan
-        let otherSpan = other.elements.span
-        for i in mutableSpan.indices {
-            mutableSpan[unchecked: i] = otherSpan[unchecked: i]
-        }
+        precondition(count == other.count)
+        elements._unsafeCopy(from: other.elements, count: count)
     }
 }
 
 public extension UniqueMatrix where T: Copyable {
     @inlinable
     var transpose: Self {
-        var result: Self = .init(rows: columns, columns: rows, {_ in })
+        var result: Self = .init(rows: columns, columns: rows) { _ in }
         for i in 0..<columns {
             for j in 0..<rows {
                 result[i, j] = self[j, i]

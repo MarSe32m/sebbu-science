@@ -17,7 +17,7 @@ public protocol FixedStepSDESolverState: ~Copyable {
 }
 
 public protocol SDERHSFunction: ~Copyable {
-    associatedtype State: FixedStepSDESolverState
+    associatedtype State
     associatedtype NoiseType
     
     /// Must fully overwrite `dy`.
@@ -35,7 +35,7 @@ public protocol SDERHSFunction: ~Copyable {
         into dy: inout State
     )
     
-    /// Samples normalized noises ξ_i with E[ξ_i ξ_j] = δ_ij.
+    /// Samples normalized noises ξ_i with E[ξ_i ξ^\*_j] = δ_ij.
     /// The solver multiplies them by sqrt(dt).
     mutating func sampleWhiteNoise(
         t: Double,

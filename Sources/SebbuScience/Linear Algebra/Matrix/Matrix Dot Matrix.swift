@@ -485,25 +485,25 @@ public extension Matrix<Complex<Float>> {
 
 //MARK: Matrix-matrix multiplication global functions
 @inlinable
-public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Double, _ leftMatrix: UnsafePointer<Double>, _ rightMatrix: UnsafePointer<Double>, _ resultMultiplier: Double, _ resultMatrix: UnsafeMutablePointer<Double>) {
+public func matMulBLAS(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Double, _ leftMatrix: UnsafePointer<Double>, _ rightMatrix: UnsafePointer<Double>, _ resultMultiplier: Double, _ resultMatrix: UnsafeMutablePointer<Double>) {
     assert(leftColumns == rightRows)
     BLAS.dgemm(.rowMajor, .noTranspose, .noTranspose, leftRows, rightColumns, leftColumns, multiplier, leftMatrix, leftColumns, rightMatrix, rightColumns, resultMultiplier, resultMatrix, leftColumns)
 }
 
 @inlinable
-public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Float, _ leftMatrix: UnsafePointer<Float>, _ rightMatrix: UnsafePointer<Float>, _ resultMultiplier: Float, _ resultMatrix: UnsafeMutablePointer<Float>) {
+public func matMulBLAS(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Float, _ leftMatrix: UnsafePointer<Float>, _ rightMatrix: UnsafePointer<Float>, _ resultMultiplier: Float, _ resultMatrix: UnsafeMutablePointer<Float>) {
     assert(leftColumns == rightRows)
     BLAS.sgemm(.rowMajor, .noTranspose, .noTranspose, leftRows, rightColumns, leftColumns, multiplier, leftMatrix, leftColumns, rightMatrix, rightColumns, resultMultiplier, resultMatrix, leftColumns)
 }
 
 @inlinable
-public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Complex<Double>, _ leftMatrix: UnsafePointer<Complex<Double>>, _ rightMatrix: UnsafePointer<Complex<Double>>, _ resultMultiplier: Complex<Double>, _ resultMatrix: UnsafeMutablePointer<Complex<Double>>) {
+public func matMulBLAS(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Complex<Double>, _ leftMatrix: UnsafePointer<Complex<Double>>, _ rightMatrix: UnsafePointer<Complex<Double>>, _ resultMultiplier: Complex<Double>, _ resultMatrix: UnsafeMutablePointer<Complex<Double>>) {
     assert(leftColumns == rightRows)
     BLAS.zgemm(.rowMajor, .noTranspose, .noTranspose, leftRows, rightColumns, leftColumns, multiplier, leftMatrix, leftColumns, rightMatrix, rightColumns, resultMultiplier, resultMatrix, leftColumns)
 }
 
 @inlinable
-public func matMul(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Complex<Float>, _ leftMatrix: UnsafePointer<Complex<Float>>, _ rightMatrix: UnsafePointer<Complex<Float>>, _ resultMultiplier: Complex<Float>, _ resultMatrix: UnsafeMutablePointer<Complex<Float>>) {
+public func matMulBLAS(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Complex<Float>, _ leftMatrix: UnsafePointer<Complex<Float>>, _ rightMatrix: UnsafePointer<Complex<Float>>, _ resultMultiplier: Complex<Float>, _ resultMatrix: UnsafeMutablePointer<Complex<Float>>) {
     assert(leftColumns == rightRows)
     BLAS.cgemm(.rowMajor, .noTranspose, .noTranspose, leftRows, rightColumns, leftColumns, multiplier, leftMatrix, leftColumns, rightMatrix, rightColumns, resultMultiplier, resultMatrix, leftColumns)
 }
