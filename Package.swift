@@ -88,6 +88,9 @@ let package = Package(
                 .define("ACCELERATE_NEW_LAPACK", .when(platforms: [.macOS])),
                 .define("ACCELERATE_LAPACK_ILP64", .when(platforms: [.macOS]))
             ],
+            swiftSettings: [
+                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))
+            ],
             linkerSettings: [
                 .linkedFramework("Accelerate", .when(platforms: [.macOS]))
             ]

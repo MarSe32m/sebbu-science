@@ -4,9 +4,8 @@
 //
 //  Created by Sebastian Toivonen on 22.5.2026.
 //
-import RealModule
-import ComplexModule
-import SebbuCollections
+import Numerics
+import NumericsExtensions
 
 public extension UniqueMatrix where T: AlgebraicField {
     /// The inverse of the matrix, if invertible.
@@ -32,6 +31,14 @@ public extension UniqueMatrix where T: AlgebraicField {
     }
     
     @inlinable
+    init(copying: borrowing Self, adding: borrowing Self) where T: Copyable {
+        let newElements = UnsafeMutablePointer<T>.allocate(capacity: copying.count)
+        newElements._unsafeCopy(from: copying.elements, adding: adding.elements, count: copying.count)
+        self.init(_unsafeElements: newElements, rows: copying.rows, columns: copying.columns)
+    }
+    
+    
+    @inlinable
     static func diagonal(from: [T]) -> Self {
         let N = from.count
         var elements = [T](repeating: .zero, count: N*N)
@@ -55,7 +62,6 @@ public extension UniqueMatrix where T: AlgebraicField {
     }
     
     @inlinable
-    @_transparent
     mutating func zeroElements() {
         elements._unsafeZeroElements(count: count)
     }
@@ -64,6 +70,12 @@ public extension UniqueMatrix where T: AlgebraicField {
     mutating func copyElements(from other: borrowing Self, adding: borrowing Self, multiplied: T) {
         precondition(count == other.count && count == adding.count, "The matrices must have the same size.")
         elements._unsafeCopy(from: other.elements, adding: adding.elements, multiplied: multiplied, count: count)
+    }
+    
+    @inlinable
+    mutating func copyElements(from other: borrowing Self, adding: borrowing Self) {
+        precondition(count == other.count && count == adding.count, "The matrices must have the same size.")
+        elements._unsafeCopy(from: other.elements, adding: adding.elements, count: count)
     }
     
     @inlinable
@@ -243,7 +255,7 @@ public extension UniqueMatrix where T == Float {
 public extension UniqueMatrix<Complex<Double>> {
     @inlinable
     var conjugateTranspose: Self {
-        var newElements: UnsafeMutablePointer<T> = .allocate(capacity: count)
+        let newElements: UnsafeMutablePointer<T> = .allocate(capacity: count)
         let newRows = self.columns
         let newColumns = self.rows
         for i in 0..<rows {
@@ -321,7 +333,7 @@ public extension UniqueMatrix<Complex<Double>> {
 public extension UniqueMatrix<Complex<Float>> {
     @inlinable
     var conjugateTranspose: Self {
-        var newElements: UnsafeMutablePointer<T> = .allocate(capacity: count)
+        let newElements: UnsafeMutablePointer<T> = .allocate(capacity: count)
         let newRows = self.columns
         let newColumns = self.rows
         for i in 0..<rows {
@@ -434,8 +446,8 @@ public extension UniqueMatrix<Complex<Float>> {
     }
 }
 
-public extension UniqueMatrix where T: AlgebraicField, T.Magnitude: FloatingPoint {
-    @inlinable @inline(__always)
+public extension UniqueMatrix where T: ConjugatableScalar, T.Magnitude: FloatingPoint {
+    @inlinable
     func isApproximatelyEqual( to other: borrowing Self, absoluteTolerance: T.Magnitude, relativeTolerance: T.Magnitude = 0) -> Bool {
         if rows != other.rows || columns != other.columns { return false }
         for i in 0..<count {
@@ -480,9 +492,7 @@ public extension UniqueMatrix where T: AlgebraicField, T.Magnitude: FloatingPoin
         }
         return true
     }
-}
-
-public extension UniqueMatrix where T == Complex<Double> {
+    
     @inlinable
     var isHermitian: Bool {
         if rows != columns { return false }
@@ -510,58 +520,8 @@ public extension UniqueMatrix where T == Complex<Double> {
     }
 }
 
-public extension UniqueMatrix where T == Complex<Float> {
-    @inlinable
-    var isHermitian: Bool {
-        if rows != columns { return false }
-        for i in 0..<rows {
-            for j in 0..<columns where j != i {
-                if !self[i, j].isApproximatelyEqual(to: self[j, i].conjugate) {
-                    return false
-                }
-            }
-        }
-        return true
-    }
-    @inlinable
-    var isAntiHermitian: Bool {
-        if rows != columns { return false }
-        for i in 0..<rows {
-            for j in 0..<columns {
-                if !self[i, j].conjugate.isApproximatelyEqual(to: -self[j, i]) {
-                    return false
-                }
-            }
-        }
-        return true
-    }
-}
-
-public extension UniqueMatrix where T: AlgebraicField & Real, T.Magnitude: FloatingPoint {
-    @inlinable
-    var isHermitian: Bool {
-        if rows != columns { return false }
-        for i in 0..<rows {
-            for j in 0..<columns where j != i {
-                if !self[i, j].isApproximatelyEqual(to: self[j, i].conjugate) {
-                    return false
-                }
-            }
-        }
-        return true
-    }
-    @inlinable
-    var isAntiHermitian: Bool {
-        if rows != columns { return false }
-        for i in 0..<rows {
-            for j in 0..<columns {
-                if !self[i, j].conjugate.isApproximatelyEqual(to: -self[j, i]) {
-                    return false
-                }
-            }
-        }
-        return true
-    }
+public extension UniqueMatrix where T == Complex<Double> {
+    
 }
 
 public extension UniqueMatrix where T: AlgebraicField {

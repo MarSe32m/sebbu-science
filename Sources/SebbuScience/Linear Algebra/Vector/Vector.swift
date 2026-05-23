@@ -20,6 +20,16 @@ public struct Vector<T> {
     }
     
     @inlinable
+    public init(copying: borrowing UniqueVector<T>) where T: Copyable {
+        self.components = .init(unsafeUninitializedCapacity: copying.count) { buffer, initializedCount in
+            for i in 0..<copying.count {
+                buffer.initializeElement(at: i, to: copying.components[i])
+            }
+            initializedCount = copying.count
+        }
+    }
+    
+    @inlinable
     public init(count: Int, _ initializingElementsWith: (UnsafeMutableBufferPointer<T>) throws -> Void) rethrows {
         components = try .init(unsafeUninitializedCapacity: count, initializingWith: { buffer, initializedCount in
             initializedCount = count

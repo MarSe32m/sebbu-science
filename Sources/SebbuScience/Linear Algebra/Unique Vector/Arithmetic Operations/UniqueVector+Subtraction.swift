@@ -1,17 +1,16 @@
 //
-//  UniqueMatrix+Subtraction.swift
+//  UniqueVector+Subtraction.swift
 //  sebbu-science
 //
-//  Created by Sebastian Toivonen on 22.5.2026.
+//  Created by Sebastian Toivonen on 23.5.2026.
 //
 
 import NumericsExtensions
-
 //MARK: Addition for AlgebraicField
-public extension UniqueMatrix where T: AlgebraicField {
+public extension UniqueVector where T: AlgebraicField {
     @inlinable
     static func -(lhs: borrowing Self, rhs: borrowing Self) -> Self {
-        var resultMatrix: Self = UniqueMatrix(copying: lhs)
+        var resultMatrix: Self = UniqueVector(copying: lhs)
         resultMatrix.subtract(rhs)
         return resultMatrix
     }
@@ -23,64 +22,65 @@ public extension UniqueMatrix where T: AlgebraicField {
 
     @inlinable
     mutating func subtract(_ other: borrowing Self, multiplied: T) {
-        elements._unsafeSubtract(other.elements, multiplied: multiplied, count: count)
+        components._unsafeSubtract(other.components, multiplied: multiplied, count: count)
     }
     
     @inlinable
     mutating func subtract(_ other: borrowing Self) {
-        elements._unsafeSubtract(other.elements, count: count)
+        components._unsafeSubtract(other.components, count: count)
     }
 }
 
 //MARK: Addition for Double
-public extension UniqueMatrix<Double> {
+public extension UniqueVector<Double> {
     @inlinable
     mutating func subtractBLAS(_ other: borrowing Self, multiplied: T = 1.0) {
-        BLAS.daxpy(count, -multiplied, other.elements, 1, elements, 1)
+        BLAS.daxpy(count, -multiplied, other.components, 1, components, 1)
     }
 }
 
 //MARK: Addition for Float
-public extension UniqueMatrix<Float> {
+public extension UniqueVector<Float> {
     @inlinable
     mutating func subtractBLAS(_ other: borrowing Self, multiplied: T = 1.0) {
-        BLAS.saxpy(count, -multiplied, other.elements, 1, elements, 1)
+        BLAS.saxpy(count, -multiplied, other.components, 1, components, 1)
     }
 }
 
 //MARK: Addition for Complex<Double>
-public extension UniqueMatrix<Complex<Double>> {
+public extension UniqueVector<Complex<Double>> {
     @inlinable
     mutating func subtract(_ other: borrowing Self, multiplied: Double) {
-        elements._unsafeSubtract(other.elements, multiplied: multiplied, count: count)
+        components._unsafeSubtract(other.components, multiplied: multiplied, count: count)
     }
     
     @inlinable
     mutating func subtractBLAS(_ other: borrowing Self, multiplied: T = .one) {
-        BLAS.zaxpy(count, -multiplied, other.elements, 1, elements, 1)
+        BLAS.zaxpy(count, -multiplied, other.components, 1, components, 1)
     }
     
     @inlinable
     mutating func subtractBLAS(_ other: borrowing Self, multiplied: Double) {
-        BLAS.zaxpy(count, -multiplied, other.elements, 1, elements, 1)
+        BLAS.zaxpy(count, -multiplied, other.components, 1, components, 1)
     }
 }
 
 //MARK: Addition for Complex<Float>
-public extension UniqueMatrix<Complex<Float>> {
+public extension UniqueVector<Complex<Float>> {
     @inlinable
     mutating func subtract(_ other: borrowing Self, multiplied: Float) {
-        elements._unsafeSubtract(other.elements, multiplied: multiplied, count: count)
+        components._unsafeSubtract(other.components, multiplied: multiplied, count: count)
     }
     
     @inlinable
     mutating func subtractBLAS(_ other: borrowing Self, multiplied: T = .one) {
-        BLAS.caxpy(count, -multiplied, other.elements, 1, elements, 1)
+        BLAS.caxpy(count, -multiplied, other.components, 1, components, 1)
     }
     
     @inlinable
     mutating func subtractBLAS(_ other: borrowing Self, multiplied: Float) {
-        BLAS.caxpy(count, -multiplied, other.elements, 1, elements, 1)
+        BLAS.caxpy(count, -multiplied, other.components, 1, components, 1)
     }
 }
+
 

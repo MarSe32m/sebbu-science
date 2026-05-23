@@ -40,6 +40,18 @@ public struct Matrix<T> {
     }
     
     @inlinable
+    public init(copying: borrowing UniqueMatrix<T>) where T: Copyable {
+        self.elements = .init(unsafeUninitializedCapacity: copying.count) { buffer, initializedCount in
+            for i in 0..<copying.count {
+                buffer.initializeElement(at: i, to: copying.elements[i])
+            }
+            initializedCount = copying.count
+        }
+        self.rows = copying.rows
+        self.columns = copying.columns
+    }
+    
+    @inlinable
     public init(rows: Int, columns: Int, _ initializingElementsWith: (UnsafeMutableBufferPointer<T>) throws -> Void) rethrows {
         self.rows = rows
         self.columns = columns

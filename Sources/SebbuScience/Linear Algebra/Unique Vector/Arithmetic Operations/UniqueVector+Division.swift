@@ -1,21 +1,20 @@
 //
-//  UniqueMatrix+Division.swift
+//  UniqueVector+Division.swift
 //  sebbu-science
 //
-//  Created by Sebastian Toivonen on 22.5.2026.
+//  Created by Sebastian Toivonen on 23.5.2026.
 //
 
 import NumericsExtensions
 
-
 //MARK: Division for AlgebraicField
-public extension UniqueMatrix where T: AlgebraicField {
+public extension UniqueVector where T: AlgebraicField {
     @inlinable
     static func /(lhs: borrowing Self, rhs: T) -> Self {
         if let reciprocal = rhs.reciprocal {
-            return UniqueMatrix(copying: lhs, multiplied: reciprocal)
+            return UniqueVector(copying: lhs, multiplied: reciprocal)
         }
-        var result = UniqueMatrix(copying: lhs)
+        var result = UniqueVector(copying: lhs)
         result.divide(by: rhs)
         return result
     }
@@ -27,16 +26,16 @@ public extension UniqueMatrix where T: AlgebraicField {
     
     @inlinable
     mutating func divide(by: T) {
-        elements._unsafeDivide(by: by, count: count)
+        components._unsafeDivide(by: by, count: count)
     }
 }
 
 //MARK: Scaling for Double
-public extension UniqueMatrix<Double> {
+public extension UniqueVector<Double> {
     @inlinable
     mutating func divideBLAS(by: T) {
         if let reciprocal = by.reciprocal {
-            BLAS.dscal(count, reciprocal, elements, 1)
+            BLAS.dscal(count, reciprocal, components, 1)
         } else {
             divide(by: by)
         }
@@ -44,11 +43,11 @@ public extension UniqueMatrix<Double> {
 }
 
 //MARK: Scaling for Float
-public extension UniqueMatrix<Float> {
+public extension UniqueVector<Float> {
     @inlinable
     mutating func divideBLAS(by: T) {
         if let reciprocal = by.reciprocal {
-            BLAS.sscal(count, reciprocal, elements, 1)
+            BLAS.sscal(count, reciprocal, components, 1)
         } else {
             divide(by: by)
         }
@@ -56,13 +55,13 @@ public extension UniqueMatrix<Float> {
 }
 
 //MARK: Scaling for Complex<Double>
-public extension UniqueMatrix<Complex<Double>> {
+public extension UniqueVector<Complex<Double>> {
     @inlinable
     static func /(lhs: borrowing Self, rhs: Double) -> Self {
         if let reciprocal = rhs.reciprocal {
-            return UniqueMatrix(copying: lhs, multiplied: reciprocal)
+            return UniqueVector(copying: lhs, multiplied: reciprocal)
         }
-        var result = UniqueMatrix(copying: lhs)
+        var result = UniqueVector(copying: lhs)
         result.divide(by: rhs)
         return result
     }
@@ -74,13 +73,13 @@ public extension UniqueMatrix<Complex<Double>> {
     
     @inlinable
     mutating func divide(by: Double) {
-        elements._unsafeDivide(by: by, count: count)
+        components._unsafeDivide(by: by, count: count)
     }
 
     @inlinable
     mutating func divideBLAS(by: T) {
         if let reciprocal = by.reciprocal {
-            BLAS.zscal(count, reciprocal, elements, 1)
+            BLAS.zscal(count, reciprocal, components, 1)
         } else {
             divide(by: by)
         }
@@ -89,7 +88,7 @@ public extension UniqueMatrix<Complex<Double>> {
     @inlinable
     mutating func divideBLAS(by: Double) {
         if let reciprocal = by.reciprocal {
-            BLAS.zdscal(count, reciprocal, elements, 1)
+            BLAS.zdscal(count, reciprocal, components, 1)
         } else {
             divide(by: by)
         }
@@ -97,13 +96,13 @@ public extension UniqueMatrix<Complex<Double>> {
 }
 
 //MARK: Scaling for Complex<Float>
-public extension UniqueMatrix<Complex<Float>> {
+public extension UniqueVector<Complex<Float>> {
     @inlinable
     static func /(lhs: borrowing Self, rhs: Float) -> Self {
         if let reciprocal = rhs.reciprocal {
-            return UniqueMatrix(copying: lhs, multiplied: reciprocal)
+            return UniqueVector(copying: lhs, multiplied: reciprocal)
         }
-        var result = UniqueMatrix(copying: lhs)
+        var result = UniqueVector(copying: lhs)
         result.divide(by: rhs)
         return result
     }
@@ -115,13 +114,13 @@ public extension UniqueMatrix<Complex<Float>> {
     
     @inlinable
     mutating func divide(by: Float) {
-        elements._unsafeDivide(by: by, count: count)
+        components._unsafeDivide(by: by, count: count)
     }
 
     @inlinable
     mutating func divideBLAS(by: T) {
         if let reciprocal = by.reciprocal {
-            BLAS.cscal(count, reciprocal, elements, 1)
+            BLAS.cscal(count, reciprocal, components, 1)
         } else {
             divide(by: by)
         }
@@ -130,7 +129,7 @@ public extension UniqueMatrix<Complex<Float>> {
     @inlinable
     mutating func divideBLAS(by: Float) {
         if let reciprocal = by.reciprocal {
-            BLAS.csscal(count, reciprocal, elements, 1)
+            BLAS.csscal(count, reciprocal, components, 1)
         } else {
             divide(by: by)
         }

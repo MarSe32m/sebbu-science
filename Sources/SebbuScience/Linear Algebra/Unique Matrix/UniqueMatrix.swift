@@ -8,6 +8,7 @@
 import RealModule
 import ComplexModule
 
+@frozen
 public struct UniqueMatrix<T: ~Copyable>: ~Copyable {
     public let elements: UnsafeMutablePointer<T>
     public let rows: Int
@@ -51,6 +52,28 @@ public struct UniqueMatrix<T: ~Copyable>: ~Copyable {
     }
     
     @inlinable
+    public init(copying: Matrix<T>) where T: Copyable {
+        self.elements = .allocate(capacity: copying.elements.count)
+        self.elements.initialize(from: copying.elements, count: copying.elements.count)
+        self.rows = copying.rows
+        self.columns = copying.columns
+    }
+    
+    @inlinable
+    public init(consumingRowVector vector: consuming UniqueVector<T>) {
+        let columns = vector.count
+        let elements = vector.consumeComponents()
+        self.init(_unsafeElements: elements, rows: 1, columns: columns)
+    }
+    
+    @inlinable
+    public init(consumingColumnVector vector: consuming UniqueVector<T>) {
+        let rows = vector.count
+        let elements = vector.consumeComponents()
+        self.init(_unsafeElements: elements, rows: rows, columns: 1)
+    }
+    
+    @inlinable
     public init(copying: borrowing Self) where T: Copyable {
         let newElements = UnsafeMutablePointer<T>.allocate(capacity: copying.count)
         newElements._unsafeCopy(from: copying.elements, count: copying.count)
@@ -58,8 +81,22 @@ public struct UniqueMatrix<T: ~Copyable>: ~Copyable {
     }
     
     @inlinable
+    public init(copyingRowVector vector: borrowing UniqueVector<T>) where T: Copyable {
+        let newElements = UnsafeMutablePointer<T>.allocate(capacity: vector.count)
+        newElements._unsafeCopy(from: vector.components, count: vector.count)
+        self.init(_unsafeElements: newElements, rows: 1, columns: vector.count)
+    }
+    
+    @inlinable
+    public init(copyingColumnVector vector: borrowing UniqueVector<T>) where T: Copyable {
+        let newElements = UnsafeMutablePointer<T>.allocate(capacity: vector.count)
+        newElements._unsafeCopy(from: vector.components, count: vector.count)
+        self.init(_unsafeElements: newElements, rows: vector.count, columns: 1)
+    }
+    
+    @inlinable
     @_disfavoredOverload
-    public init(_unsafeElements: UnsafeMutablePointer<T>, rows: Int, columns: Int) {
+    public init(_unsafeElements: consuming UnsafeMutablePointer<T>, rows: Int, columns: Int) {
         self.elements = _unsafeElements
         self.rows = rows
         self.columns = columns
@@ -116,9 +153,21 @@ public struct UniqueMatrix<T: ~Copyable>: ~Copyable {
     }
     
     @inlinable
+    public consuming func consumeElements() -> UnsafeMutablePointer<T> {
+        let components = self.elements
+        discard self
+        return components
+    }
+    
+    @inlinable
     public mutating func copyElements(from other: borrowing Self) where T: Copyable {
         precondition(count == other.count)
         elements._unsafeCopy(from: other.elements, count: count)
+    }
+    
+    @inlinable
+    public func copy() -> Self where T: Copyable {
+        .init(copying: self)
     }
 }
 

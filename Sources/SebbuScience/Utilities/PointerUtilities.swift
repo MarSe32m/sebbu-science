@@ -62,6 +62,12 @@ extension UnsafeMutablePointer where Pointee: AlgebraicField {
     
     @inlinable
     @inline(always)
+    func _unsafeCopy(from: Self, adding: Self, count: Int) {
+        for i in 0..<count { self[i] = Relaxed.sum(from[i], adding[i]) }
+    }
+    
+    @inlinable
+    @inline(always)
     func _unsafeCopy(from: Self, adding: Self, multiplied: Pointee, count: Int) {
         for i in 0..<count { self[i] = Relaxed.multiplyAdd(adding[i], multiplied, from[i]) }
     }
