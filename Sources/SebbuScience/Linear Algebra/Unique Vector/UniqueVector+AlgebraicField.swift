@@ -19,7 +19,6 @@ public extension UniqueVector where T: AlgebraicField, T.Magnitude: FloatingPoin
     }
 }
 
-
 public extension UniqueVector where T: AlgebraicField {
     @inlinable
     init(copying: borrowing Self, multiplied: T) {
@@ -74,6 +73,18 @@ public extension UniqueVector where T: ConjugatableScalar {
     }
 }
 
+public extension UniqueVector where T: Real & ConjugatableScalar {
+    @inlinable
+    var norm: T {
+        .sqrt(normSquared)
+    }
+    
+    @inlinable
+    var normSquared: T {
+        self.inner(self)
+    }
+}
+
 public extension UniqueVector<Double> {
     @inlinable
     func squaredEuclideanDistance(to other: borrowing Self) -> Double {
@@ -112,6 +123,16 @@ public extension UniqueVector<Float> {
 
 public extension UniqueVector<Complex<Double>> {
     @inlinable
+    var norm: Double {
+        .sqrt(normSquared)
+    }
+    
+    @inlinable
+    var normSquared: Double {
+        self.inner(self).real
+    }
+    
+    @inlinable
     init(copying: borrowing Self, multiplied: Double) {
         let newComponents = UnsafeMutablePointer<T>.allocate(capacity: copying.count)
         newComponents._unsafeCopy(from: copying.components, multiplied: multiplied, count: copying.count)
@@ -136,6 +157,16 @@ public extension UniqueVector<Complex<Double>> {
 }
 
 public extension UniqueVector<Complex<Float>> {
+    @inlinable
+    var norm: Float {
+        .sqrt(normSquared)
+    }
+    
+    @inlinable
+    var normSquared: Float {
+        self.inner(self).real
+    }
+    
     @inlinable
     init(copying: borrowing Self, multiplied: Float) {
         let newComponents = UnsafeMutablePointer<T>.allocate(capacity: copying.count)
