@@ -154,6 +154,18 @@ public extension UniqueVector<Complex<Double>> {
     func euclideanDistance(to other: borrowing Self) -> Double {
         .sqrt(squaredEuclideanDistance(to: other))
     }
+    
+    @inlinable
+    mutating func copyComponents(from other: borrowing Self, multiplied: Double) {
+        precondition(count == other.count)
+        components._unsafeCopy(from: other.components, multiplied: multiplied, count: count)
+    }
+    
+    @inlinable
+    mutating func copyComponents(from other: borrowing Self, adding: borrowing Self, multiplied: Double) {
+        precondition(count == other.count && count == adding.count)
+        components._unsafeCopy(from: other.components, adding: adding.components, multiplied: multiplied, count: count)
+    }
 }
 
 public extension UniqueVector<Complex<Float>> {
@@ -188,5 +200,17 @@ public extension UniqueVector<Complex<Float>> {
     @inlinable
     func euclideanDistance(to other: borrowing Self) -> Float {
         .sqrt(squaredEuclideanDistance(to: other))
+    }
+    
+    @inlinable
+    mutating func copyComponents(from other: borrowing Self, multiplied: Float) {
+        precondition(count == other.count)
+        components._unsafeCopy(from: other.components, multiplied: multiplied, count: count)
+    }
+    
+    @inlinable
+    mutating func copyComponents(from other: borrowing Self, adding: borrowing Self, multiplied: Float) {
+        precondition(count == other.count && count == adding.count)
+        components._unsafeCopy(from: other.components, adding: adding.components, multiplied: multiplied, count: count)
     }
 }
