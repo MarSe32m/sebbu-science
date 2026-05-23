@@ -18,7 +18,7 @@ public protocol AdaptiveStepODESolverState: ~Copyable, FixedStepODESolverState {
     func distance(to: borrowing Self) -> Double
 }
 
-public protocol ODERHSFunction {
+public protocol ODERHSFunction: ~Copyable {
     associatedtype State
     
     mutating func evaluate(
