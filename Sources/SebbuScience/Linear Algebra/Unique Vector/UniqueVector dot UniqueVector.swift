@@ -100,7 +100,7 @@ public extension UniqueVector where T: ConjugatableScalar {
     }
 
     @inlinable
-    func inner(metric: Matrix<T>, _ other: borrowing Self) -> T {
+    func inner(metric: borrowing UniqueMatrix<T>, _ other: borrowing Self) -> T {
         precondition(other.count == metric.columns)
         precondition(count == metric.rows)
         var result: T = .zero
@@ -114,53 +114,53 @@ public extension UniqueVector where T: ConjugatableScalar {
 }
 
 //MARK: Dot, inner and outer product for Double
-public extension Vector<Double> {
+public extension UniqueVector<Double> {
     @inlinable
-    func dotBLAS(_ other: Self) -> T {
+    func dotBLAS(_ other: borrowing Self) -> T {
         BLAS.ddot(count, components, 1, other.components, 1)
     }
     
     @inlinable
-    func innerBLAS(_ other: Self) -> T {
+    func innerBLAS(_ other: borrowing Self) -> T {
         BLAS.ddot(count, components, 1, other.components, 1)
     }
 }
 
 //MARK: Dot, inner and outer product for Float
-public extension Vector<Float> {
+public extension UniqueVector<Float> {
     @inlinable
-    func dotBLAS(_ other: Self) -> T {
+    func dotBLAS(_ other: borrowing Self) -> T {
         BLAS.sdot(count, components, 1, other.components, 1)
     }
     
     @inlinable
-    func innerBLAS(_ other: Self) -> T {
+    func innerBLAS(_ other: borrowing Self) -> T {
         BLAS.sdot(count, components, 1, other.components, 1)
     }
 }
 
 //MARK: Dot, inner and outer product for Complex<Double>
-public extension Vector<Complex<Double>> {
+public extension UniqueVector<Complex<Double>> {
     @inlinable
-    func dotBLAS(_ other: Self) -> T {
+    func dotBLAS(_ other: borrowing Self) -> T {
         BLAS.zdotu(count, components, 1, other.components, 1)
     }
 
     @inlinable
-    func innerBLAS(_ other: Self) -> T {
+    func innerBLAS(_ other: borrowing Self) -> T {
         BLAS.zdotc(count, components, 1, other.components, 1)
     }
 }
 
 //MARK: Dot, inner and outer product for Complex<Float>
-public extension Vector<Complex<Float>> {
+public extension UniqueVector<Complex<Float>> {
     @inlinable
-    func dotBLAS(_ other: Self) -> T {
+    func dotBLAS(_ other: borrowing Self) -> T {
         BLAS.cdotu(count, components, 1, other.components, 1)
     }
 
     @inlinable
-    func innerBLAS(_ other: Self) -> T {
+    func innerBLAS(_ other: borrowing Self) -> T {
         BLAS.cdotc(count, components, 1, other.components, 1)
     }
 }
