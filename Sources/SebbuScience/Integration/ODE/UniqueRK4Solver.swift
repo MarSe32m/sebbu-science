@@ -7,7 +7,7 @@
 
 import Numerics
 
-public struct UniqueRK4Solver<State: ~Copyable & FixedStepODESolverState, RHS: ODERHSFunction>: ~Copyable, ~Escapable where RHS.State == State {
+public struct UniqueRK4Solver<State: ~Copyable & FixedStepODESolverState, RHS: ~Copyable & ~Escapable & ODERHSFunction>: ~Copyable, ~Escapable where RHS.State == State {
     public var t: Double
     public var dt: Double
     @usableFromInline
@@ -24,12 +24,12 @@ public struct UniqueRK4Solver<State: ~Copyable & FixedStepODESolverState, RHS: O
     @usableFromInline
     internal var temporary: State
     
-    @_lifetime(borrow owner)
+    @_lifetime(copy rhs)
     @inlinable
     public init(
         t: Double,
         dt: Double,
-        rhs: RHS,
+        rhs: consuming RHS,
         k1: consuming State,
         k2: consuming State,
         k3: consuming State,

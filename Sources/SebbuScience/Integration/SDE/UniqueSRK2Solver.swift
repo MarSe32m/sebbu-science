@@ -11,7 +11,7 @@ import DequeModule
 
 public struct UniqueSRK2Solver<
     State: ~Copyable & FixedStepSDESolverState,
-    RHS: SDERHSFunction
+    RHS: ~Copyable & ~Escapable & SDERHSFunction
 >: ~Copyable, ~Escapable
 where RHS.State == State, RHS.NoiseType == State.NoiseType {
 
@@ -39,7 +39,7 @@ where RHS.State == State, RHS.NoiseType == State.NoiseType {
     @usableFromInline
     internal var noises: MutableSpan<State.NoiseType>
 
-    @_lifetime(copy noises)
+    @_lifetime(copy rhs, copy noises)
     @inlinable
     public init(
         t: Double,

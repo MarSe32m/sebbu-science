@@ -7,7 +7,7 @@
 
 import Numerics
 
-public struct UniqueDOPRISolver<State: ~Copyable & AdaptiveStepODESolverState, RHS: ODERHSFunction>: ~Copyable, ~Escapable where RHS.State == State {
+public struct UniqueDOPRISolver<State: ~Copyable & AdaptiveStepODESolverState, RHS: ~Copyable & ~Escapable & ODERHSFunction>: ~Copyable, ~Escapable where RHS.State == State {
     public var t: Double
     public var dt: Double
     public var maxStep: Double
@@ -37,13 +37,13 @@ public struct UniqueDOPRISolver<State: ~Copyable & AdaptiveStepODESolverState, R
     @usableFromInline
     internal var temporary: State
     
-    @_lifetime(borrow owner)
+    @_lifetime(copy rhs)
     @inlinable
     public init(
         t: Double,
         dt: Double,
         maxStep: Double,
-        rhs: RHS,
+        rhs: consuming RHS,
         y4: consuming State,
         k1: consuming State,
         k2: consuming State,
@@ -54,8 +54,7 @@ public struct UniqueDOPRISolver<State: ~Copyable & AdaptiveStepODESolverState, R
         k7: consuming State,
         temporary: consuming State,
         absoluteTolerance: Double = 1e-6,
-        relativeTolerance: Double = 1e-3,
-        owner: Void = ()
+        relativeTolerance: Double = 1e-3
     ) {
         precondition(dt > .zero, "Time-step must be positive")
         self.t = t
