@@ -7,7 +7,7 @@
 
 import Numerics
 
-public struct UniqueRK4Solver<State: FixedStepODESolverState, RHS: ODERHSFunction>: ~Copyable, ~Escapable where RHS.State == State {
+public struct UniqueRK4Solver<State: ~Copyable & FixedStepODESolverState, RHS: ODERHSFunction>: ~Copyable, ~Escapable where RHS.State == State {
     public var t: Double
     public var dt: Double
     @usableFromInline

@@ -10,7 +10,7 @@ import NumericsExtensions
 import DequeModule
 
 public struct UniqueSRK2Solver<
-    State: FixedStepSDESolverState,
+    State: ~Copyable & FixedStepSDESolverState,
     RHS: SDERHSFunction
 >: ~Copyable, ~Escapable
 where RHS.State == State, RHS.NoiseType == State.NoiseType {

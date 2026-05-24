@@ -203,7 +203,7 @@ struct DecayingSDEFunc: SDERHSFunction {
 }
 
 @usableFromInline
-struct State {
+struct State: ~Copyable {
     @usableFromInline
     var state: Double
     

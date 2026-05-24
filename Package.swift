@@ -72,7 +72,8 @@ let package = Package(
                 .define("ACCELERATE_LAPACK_ILP64", .when(platforms: [.macOS]))
             ],
             swiftSettings: [
-                .enableExperimentalFeature("Lifetimes")
+                .enableExperimentalFeature("Lifetimes"),
+                .enableExperimentalFeature("SuppressedAssociatedTypes")
             ],
             linkerSettings: [
                 .linkedFramework("Accelerate", .when(platforms: [.macOS]))
@@ -89,7 +90,8 @@ let package = Package(
                 .define("ACCELERATE_LAPACK_ILP64", .when(platforms: [.macOS]))
             ],
             swiftSettings: [
-                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))
+                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
+                .enableExperimentalFeature("Lifetimes")
             ],
             linkerSettings: [
                 .linkedFramework("Accelerate", .when(platforms: [.macOS]))

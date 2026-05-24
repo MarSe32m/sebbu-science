@@ -7,7 +7,7 @@
 
 import Numerics
 
-public struct UniqueDOPRISolver<State: AdaptiveStepODESolverState, RHS: ODERHSFunction>: ~Copyable, ~Escapable where RHS.State == State {
+public struct UniqueDOPRISolver<State: ~Copyable & AdaptiveStepODESolverState, RHS: ODERHSFunction>: ~Copyable, ~Escapable where RHS.State == State {
     public var t: Double
     public var dt: Double
     public var maxStep: Double

@@ -16,8 +16,8 @@ public protocol FixedStepSDESolverState: ~Copyable {
     mutating func assign(_ base: borrowing Self, adding direction: borrowing Self, multipliedBy c: Double)
 }
 
-public protocol SDERHSFunction: ~Copyable {
-    associatedtype State
+public protocol SDERHSFunction: ~Copyable, ~Escapable {
+    associatedtype State: ~Copyable
     associatedtype NoiseType
     
     /// Must fully overwrite `dy`.
