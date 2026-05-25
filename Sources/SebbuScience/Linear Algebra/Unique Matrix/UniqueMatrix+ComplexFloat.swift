@@ -23,19 +23,15 @@ public extension UniqueMatrix<Complex<Float>> {
     var inverse: Self? {
         if rows != columns { return nil }
         #if canImport(COpenBLAS)
-        var a = elements
+        var a: UniqueMatrix<Complex<Float>> = .init(copying: self)
         var m = rows
         var lda = columns
         var ipiv: [lapack_int] = .init(repeating: .zero, count: m)
-        var info = a.withUnsafeMutableBufferPointer { a in
-            LAPACKE_cgetrf(LAPACK_ROW_MAJOR, .init(m), .init(m), .init(a.baseAddress), .init(lda), &ipiv)
-        }
+        var info = LAPACKE_cgetrf(LAPACK_ROW_MAJOR, .init(m), .init(m), .init(a.elements), .init(lda), &ipiv)
         if info != 0 { return nil }
-        info = a.withUnsafeMutableBufferPointer { a in
-            LAPACKE_cgetri(LAPACK_ROW_MAJOR, .init(m), .init(a.baseAddress), .init(lda), ipiv)
-        }
+        info = LAPACKE_cgetri(LAPACK_ROW_MAJOR, .init(m), .init(a.elements), .init(lda), ipiv)
         if info != 0 { return nil }
-        return .init(elements: a, rows: rows, columns: columns)
+        return a
         #elseif canImport(Accelerate)
         var m = rows
         var n = columns
