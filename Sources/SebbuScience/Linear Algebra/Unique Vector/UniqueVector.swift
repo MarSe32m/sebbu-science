@@ -38,17 +38,29 @@ public struct UniqueVector<T: ~Copyable>: ~Copyable {
     }
     
     @inlinable
-    public init(copying: Vector<T>) where T: Copyable {
-        self.components = .allocate(capacity: copying.count)
-        self.count = copying.count
-        self.components.initialize(from: copying.components, count: copying.count)
+    public init(copying vector: Vector<T>) where T: Copyable {
+        self.init(copying: vector, count: vector.count)
     }
     
     @inlinable
-    public init(copying: borrowing Self) where T: Copyable {
-        let newComponents = UnsafeMutablePointer<T>.allocate(capacity: copying.count)
-        newComponents._unsafeCopy(from: copying.components, count: copying.count)
-        self.init(_unsafeComponents: newComponents, count: copying.count)
+    public init(copying vector: Vector<T>, count: Int) where T: Copyable {
+        assert(count <= vector.count, "Count must not exceed the vector's count.")
+        self.components = .allocate(capacity: count)
+        self.count = count
+        self.components.initialize(from: vector.components, count: count)
+    }
+    
+    @inlinable
+    public init(copying vector: borrowing Self) where T: Copyable {
+        self.init(copying: vector, count: vector.count)
+    }
+    
+    @inlinable
+    public init(copying vector: borrowing Self, count: Int) where T: Copyable {
+        assert(count <= vector.count, "Count must not exceed vector's count.")
+        let newComponents: UnsafeMutablePointer<T> = .allocate(capacity: count)
+        newComponents._unsafeCopy(from: vector.components, count: count)
+        self.init(_unsafeComponents: newComponents, count: count)
     }
     
     @inlinable
