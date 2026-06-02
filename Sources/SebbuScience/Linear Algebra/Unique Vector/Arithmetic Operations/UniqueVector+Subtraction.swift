@@ -29,6 +29,11 @@ public extension UniqueVector where T: AlgebraicField {
     mutating func subtract(_ other: borrowing Self) {
         components._unsafeSubtract(other.components, count: count)
     }
+    
+    @inlinable
+    mutating func subtract(_ scalar: T) {
+        components._unsafeSubtract(scalar, count: count)
+    }
 }
 
 //MARK: Addition for Double
@@ -52,6 +57,11 @@ public extension UniqueVector<Complex<Double>> {
     @inlinable
     mutating func subtract(_ other: borrowing Self, multiplied: Double) {
         components._unsafeSubtract(other.components, multiplied: multiplied, count: count)
+    }
+    
+    @inlinable
+    mutating func subtract(_ scalar: Double) {
+        components._unsafeSubtract(scalar, count: count)
     }
     
     @inlinable

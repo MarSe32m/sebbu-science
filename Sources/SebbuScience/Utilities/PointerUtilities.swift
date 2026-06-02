@@ -22,6 +22,12 @@ extension UnsafeMutablePointer where Pointee: AlgebraicField {
     
     @inlinable
     @inline(always)
+    func _unsafeAdd(_ scalar: Pointee, count: Int) {
+        for i in 0..<count { self[i] = Relaxed.sum(scalar, self[i]) }
+    }
+    
+    @inlinable
+    @inline(always)
     func _unsafeSubtract(_ other: Self, count: Int) {
         for i in 0..<count { self[i] = Relaxed.sum(self[i], -other[i]) }
     }
@@ -30,6 +36,12 @@ extension UnsafeMutablePointer where Pointee: AlgebraicField {
     @inline(always)
     func _unsafeSubtract(_ other: Self, multiplied: Pointee, count: Int) {
         for i in 0..<count { self[i] = Relaxed.multiplyAdd(-other[i], multiplied, self[i]) }
+    }
+    
+    @inlinable
+    @inline(always)
+    func _unsafeSubtract(_ scalar: Pointee, count: Int) {
+        _unsafeAdd(-scalar, count: count)
     }
     
     @inlinable
@@ -83,6 +95,14 @@ extension UnsafeMutablePointer where Pointee == Complex<Double> {
             }
         }
     }
+    
+    @inlinable
+    @inline(always)
+    func _unsafeAdd(_ scalar: Double, count: Int) {
+        self.withMemoryRebound(to: Double.self, capacity: 2 &* count) { elements in
+            for i in 0..<2 &* count { elements[i] = Relaxed.sum(elements[i], scalar) }
+        }
+    }
 
     @inlinable
     @inline(always)
@@ -92,6 +112,12 @@ extension UnsafeMutablePointer where Pointee == Complex<Double> {
                 for i in 0..<2 &* count { elements[i] = Relaxed.multiplyAdd(-other[i], multiplied, elements[i]) }
             }
         }
+    }
+    
+    @inlinable
+    @inline(always)
+    func _unsafeSubtract(_ scalar: Double, count: Int) {
+        _unsafeAdd(-scalar, count: count)
     }
     
     @inlinable
@@ -145,6 +171,14 @@ extension UnsafeMutablePointer where Pointee == Complex<Float> {
             }
         }
     }
+    
+    @inlinable
+    @inline(always)
+    func _unsafeAdd(_ scalar: Float, count: Int) {
+        self.withMemoryRebound(to: Float.self, capacity: 2 &* count) { elements in
+            for i in 0..<2 &* count { elements[i] = Relaxed.sum(elements[i], scalar) }
+        }
+    }
 
     @inlinable
     @inline(always)
@@ -154,6 +188,12 @@ extension UnsafeMutablePointer where Pointee == Complex<Float> {
                 for i in 0..<2 &* count { elements[i] = Relaxed.multiplyAdd(-other[i], multiplied, elements[i]) }
             }
         }
+    }
+    
+    @inlinable
+    @inline(always)
+    func _unsafeSubtract(_ scalar: Float, count: Int) {
+        _unsafeAdd(-scalar, count: count)
     }
     
     @inlinable
