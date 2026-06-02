@@ -124,6 +124,45 @@ public struct UniqueVector<T: ~Copyable>: ~Copyable {
     }
     
     @inlinable
+    public static func withUnsafeComponents<R>(_ components: UnsafeMutablePointer<T>, count: Int, _ body: (inout UniqueVector<T>) throws -> R) throws -> R {
+        var vector = UniqueVector(_unsafeComponents: components, count: count)
+        do {
+            let result = try body(&vector)
+            let _ = vector.consumeComponents()
+            return result
+        } catch {
+            let _ = vector.consumeComponents()
+            throw error
+        }
+    }
+    
+    @inlinable
+    public static func withUnsafeComponents<R>(_ components: UnsafeMutablePointer<T>, count: Int, _ body: (inout UniqueVector<T>) -> R) -> R {
+        var vector = UniqueVector(_unsafeComponents: components, count: count)
+        let result = body(&vector)
+        let _ = vector.consumeComponents()
+        return result
+    }
+    
+    @inlinable
+    public static func withUnsafeComponents<R>(_ components: UnsafeMutableBufferPointer<T>, _ body: (inout UniqueVector<T>) throws -> R) throws -> R {
+        let count = components.count
+        guard let components = components.baseAddress else {
+            fatalError("Cannot access components of an unitialized vector")
+        }
+        return try withUnsafeComponents(components, count: count, body)
+    }
+    
+    @inlinable
+    public static func withUnsafeComponents<R>(_ components: UnsafeMutableBufferPointer<T>, _ body: (inout UniqueVector<T>) -> R) -> R {
+        let count = components.count
+        guard let components = components.baseAddress else {
+            fatalError("Cannot access components of an unitialized vector")
+        }
+        return withUnsafeComponents(components, count: count, body)
+    }
+    
+    @inlinable
     deinit {
         components.deinitialize(count: count)
         components.deallocate()
