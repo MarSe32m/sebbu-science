@@ -241,7 +241,7 @@ extension SRK2MultiNoiseSolver<Vector<Double>, Double> {
         //yAux = currentState + dt * fty0 + dW * gty0
         auxiliaryState.copyComponents(from: currentState)
         auxiliaryState.add(fty0, multiplied: dt)
-        auxiliaryState.add(gty0Cache, multiplied: halfSqrtDt)
+        auxiliaryState.add(gty0Cache, multiplied: sqrtDt)
         
         let ftyAux = f(t + dt, auxiliaryState) // Returns non-cachable and non-modifiable state!
         currentState.add(fty0, multiplied: halfdt)
@@ -287,7 +287,7 @@ extension SRK2MultiNoiseSolver<[Vector<Double>], Double> {
         for i in auxiliaryState.indices {
             auxiliaryState[i].copyComponents(from: currentState[i])
             auxiliaryState[i].add(fty0[i], multiplied: dt)
-            auxiliaryState[i].add(gty0Cache[i], multiplied: halfSqrtDt)
+            auxiliaryState[i].add(gty0Cache[i], multiplied: sqrtDt)
         }
         
         let ftyAux = f(t + dt, auxiliaryState) // Returns non-cachable and non-modifiable state!
@@ -332,7 +332,7 @@ extension SRK2MultiNoiseSolver<Vector<Complex<Double>>, Complex<Double>> {
         //yAux = currentState + dt * fty0 + dW * gty0
         auxiliaryState.copyComponents(from: currentState)
         auxiliaryState.add(fty0, multiplied: dt)
-        auxiliaryState.add(gty0Cache, multiplied: halfSqrtDt)
+        auxiliaryState.add(gty0Cache, multiplied: sqrtDt)
         
         let ftyAux = f(t + dt, auxiliaryState) // Returns non-cachable and non-modifiable state!
         currentState.add(fty0, multiplied: halfdt)
@@ -378,7 +378,7 @@ extension SRK2MultiNoiseSolver<[Vector<Complex<Double>>], Complex<Double>> {
         for i in auxiliaryState.indices {
             auxiliaryState[i].copyComponents(from: currentState[i])
             auxiliaryState[i].add(fty0[i], multiplied: dt)
-            auxiliaryState[i].add(gty0Cache[i], multiplied: halfSqrtDt)
+            auxiliaryState[i].add(gty0Cache[i], multiplied: sqrtDt)
         }
         
         let ftyAux = f(t + dt, auxiliaryState) // Returns non-cachable and non-modifiable state!
