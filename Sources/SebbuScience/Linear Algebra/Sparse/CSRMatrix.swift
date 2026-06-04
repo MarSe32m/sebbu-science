@@ -252,6 +252,7 @@ public extension CSRMatrix where T: AlgebraicField {
                         let upperBound = rowIndices[i &+ 1]
                         j = rowIndices[i]
                         if j == upperBound {
+                            into[i] = .zero
                             i &+= 1
                             continue
                         }
