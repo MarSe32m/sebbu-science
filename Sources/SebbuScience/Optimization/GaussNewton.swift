@@ -22,7 +22,7 @@ public extension Optimize {
             if step.norm <= stepTolerance * (x.norm + stepTolerance) { return trial }
             x = trial
         }
-        return nil
+        return x
     }
     
     @inlinable
@@ -47,6 +47,6 @@ public extension Optimize {
             if step.norm <= stepTolerance * (x.norm + stepTolerance) { return trial }
             x = trial
         }
-        return nil
+        return x
     }
 }
