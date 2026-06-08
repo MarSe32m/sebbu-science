@@ -1,5 +1,29 @@
 
 public extension Optimize {
+    struct GaussNewtonResult<Value> {
+        public enum Reason {
+            case residualTolerance
+            case stepTolerance
+            case maxIterations
+            case linearSolveFailed
+        }
+
+        public var parameters: Vector<Value>
+        public var cost: Value
+        public var iterations: Int
+        public var converged: Bool
+        public var reason: Reason
+        
+        @inlinable
+        public init(parameters: Vector<Value>, cost: Value, iterations: Int, converged: Bool, reason: Reason) {
+            self.parameters = parameters
+            self.cost = cost
+            self.iterations = iterations
+            self.converged = converged
+            self.reason = reason
+        }
+    }
+    
     @inlinable
     static func gaussNewton(
         initial: Vector<Double>,
@@ -7,22 +31,56 @@ public extension Optimize {
         stepTolerance: Double = 1e-10,
         residualTolerance: Double = 1e-10,
         residuals: (_ parameters: Vector<Double>) -> Vector<Double>,
-        jacobian: (_ parameters: Vector<Double>) -> Matrix<Double>
-    ) -> Vector<Double>? {
+        jacobian: ((_ parameters: Vector<Double>) -> Matrix<Double>)? = nil
+    ) -> GaussNewtonResult<Double> {
         var x = initial
-        for _ in 0..<max(2, maxIterations) {
-            var r = residuals(x)
-            r.multiply(by: -1)
-            if r.norm <= residualTolerance { return x }
-            let J = jacobian(x)
+        var r = residuals(x)
+        var cost = 0.5 * r.normSquared
+        for i in 1...max(1, maxIterations) {
+            if r.norm <= residualTolerance {
+                return .init(
+                    parameters: x,
+                    cost: cost,
+                    iterations: i,
+                    converged: true,
+                    reason: .residualTolerance)
+            }
+            let J = if let jacobian {
+                jacobian(x)
+            } else {
+                finiteDifferenceJacobian(parameters: x, residual: residuals)
+            }
             precondition(J.rows == r.count)
             precondition(J.columns == x.count)
-            guard let step = try? Optimize.linearLeastSquares(A: J, /*this is -r*/r).result else { return nil }
+            r.multiply(by: -1)
+            guard let step = try? Optimize.linearLeastSquares(A: J, r).result else {
+                return .init(
+                    parameters: x,
+                    cost: cost,
+                    iterations: i,
+                    converged: false,
+                    reason: .linearSolveFailed)
+            }
             let trial = x + step
-            if step.norm <= stepTolerance * (x.norm + stepTolerance) { return trial }
+            r = residuals(trial)
+            cost = 0.5 * r.normSquared
+            if step.norm <= stepTolerance * (x.norm + stepTolerance) {
+                return .init(
+                    parameters: trial,
+                    cost: cost,
+                    iterations: i,
+                    converged: true,
+                    reason: .stepTolerance
+                )
+            }
             x = trial
         }
-        return x
+        return .init(
+            parameters: x,
+            cost: cost,
+            iterations: maxIterations,
+            converged: false,
+            reason: .maxIterations)
     }
     
     @inlinable
@@ -32,21 +90,55 @@ public extension Optimize {
         stepTolerance: Float = 1e-5,
         residualTolerance: Float = 1e-5,
         residuals: (_ parameters: Vector<Float>) -> Vector<Float>,
-        jacobian: (_ parameters: Vector<Float>) -> Matrix<Float>
-    ) -> Vector<Float>? {
+        jacobian: ((_ parameters: Vector<Float>) -> Matrix<Float>)? = nil
+    ) -> GaussNewtonResult<Float> {
         var x = initial
-        for _ in 0..<max(2, maxIterations) {
-            var r = residuals(x)
-            r.multiply(by: -1)
-            if r.norm <= residualTolerance { return x }
-            let J = jacobian(x)
+        var r = residuals(x)
+        var cost = 0.5 * r.normSquared
+        for i in 1...max(1, maxIterations) {
+            if r.norm <= residualTolerance {
+                return .init(
+                    parameters: x,
+                    cost: cost,
+                    iterations: i,
+                    converged: true,
+                    reason: .residualTolerance)
+            }
+            let J = if let jacobian {
+                jacobian(x)
+            } else {
+                finiteDifferenceJacobian(parameters: x, residual: residuals)
+            }
             precondition(J.rows == r.count)
             precondition(J.columns == x.count)
-            guard let step = try? Optimize.linearLeastSquares(A: J, /*this is -r*/r).result else { return nil }
+            r.multiply(by: -1)
+            guard let step = try? Optimize.linearLeastSquares(A: J, r).result else {
+                return .init(
+                    parameters: x,
+                    cost: cost,
+                    iterations: i,
+                    converged: false,
+                    reason: .linearSolveFailed)
+            }
             let trial = x + step
-            if step.norm <= stepTolerance * (x.norm + stepTolerance) { return trial }
+            r = residuals(trial)
+            cost = 0.5 * r.normSquared
+            if step.norm <= stepTolerance * (x.norm + stepTolerance) {
+                return .init(
+                    parameters: trial,
+                    cost: cost,
+                    iterations: i,
+                    converged: true,
+                    reason: .stepTolerance
+                )
+            }
             x = trial
         }
-        return x
+        return .init(
+            parameters: x,
+            cost: cost,
+            iterations: maxIterations,
+            converged: false,
+            reason: .maxIterations)
     }
 }
