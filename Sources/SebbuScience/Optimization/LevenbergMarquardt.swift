@@ -80,7 +80,7 @@ public extension Optimize {
 
             let gradient = J.transpose.dot(r)
 
-            if gradient.components.max(by: { $0.magnitude < $1.magnitude }) ?? 0.0 <= gradientTolerance {
+            if gradient.components.map({ abs($0) }).max() ?? 0.0 <= gradientTolerance {
                 return .init(
                     parameters: x,
                     cost: cost,
@@ -153,7 +153,7 @@ public extension Optimize {
                     lambda = max(minDamping, lambda * dampingDecrease)
                     accepted = true
 
-                    if (oldCost - cost).magnitude <= costTolerance * max(1.0, oldCost) {
+                    if abs(oldCost - cost) <= costTolerance * max(1.0, oldCost) {
                         return .init(
                             parameters: x,
                             cost: cost,
@@ -224,7 +224,7 @@ public extension Optimize {
 
             let gradient = J.transpose.dot(r)
             
-            if gradient.components.max(by: { $0.magnitude < $1.magnitude }) ?? 0.0 <= gradientTolerance {
+            if gradient.components.map({ abs($0) }).max() ?? 0.0 <= gradientTolerance {
                 return .init(
                     parameters: x,
                     cost: cost,
@@ -297,7 +297,7 @@ public extension Optimize {
                     lambda = max(minDamping, lambda * dampingDecrease)
                     accepted = true
 
-                    if (oldCost - cost).magnitude <= costTolerance * max(1.0, oldCost) {
+                    if abs(oldCost - cost) <= costTolerance * max(1.0, oldCost) {
                         return .init(
                             parameters: x,
                             cost: cost,
