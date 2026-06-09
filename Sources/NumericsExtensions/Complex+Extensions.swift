@@ -86,6 +86,7 @@ public extension Complex {
 }
 
 public extension Complex {
+    /// 1 - exp(-z), computed in such a way as to maintain accuracy for small x.
     @inlinable
     static func oneMinusExpMinus(_ z: Complex) -> Complex {
         // 1 - exp(-(x + iy))
@@ -119,20 +120,10 @@ public extension Complex {
         return Complex(real, imaginary)
     }
     
+    /// (1 - exp(-z)) / z, computed in such a way as to maintain accuracy for small z.
     @inlinable
     static func phiOneMinusExpMinus(_ z: Complex) -> Complex {
         // phi(z) = (1 - exp(-z)) / z
-        //
-        // This function appears in the exact covariance increment
-        //
-        //     R_ij = r_i r_j^* Δt phi((W_i + W_j^*) Δt)
-        //
-        // since
-        //
-        //     R_ij = r_i r_j^* / λ * (1 - exp(-λ Δt))
-        //          = r_i r_j^* Δt * (1 - exp(-z)) / z,
-        //
-        // where z = λ Δt.
         //
         // Directly evaluating
         //
