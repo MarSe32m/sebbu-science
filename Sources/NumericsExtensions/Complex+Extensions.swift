@@ -85,6 +85,98 @@ public extension Complex {
     }
 }
 
+public extension Complex {
+    @inlinable
+    static func oneMinusExpMinus(_ z: Complex) -> Complex {
+        // 1 - exp(-(x + iy))
+        //   = 1 - exp(-x) cos(y) + i exp(-x) sin(y)
+        //
+        // The real part is the delicate part when x and y are small:
+        //
+        //     1 - exp(-x) cos(y)
+        //       = 1 - exp(-x) + exp(-x)(1 - cos(y))
+        //       = -expm1(-x) + exp(-x) * 2 sin²(y/2).
+        //
+        // This avoids cancellation in both 1 - exp(-x) and 1 - cos(y).
+
+        guard z.real.isFinite && z.imaginary.isFinite else {
+            return Complex(.nan, .nan)
+        }
+
+        let x = z.real
+        let y = z.imaginary
+
+        let expMinusX: RealType = .exp(-x)
+        let sinHalfY: RealType = .sin(y / 2)
+
+        let real =
+            -RealType.expMinusOne(-x)
+            + expMinusX * 2 * sinHalfY * sinHalfY
+
+        let imaginary =
+            expMinusX * .sin(y)
+
+        return Complex(real, imaginary)
+    }
+    
+    @inlinable
+    static func phiOneMinusExpMinus(_ z: Complex) -> Complex {
+        // phi(z) = (1 - exp(-z)) / z
+        //
+        // This function appears in the exact covariance increment
+        //
+        //     R_ij = r_i r_j^* Δt phi((W_i + W_j^*) Δt)
+        //
+        // since
+        //
+        //     R_ij = r_i r_j^* / λ * (1 - exp(-λ Δt))
+        //          = r_i r_j^* Δt * (1 - exp(-z)) / z,
+        //
+        // where z = λ Δt.
+        //
+        // Directly evaluating
+        //
+        //     (1 - exp(-z)) / z
+        //
+        // is numerically delicate near z = 0 because both numerator and
+        // denominator vanish. The removable singularity has value 1, so near
+        // zero we use the Taylor expansion:
+        //
+        //     (1 - exp(-z)) / z
+        //       = 1 - z/2 + z^2/6 - z^3/24 + z^4/120 - ...
+        //
+        // Away from zero, we compute 1 - exp(-z) using the stable expm1
+        // and divide by z.
+
+        guard z.real.isFinite && z.imaginary.isFinite else {
+            return Complex(.nan, .nan)
+        }
+
+        let absZ = z.length
+
+        // The threshold is deliberately conservative. For |z| ~ 1e-4, the
+        // first omitted term after z^6 is ~1e-32, far below Double precision.
+        let threshold: RealType = (Self.one / 10000).real
+        if absZ < threshold {
+            let z2 = z * z
+            let z3 = z2 * z
+            let z4 = z2 * z2
+            let z5 = z4 * z
+            let z6 = z3 * z3
+            var result = Self.one
+            result -= z/2
+            result += z2/6
+            result -= z3/24
+            result += z4/120
+            result -= z5/720
+            result += z6/5040
+            return result
+        }
+
+        return Self.oneMinusExpMinus(z) / z
+    }
+}
+
 //MARK: Special functions
 public extension Complex<Double> {
     @inlinable

@@ -920,4 +920,46 @@ public extension MatrixOperations {
         fatalError("TODO: Default implementation not yet implemented")
 #endif
     }
+    
+    @inlinable
+    static func positiveSemidefiniteSquareRoot(
+        _ A: Matrix<Complex<Double>>
+    ) -> Matrix<Complex<Double>> {
+        let Q = symmetrizedHermitian(A)
+
+        guard let result = try? MatrixOperations.diagonalizeHermitian(Q) else {
+            fatalError("Failed to diagonalize")
+        }
+        var eigenValues = result.eigenValues
+        let eigenVectors = result.eigenVectors
+
+        var scale = 0.0
+        for lambda in eigenValues {
+            precondition(lambda.isFinite, "Matrix has a non-finite eigenvalue: \(lambda)")
+            scale = max(scale, abs(lambda))
+        }
+
+        let eps = Double.ulpOfOne
+        let tol = 100.0 * eps * Double(eigenValues.count) * max(scale, Double.leastNormalMagnitude)
+
+        for i in 0..<eigenValues.count {
+            if eigenValues[i] < -tol {
+                fatalError("Matrix is not positive semidefinite. λ_min = \(eigenValues[i]), tolerance = \(tol)")
+            }
+
+            if eigenValues[i] < 0.0 {
+                eigenValues[i] = 0.0
+            }
+        }
+
+        let sqrtD: Matrix<Complex<Double>> = .diagonal(
+            from: eigenValues.map { Complex($0.squareRoot()) }
+        )
+
+        let U: Matrix<Complex<Double>> = .from(
+            columns: eigenVectors.map { $0.components }
+        )
+
+        return U.dot(sqrtD)
+    }
 }

@@ -8,6 +8,7 @@
 import RealModule
 import ComplexModule
 import SebbuCollections
+import NumericsExtensions
 
 public enum MatrixOperations {
     public enum MatrixOperationError: Error {
@@ -272,6 +273,20 @@ public enum MatrixOperations {
             }
         }
         return rhoReduced
+    }
+
+    @inlinable
+    public static func symmetrizedHermitian<T: Real>(_ Q: Matrix<Complex<T>>) -> Matrix<Complex<T>> {
+        var result = Q
+        for j in 0..<Q.rows {
+            for k in 0..<Q.columns {
+                result[j, k] = (Q[j, k] + Q[k, j].conjugate).divided(by: 2)
+            }
+        }
+        for j in 0..<Q.rows {
+            result[j, j].imaginary = .zero
+        }
+        return result
     }
     
     public static func printMatrix(_ matrix: Matrix<Complex<Double>>, format: String = "%.3f") {
