@@ -1,158 +1,144 @@
 
 public extension Optimize {
+    struct GaussNewtonResult<Value> {
+        public enum Reason {
+            case residualTolerance
+            case stepTolerance
+            case maxIterations
+            case linearSolveFailed
+        }
+
+        public var parameters: Vector<Value>
+        public var cost: Value
+        public var iterations: Int
+        public var converged: Bool
+        public var reason: Reason
+        
+        @inlinable
+        public init(parameters: Vector<Value>, cost: Value, iterations: Int, converged: Bool, reason: Reason) {
+            self.parameters = parameters
+            self.cost = cost
+            self.iterations = iterations
+            self.converged = converged
+            self.reason = reason
+        }
+    }
+    
+    @inlinable
     static func gaussNewton(
         initial: Vector<Double>,
         maxIterations: Int = 1000,
-        tolerance: Double = 1e-10,
+        stepTolerance: Double = 1e-10,
+        residualTolerance: Double = 1e-10,
         residuals: (_ parameters: Vector<Double>) -> Vector<Double>,
-        jacobian: (_ parameters: Vector<Double>) -> Matrix<Double>
-    ) -> Vector<Double>? {
-        var currentParameters = initial
-        for _ in 0..<max(1, maxIterations) {
-            let r = residuals(currentParameters)
-            let J = jacobian(currentParameters)
-            
-            guard let JpseudoInverse = J.pseudoInverse else { return nil }
-            
-            let step = JpseudoInverse.dot(r)
-            let newParameters = currentParameters - step
-            
-            if step.norm < tolerance || r.normSquared < tolerance {
-                return newParameters
+        jacobian: ((_ parameters: Vector<Double>) -> Matrix<Double>)? = nil
+    ) -> GaussNewtonResult<Double> {
+        var x = initial
+        var r = residuals(x)
+        var cost = 0.5 * r.normSquared
+        for i in 1...max(1, maxIterations) {
+            if r.norm <= residualTolerance {
+                return .init(
+                    parameters: x,
+                    cost: cost,
+                    iterations: i,
+                    converged: true,
+                    reason: .residualTolerance)
             }
-            currentParameters = newParameters
+            let J = if let jacobian {
+                jacobian(x)
+            } else {
+                finiteDifferenceJacobian(parameters: x, residual: residuals)
+            }
+            precondition(J.rows == r.count)
+            precondition(J.columns == x.count)
+            r.multiply(by: -1)
+            guard let step = try? Optimize.linearLeastSquares(A: J, r).result else {
+                return .init(
+                    parameters: x,
+                    cost: cost,
+                    iterations: i,
+                    converged: false,
+                    reason: .linearSolveFailed)
+            }
+            let trial = x + step
+            r = residuals(trial)
+            cost = 0.5 * r.normSquared
+            if step.norm <= stepTolerance * (x.norm + stepTolerance) {
+                return .init(
+                    parameters: trial,
+                    cost: cost,
+                    iterations: i,
+                    converged: true,
+                    reason: .stepTolerance
+                )
+            }
+            x = trial
         }
-        return nil // did not converge
+        return .init(
+            parameters: x,
+            cost: cost,
+            iterations: maxIterations,
+            converged: false,
+            reason: .maxIterations)
     }
     
-    static func gaussNewton(
-        initial: [Double],
-        maxIterations: Int = 1000,
-        tolerance: Double = 1e-10,
-        residuals: (_ parameters: [Double]) -> [Double],
-        jacobian: (_ parameters: [Double]) -> Matrix<Double>
-    ) -> [Double]? {
-        return gaussNewton(initial: Vector(initial), maxIterations: maxIterations, tolerance: tolerance) { parameters in
-            Vector(residuals(parameters.components))
-        } jacobian: { parameters in
-            jacobian(parameters.components)
-        }?.components
-    }
-    
+    @inlinable
     static func gaussNewton(
         initial: Vector<Float>,
         maxIterations: Int = 1000,
-        tolerance: Float = 1e-5,
+        stepTolerance: Float = 1e-5,
+        residualTolerance: Float = 1e-5,
         residuals: (_ parameters: Vector<Float>) -> Vector<Float>,
-        jacobian: (_ parameters: Vector<Float>) -> Matrix<Float>
-    ) -> Vector<Float>? {
-        var currentParameters = initial
-        for _ in 0..<max(1, maxIterations) {
-            let r = residuals(currentParameters)
-            let J = jacobian(currentParameters)
-            
-            guard let JpseudoInverse = J.pseudoInverse else { return nil }
-            
-            let step = JpseudoInverse.dot(r)
-            let newParameters = currentParameters - step
-            
-            if step.norm < tolerance || r.normSquared < tolerance {
-                return newParameters
+        jacobian: ((_ parameters: Vector<Float>) -> Matrix<Float>)? = nil
+    ) -> GaussNewtonResult<Float> {
+        var x = initial
+        var r = residuals(x)
+        var cost = 0.5 * r.normSquared
+        for i in 1...max(1, maxIterations) {
+            if r.norm <= residualTolerance {
+                return .init(
+                    parameters: x,
+                    cost: cost,
+                    iterations: i,
+                    converged: true,
+                    reason: .residualTolerance)
             }
-            currentParameters = newParameters
-        }
-        return nil // did not converge
-    }
-    
-    static func gaussNewton(
-        initial: [Float],
-        maxIterations: Int = 1000,
-        tolerance: Float = 1e-5,
-        residuals: (_ parameters: [Float]) -> [Float],
-        jacobian: (_ parameters: [Float]) -> Matrix<Float>
-    ) -> [Float]? {
-        return gaussNewton(initial: Vector(initial), maxIterations: maxIterations, tolerance: tolerance) { parameters in
-            Vector(residuals(parameters.components))
-        } jacobian: { parameters in
-            jacobian(parameters.components)
-        }?.components
-    }
-    
-    static func gaussNewton(
-        initial: Vector<Complex<Double>>,
-        maxIterations: Int = 1000,
-        tolerance: Double = 1e-10,
-        residuals: (_ parameters: Vector<Complex<Double>>) -> Vector<Complex<Double>>,
-        jacobian: (_ parameters: Vector<Complex<Double>>) -> Matrix<Complex<Double>>
-    ) -> Vector<Complex<Double>>? {
-        var currentParameters = initial
-        for _ in 0..<max(1, maxIterations) {
-            let r = residuals(currentParameters)
-            let J = jacobian(currentParameters)
-            
-            guard let JpseudoInverse = J.pseudoInverse else { return nil }
-            
-            let step = JpseudoInverse.dot(r)
-            let newParameters = currentParameters - step
-            
-            if step.norm < tolerance || r.normSquared < tolerance {
-                return newParameters
+            let J = if let jacobian {
+                jacobian(x)
+            } else {
+                finiteDifferenceJacobian(parameters: x, residual: residuals)
             }
-            currentParameters = newParameters
-        }
-        return nil // did not converge
-    }
-    
-    static func gaussNewton(
-        initial: [Complex<Double>],
-        maxIterations: Int = 1000,
-        tolerance: Double = 1e-10,
-        residuals: (_ parameters: [Complex<Double>]) -> [Complex<Double>],
-        jacobian: (_ parameters: [Complex<Double>]) -> Matrix<Complex<Double>>
-    ) -> [Complex<Double>]? {
-        return gaussNewton(initial: Vector(initial), maxIterations: maxIterations, tolerance: tolerance) { parameters in
-            Vector(residuals(parameters.components))
-        } jacobian: { parameters in
-            jacobian(parameters.components)
-        }?.components
-    }
-    
-    static func gaussNewton(
-        initial: Vector<Complex<Float>>,
-        maxIterations: Int = 1000,
-        tolerance: Float = 1e-5,
-        residuals: (_ parameters: Vector<Complex<Float>>) -> Vector<Complex<Float>>,
-        jacobian: (_ parameters: Vector<Complex<Float>>) -> Matrix<Complex<Float>>
-    ) -> Vector<Complex<Float>>? {
-        var currentParameters = initial
-        for _ in 0..<max(1, maxIterations) {
-            let r = residuals(currentParameters)
-            let J = jacobian(currentParameters)
-            
-            guard let JpseudoInverse = J.pseudoInverse else { return nil }
-            
-            let step = JpseudoInverse.dot(r)
-            let newParameters = currentParameters - step
-            
-            if step.norm < tolerance || r.normSquared < tolerance {
-                return newParameters
+            precondition(J.rows == r.count)
+            precondition(J.columns == x.count)
+            r.multiply(by: -1)
+            guard let step = try? Optimize.linearLeastSquares(A: J, r).result else {
+                return .init(
+                    parameters: x,
+                    cost: cost,
+                    iterations: i,
+                    converged: false,
+                    reason: .linearSolveFailed)
             }
-            currentParameters = newParameters
+            let trial = x + step
+            r = residuals(trial)
+            cost = 0.5 * r.normSquared
+            if step.norm <= stepTolerance * (x.norm + stepTolerance) {
+                return .init(
+                    parameters: trial,
+                    cost: cost,
+                    iterations: i,
+                    converged: true,
+                    reason: .stepTolerance
+                )
+            }
+            x = trial
         }
-        return nil // did not converge
-    }
-    
-    static func gaussNewton(
-        initial: [Complex<Float>],
-        maxIterations: Int = 1000,
-        tolerance: Float = 1e-5,
-        residuals: (_ parameters: [Complex<Float>]) -> [Complex<Float>],
-        jacobian: (_ parameters: [Complex<Float>]) -> Matrix<Complex<Float>>
-    ) -> [Complex<Float>]? {
-        return gaussNewton(initial: Vector(initial), maxIterations: maxIterations, tolerance: tolerance) { parameters in
-            Vector(residuals(parameters.components))
-        } jacobian: { parameters in
-            jacobian(parameters.components)
-        }?.components
+        return .init(
+            parameters: x,
+            cost: cost,
+            iterations: maxIterations,
+            converged: false,
+            reason: .maxIterations)
     }
 }
