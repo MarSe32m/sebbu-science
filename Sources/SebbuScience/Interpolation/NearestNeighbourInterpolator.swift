@@ -5,8 +5,7 @@
 //  Created by Sebastian Toivonen on 3.5.2025.
 //
 
-import Numerics
-
+@frozen
 public struct NearestNeighbourInterpolator<Element> {
     public let x: [Double]
     public let y: [Element]
@@ -33,17 +32,18 @@ public struct NearestNeighbourInterpolator<Element> {
     }
     
     @inlinable
+    @inline(always)
     public func callAsFunction(_ t: Double) -> Element {
+        sample(t)
+    }
+    
+    @inlinable
+    public func sample(_ t: Double) -> Element {
         if t <= x[0] { return y[0] }
         if t >= x.last! { return y.last! }
         let k = x.intervalIndex(t)
         let t_ = _t(t: t, k: k)
         return t_ <= 0.5 ? y[k] : y[k + 1]
-    }
-    
-    @inlinable
-    public func sample(_ t: Double) -> Element {
-        self(t)
     }
 }
 

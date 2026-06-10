@@ -7,6 +7,7 @@
 
 import Numerics
 
+@frozen
 public struct LinearInterpolator<Element> {
     public let x: [Double]
     public let y: [Element]
@@ -31,39 +32,47 @@ extension LinearInterpolator: Sendable where Element: Sendable {}
 
 public extension LinearInterpolator<Double> {
     @inlinable
+    @inline(always)
     func callAsFunction(_ t: Double) -> Double {
+        sample(t)
+    }
+    
+    @inlinable
+    func sample(_ t: Double) -> Double {
         if t <= x[0] { return y[0] }
         if t >= x.last! { return y.last! }
         let k = x.intervalIndex(t)
         let t_ = (t - x[k]) / (x[k + 1] - x[k])
         return (1 - t_) * y[k] + t_ * y[k + 1]
-    }
-    
-    @inlinable
-    func sample(_ t: Double) -> Element {
-        self(t)
     }
 }
 
 public extension LinearInterpolator<Complex<Double>> {
     @inlinable
-    func callAsFunction(_ t: Double) -> Element {
+    @inline(always)
+    func callAsFunction(_ t: Double) -> Complex<Double> {
+        sample(t)
+    }
+    
+    @inlinable
+    func sample(_ t: Double) -> Complex<Double> {
         if t <= x[0] { return y[0] }
         if t >= x.last! { return y.last! }
         let k = x.intervalIndex(t)
         let t_ = (t - x[k]) / (x[k + 1] - x[k])
         return (1 - t_) * y[k] + t_ * y[k + 1]
     }
-    
-    @inlinable
-    func sample(_ t: Double) -> Element {
-        self(t)
-    }
 }
 
 public extension LinearInterpolator<Vector<Double>> {
     @inlinable
-    func callAsFunction(_ t: Double) -> Element {
+    @inline(always)
+    func callAsFunction(_ t: Double) -> Vector<Double> {
+        sample(t)
+    }
+    
+    @inlinable
+    func sample(_ t: Double) -> Vector<Double> {
         if t <= x[0] { return y[0] }
         if t >= x.last! { return y.last! }
         let k = x.intervalIndex(t)
@@ -71,17 +80,18 @@ public extension LinearInterpolator<Vector<Double>> {
         var result = (1 - _t) * y[k]
         result.add(y[k + 1], multiplied: _t)
         return result
-    }
-    
-    @inlinable
-    func sample(_ t: Double) -> Element {
-        self(t)
     }
 }
 
 public extension LinearInterpolator<Vector<Complex<Double>>> {
     @inlinable
-    func callAsFunction(_ t: Double) -> Element {
+    @inline(always)
+    func callAsFunction(_ t: Double) -> Vector<Complex<Double>> {
+        sample(t)
+    }
+    
+    @inlinable
+    func sample(_ t: Double) -> Vector<Complex<Double>> {
         if t <= x[0] { return y[0] }
         if t >= x.last! { return y.last! }
         let k = x.intervalIndex(t)
@@ -89,17 +99,18 @@ public extension LinearInterpolator<Vector<Complex<Double>>> {
         var result = (1 - _t) * y[k]
         result.add(y[k + 1], multiplied: _t)
         return result
-    }
-    
-    @inlinable
-    func sample(_ t: Double) -> Element {
-        self(t)
     }
 }
 
 public extension LinearInterpolator<Matrix<Double>> {
     @inlinable
-    func callAsFunction(_ t: Double) -> Element {
+    @inline(always)
+    func callAsFunction(_ t: Double) -> Matrix<Double> {
+        sample(t)
+    }
+    
+    @inlinable
+    func sample(_ t: Double) -> Matrix<Double> {
         if t <= x[0] { return y[0] }
         if t >= x.last! { return y.last! }
         let k = x.intervalIndex(t)
@@ -107,17 +118,18 @@ public extension LinearInterpolator<Matrix<Double>> {
         var result = (1 - _t) * y[k]
         result.add(y[k + 1], multiplied: _t)
         return result
-    }
-    
-    @inlinable
-    func sample(_ t: Double) -> Element {
-        self(t)
     }
 }
 
 public extension LinearInterpolator<Matrix<Complex<Double>>> {
     @inlinable
-    func callAsFunction(_ t: Double) -> Element {
+    @inline(always)
+    func callAsFunction(_ t: Double) -> Matrix<Complex<Double>> {
+        sample(t)
+    }
+    
+    @inlinable
+    func sample(_ t: Double) -> Matrix<Complex<Double>> {
         if t <= x[0] { return y[0] }
         if t >= x.last! { return y.last! }
         let k = x.intervalIndex(t)
@@ -125,10 +137,5 @@ public extension LinearInterpolator<Matrix<Complex<Double>>> {
         var result = (1 - _t) * y[k]
         result.add(y[k + 1], multiplied: _t)
         return result
-    }
-    
-    @inlinable
-    func sample(_ t: Double) -> Element {
-        self(t)
     }
 }

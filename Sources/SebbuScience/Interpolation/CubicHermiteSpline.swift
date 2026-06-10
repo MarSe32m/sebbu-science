@@ -6,8 +6,8 @@
 //
 
 import Numerics
-import SebbuCollections
 
+@frozen
 public struct CubicHermiteSpline<Element> {
     public let x: [Double]
     
@@ -97,7 +97,7 @@ extension CubicHermiteSpline<Double> {
     
     @inlinable
     public func sample(_ t: [Double]) -> [Double] {
-        t.betterMap { sample($0) }
+        t.map { sample($0) }
     }
 }
 
@@ -183,7 +183,7 @@ extension CubicHermiteSpline<Complex<Double>> {
     
     @inlinable
     public func sample(_ t: [Double]) -> [Complex<Double>] {
-        t.betterMap { sample($0) }
+        t.map { sample($0) }
     }
 }
 // Vector<T>
@@ -264,7 +264,7 @@ extension CubicHermiteSpline<Vector<Double>> {
     
     @inlinable
     public func sample(_ t: [Double]) -> [Vector<Double>] {
-        t.betterMap { sample($0) }
+        t.map { sample($0) }
     }
 }
  
@@ -347,7 +347,7 @@ extension CubicHermiteSpline<Vector<Complex<Double>>> {
     
     @inlinable
     public func sample(_ t: [Double]) -> [Vector<Complex<Double>>] {
-        t.betterMap { sample($0) }
+        t.map { sample($0) }
     }
 }
 
@@ -437,7 +437,7 @@ extension CubicHermiteSpline<Matrix<Double>> {
     
     @inlinable
     public func sample(_ t: [Double]) -> [Matrix<Double>] {
-        t.betterMap { sample($0) }
+        t.map { sample($0) }
     }
 }
 
@@ -527,6 +527,6 @@ extension CubicHermiteSpline<Matrix<Complex<Double>>> {
     
     @inlinable
     public func sample(_ t: [Double]) -> [Matrix<Complex<Double>>] {
-        t.betterMap { sample($0) }
+        t.map { sample($0) }
     }
 }
