@@ -11,6 +11,7 @@ public struct LinearInterpolator<Element> {
     public let x: [Double]
     public let y: [Element]
     
+    @inlinable
     public init(x: [Double], y: [Element]) {
         precondition(
             {
