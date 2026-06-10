@@ -7,6 +7,7 @@
 
 import Numerics
 
+@frozen
 public struct UniqueRK4Solver<State: ~Copyable & FixedStepODESolverState, RHS: ~Copyable & ~Escapable & ODERHSFunction>: ~Copyable, ~Escapable where RHS.State == State {
     public var t: Double
     public var dt: Double

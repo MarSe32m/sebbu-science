@@ -35,7 +35,7 @@ public protocol SDERHSFunction: ~Copyable, ~Escapable {
         into dy: inout State
     )
     
-    /// Samples normalized noises ξ_i with E[ξ_i ξ^\*_j] = δ_ij.
+    /// Samples normalized noises ξ_i with E[ξ_i ξ^\*_j] = \gamma_i(t) δ(t-s) δ_ij.
     /// The solver multiplies them by sqrt(dt).
     mutating func sampleWhiteNoise(
         t: Double,
