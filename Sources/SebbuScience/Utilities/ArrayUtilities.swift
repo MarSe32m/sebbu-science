@@ -10,7 +10,8 @@ extension Array where Element: FloatingPoint {
     @inlinable
     @inline(__always)
     internal func intervalIndex(_ t: Element) -> Int {
-        if t < self[1] || count <= 1 { return 0 }
+        if count <= 1 { return 0 }
+        if t < self[1] { return 0 }
         if t >= self[count - 2] { return count - 2}
         var min = 0
         var max = count - 1
