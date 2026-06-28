@@ -5,413 +5,204 @@
 //  Created by Sebastian Toivonen on 7.6.2026.
 //
 
-public extension Optimize {
-    struct LevenbergMarquardtResult<Value> {
-        public enum Reason {
-            case residualTolerance
-            case stepTolerance
-            case costTolerance
-            case gradientTolerance
-            case maxIterations
-            case linearSolveFailed
-            case dampingTooLarge
-        }
+import CMinpack
 
-        public var parameters: Vector<Value>
-        public var cost: Value
-        public var iterations: Int
-        public var damping: Value
-        public var converged: Bool
-        public var reason: Reason
+public extension Optimize {
+    enum LevenbergMarquardtError: Error {
+        case invalidDimensions
+        case residualCountChanged(expected: Int, actual: Int)
+        case invalidJacobianShape(
+            expectedRows: Int,
+            expectedColumns: Int,
+            actualRows: Int,
+            actualColumns: Int
+        )
+        case nonFiniteResidual
+        case nonFiniteJacobian
+        case invalidScaling
+    }
+    
+    struct LevenbergMarquardtResult {
+        public let parameters: Vector<Double>
+        public let residuals: Vector<Double>
+        
+        public let info: Int32
+        
+        public let functionEvaluations: Int
+        public let jacobianEvaluations: Int?
+        
+        public var converged: Bool { (1...4).contains(info) }
+        
+        public var sumOfSquares: Double {
+            residuals.normSquared
+        }
+        
+        public var cost: Double { 0.5 * sumOfSquares }
         
         @inlinable
-        public init(parameters: Vector<Value>, cost: Value, iterations: Int, damping: Value, converged: Bool, reason: Reason) {
+        internal init(parameters: Vector<Double>, residuals: Vector<Double>, info: Int32, functionEvaluations: Int, jacobianEvaluations: Int?) {
             self.parameters = parameters
-            self.cost = cost
-            self.iterations = iterations
-            self.damping = damping
-            self.converged = converged
-            self.reason = reason
+            self.residuals = residuals
+            self.info = info
+            self.functionEvaluations = functionEvaluations
+            self.jacobianEvaluations = jacobianEvaluations
         }
     }
-
-    @inlinable
-    static func levenbergMarquardt(
-        initial: Vector<Double>,
-        maxIterations: Int = 200,
-        residualTolerance: Double = 1e-10,
-        stepTolerance: Double = 1e-10,
-        costTolerance: Double = 1e-12,
-        gradientTolerance: Double = 1e-10,
-        initialDamping: Double = 1e-3,
-        dampingIncrease: Double = 10.0,
-        dampingDecrease: Double = 0.3,
-        minDamping: Double = 1e-30,
-        maxDamping: Double = 1e30,
-        residuals: (_ parameters: Vector<Double>) -> Vector<Double>,
-        jacobian: ((_ parameters: Vector<Double>) -> Matrix<Double>)? = nil
-    ) -> LevenbergMarquardtResult<Double> {
-        var x = initial
-        var lambda = initialDamping
-
-        var r = residuals(x)
-        var cost = 0.5 * r.normSquared
-
-        for iteration in 0..<max(1, maxIterations) {
-            let J = if let jacobian {
-                jacobian(x)
-            } else {
-                finiteDifferenceJacobian(parameters: x, residual: residuals)
-            }
-
-            precondition(J.rows == r.count)
-            precondition(J.columns == x.count)
-
-            if r.norm <= residualTolerance {
-                return .init(
-                    parameters: x,
-                    cost: cost,
-                    iterations: iteration,
-                    damping: lambda,
-                    converged: true,
-                    reason: .residualTolerance
-                )
-            }
-
-            let gradient = J.transpose.dot(r)
-
-            if gradient.components.map({ abs($0) }).max() ?? 0.0 <= gradientTolerance {
-                return .init(
-                    parameters: x,
-                    cost: cost,
-                    iterations: iteration,
-                    damping: lambda,
-                    converged: true,
-                    reason: .gradientTolerance
-                )
-            }
-
-            let scales = columnScales(J)
-
-            var accepted = false
-
-            while !accepted {
-                if lambda > maxDamping {
-                    return .init(
-                        parameters: x,
-                        cost: cost,
-                        iterations: iteration,
-                        damping: lambda,
-                        converged: false,
-                        reason: .dampingTooLarge
-                    )
-                }
-
-                let system = augmentedLevenbergMarquardtSystem(
-                    J: J,
-                    r: r,
-                    damping: lambda,
-                    scales: scales
-                )
-
-                let step: Vector<Double>
-                do {
-                    step = try Optimize.linearLeastSquares(A: system.A, system.b).result
-                } catch {
-                    return .init(
-                        parameters: x,
-                        cost: cost,
-                        iterations: iteration,
-                        damping: lambda,
-                        converged: false,
-                        reason: .linearSolveFailed
-                    )
-                }
-
-                if step.norm <= stepTolerance * (x.norm + stepTolerance) {
-                    return .init(
-                        parameters: x,
-                        cost: cost,
-                        iterations: iteration,
-                        damping: lambda,
-                        converged: true,
-                        reason: .stepTolerance
-                    )
-                }
-
-                let trialX = x + step
-                let trialR = residuals(trialX)
-                let trialCost = 0.5 * trialR.normSquared
-
-                if trialCost < cost {
-                    let oldCost = cost
-
-                    x = trialX
-                    r = trialR
-                    cost = trialCost
-
-                    lambda = max(minDamping, lambda * dampingDecrease)
-                    accepted = true
-
-                    if abs(oldCost - cost) <= costTolerance * max(1.0, oldCost) {
-                        return .init(
-                            parameters: x,
-                            cost: cost,
-                            iterations: iteration + 1,
-                            damping: lambda,
-                            converged: true,
-                            reason: .costTolerance
-                        )
-                    }
-                } else {
-                    lambda *= dampingIncrease
-                }
-            }
+    
+    @usableFromInline
+    package final class LevenbergMarquardtContext {
+        @usableFromInline
+        let residuals: (Vector<Double>) -> Vector<Double>
+        @usableFromInline
+        let jacobian: ((Vector<Double>) -> Matrix<Double>)?
+        
+        @usableFromInline
+        var error: LevenbergMarquardtError?
+        
+        @inlinable
+        init(residuals: @escaping (Vector<Double>) -> Vector<Double>, jacobian: ((Vector<Double>) -> Matrix<Double>)?) {
+            self.residuals = residuals
+            self.jacobian = jacobian
         }
-
-        return .init(
-            parameters: x,
-            cost: cost,
-            iterations: maxIterations,
-            damping: lambda,
-            converged: false,
-            reason: .maxIterations
-        )
     }
     
     @inlinable
     static func levenbergMarquardt(
-        initial: Vector<Float>,
-        maxIterations: Int = 200,
-        residualTolerance: Float = 1e-5,
-        stepTolerance: Float = 1e-5,
-        costTolerance: Float = 1e-6,
-        gradientTolerance: Float = 1e-5,
-        initialDamping: Float = 1e-3,
-        dampingIncrease: Float = 10.0,
-        dampingDecrease: Float = 0.3,
-        minDamping: Float = 1e-30,
-        maxDamping: Float = 1e30,
-        residuals: (_ parameters: Vector<Float>) -> Vector<Float>,
-        jacobian: ((_ parameters: Vector<Float>) -> Matrix<Float>)? = nil
-    ) -> LevenbergMarquardtResult<Float> {
-        var x = initial
-        var lambda = initialDamping
-
-        var r = residuals(x)
-        var cost = 0.5 * r.normSquared
-
-        for iteration in 0..<max(1, maxIterations) {
-            let J = if let jacobian {
-                jacobian(x)
+        initial: Vector<Double>,
+        functionTolerance ftol: Double = 1e-8,
+        stepTolerance xtol: Double = 1e-8,
+        gradientTolerance gtol: Double = 1e-8,
+        maxFunctionEvaluations: Int? = nil,
+        finiteDifferenceFunctionError epsfcn: Double = .zero,
+        scaling: [Double]? = nil,
+        initialStepFactor: Double = 100,
+        residuals: (Vector<Double>) -> Vector<Double>,
+        jacobian: ((Vector<Double>) -> Matrix<Double>)? = nil
+    ) throws -> LevenbergMarquardtResult {
+        let initialResiduals = residuals(initial)
+        let parameterCount = initial.count
+        let residualCount = initialResiduals.count
+        guard parameterCount > 0,
+              residualCount >= parameterCount,
+              parameterCount <= Int(Int32.max),
+              residualCount <= Int(Int32.max),
+              ftol >= 0, xtol >= 0, gtol >= 0, epsfcn >= 0,
+              initialStepFactor > 0 else {
+            throw LevenbergMarquardtError.invalidDimensions
+        }
+        let n = parameterCount
+        let m = residualCount
+        // mode = 1 -> MINPACK determines parameter scaling automatically
+        // mode = 2 -> the user supplies positive scaling values in diag
+        var diag = scaling ?? .init(repeating: 1, count: n)
+        let mode: Int32 = scaling == nil ? 1 : 2
+        guard diag.count == n, diag.allSatisfy({ $0.isFinite && $0 > 0 }) else {
+            throw LevenbergMarquardtError.invalidScaling
+        }
+        // MINPACK's drivers use
+        // lmdif -> 200 * (n + 1)
+        // lmder -> 100 * (n + 1)
+        let defaultMaximum = jacobian == nil ? 200 * (n + 1) : 100 * (n + 1)
+        let maxfev = maxFunctionEvaluations ?? defaultMaximum
+        guard maxfev > 0, maxfev <= Int(Int32.max) else {
+            throw LevenbergMarquardtError.invalidDimensions
+        }
+        var x = initial.components
+        var fvec: [Double] = .init(repeating: .zero, count: m)
+        var fjac: [Double] = .init(repeating: .zero, count: m * n)
+        var ipvt: [Int32] = .init(repeating: .zero, count: n)
+        var qtf: [Double] = .init(repeating: .zero, count: n)
+        var wa1: [Double] = .init(repeating: .zero, count: n)
+        var wa2: [Double] = .init(repeating: .zero, count: n)
+        var wa3: [Double] = .init(repeating: .zero, count: n)
+        var wa4: [Double] = .init(repeating: .zero, count: m)
+        
+        var functionEvaluations: Int32 = 0
+        var jacobianEvaluations: Int32 = 0
+        return try withoutActuallyEscaping(residuals) { residuals in
+            let context = LevenbergMarquardtContext(residuals: residuals, jacobian: jacobian)
+            let contextPtr = Unmanaged.passUnretained(context).toOpaque()
+            let info: Int32 = if jacobian == nil {
+                lmdif(cminpackLMDIFCallback, contextPtr, Int32(m), Int32(n), &x, &fvec, ftol, xtol, gtol, Int32(maxfev), epsfcn, &diag, mode, initialStepFactor, 0, &functionEvaluations, &fjac, Int32(m), &ipvt, &qtf, &wa1, &wa2, &wa3, &wa4)
             } else {
-                finiteDifferenceJacobian(parameters: x, residual: residuals)
+                lmder(cminpackLMDERCallback, contextPtr, Int32(m), Int32(n), &x, &fvec, &fjac, Int32(m), ftol, xtol, gtol, Int32(maxfev), &diag, mode, initialStepFactor, 0, &functionEvaluations, &jacobianEvaluations, &ipvt, &qtf, &wa1, &wa2, &wa3, &wa4)
             }
-
-            precondition(J.rows == r.count)
-            precondition(J.columns == x.count)
-
-            if r.norm <= residualTolerance {
-                return .init(
-                    parameters: x,
-                    cost: cost,
-                    iterations: iteration,
-                    damping: lambda,
-                    converged: true,
-                    reason: .residualTolerance
-                )
+            if let error = context.error {
+                throw error
             }
-
-            let gradient = J.transpose.dot(r)
-            
-            if gradient.components.map({ abs($0) }).max() ?? 0.0 <= gradientTolerance {
-                return .init(
-                    parameters: x,
-                    cost: cost,
-                    iterations: iteration,
-                    damping: lambda,
-                    converged: true,
-                    reason: .gradientTolerance
-                )
-            }
-
-            let scales = columnScales(J)
-
-            var accepted = false
-
-            while !accepted {
-                if lambda > maxDamping {
-                    return .init(
-                        parameters: x,
-                        cost: cost,
-                        iterations: iteration,
-                        damping: lambda,
-                        converged: false,
-                        reason: .dampingTooLarge
-                    )
-                }
-
-                let system = augmentedLevenbergMarquardtSystem(
-                    J: J,
-                    r: r,
-                    damping: lambda,
-                    scales: scales
-                )
-
-                let step: Vector<Float>
-                do {
-                    step = try Optimize.linearLeastSquares(A: system.A, system.b).result
-                } catch {
-                    return .init(
-                        parameters: x,
-                        cost: cost,
-                        iterations: iteration,
-                        damping: lambda,
-                        converged: false,
-                        reason: .linearSolveFailed
-                    )
-                }
-
-                if step.norm <= stepTolerance * (x.norm + stepTolerance) {
-                    return .init(
-                        parameters: x,
-                        cost: cost,
-                        iterations: iteration,
-                        damping: lambda,
-                        converged: true,
-                        reason: .stepTolerance
-                    )
-                }
-
-                let trialX = x + step
-                let trialR = residuals(trialX)
-                let trialCost = 0.5 * trialR.normSquared
-
-                if trialCost < cost {
-                    let oldCost = cost
-
-                    x = trialX
-                    r = trialR
-                    cost = trialCost
-
-                    lambda = max(minDamping, lambda * dampingDecrease)
-                    accepted = true
-
-                    if abs(oldCost - cost) <= costTolerance * max(1.0, oldCost) {
-                        return .init(
-                            parameters: x,
-                            cost: cost,
-                            iterations: iteration + 1,
-                            damping: lambda,
-                            converged: true,
-                            reason: .costTolerance
-                        )
-                    }
-                } else {
-                    lambda *= dampingIncrease
-                }
-            }
+            return LevenbergMarquardtResult(parameters: Vector(x), residuals: Vector(fvec), info: info, functionEvaluations: Int(functionEvaluations), jacobianEvaluations: jacobian == nil ? nil : Int(jacobianEvaluations))
         }
-
-        return .init(
-            parameters: x,
-            cost: cost,
-            iterations: maxIterations,
-            damping: lambda,
-            converged: false,
-            reason: .maxIterations
-        )
     }
 }
 
+@c
 @inlinable
-package func columnScales(_ J: Matrix<Double>) -> [Double] {
-    var scales = [Double](repeating: 1.0, count: J.columns)
-
-    for j in 0..<J.columns {
-        var s = 0.0
-        for i in 0..<J.rows {
-            let Jij = J[i, j]
-            s += Jij * Jij
-        }
-
-        scales[j] = max(s.squareRoot(), 1e-12)
+package func cminpackLMDIFCallback(_ contextPtr: UnsafeMutableRawPointer?, _ m: Int32, _ n: Int32, _ x: UnsafePointer<Double>?, _ fvec: UnsafeMutablePointer<Double>?, _ iflag: Int32) -> Int32 {
+    // iflag == 0 is an optional printing / progress callback
+    guard iflag != 0 else { return 0 }
+    guard let contextPtr, let x, let fvec else { return -1 }
+    
+    let context = Unmanaged<Optimize.LevenbergMarquardtContext>.fromOpaque(contextPtr).takeUnretainedValue()
+    let parameters: Vector<Double> = .init(Array(UnsafeBufferPointer(start: x, count: Int(n))))
+    let residuals = context.residuals(parameters)
+    guard residuals.count == Int(m) else {
+        context.error = .residualCountChanged(expected: Int(m), actual: residuals.count)
+        return -1
     }
-
-    return scales
+    guard residuals.components.allSatisfy(\.isFinite) else {
+        context.error = .nonFiniteResidual
+        return -1
+    }
+    for i in 0..<Int(m) {
+        fvec[i] = residuals[i]
+    }
+    return 0
 }
 
+@c
 @inlinable
-package func augmentedLevenbergMarquardtSystem(
-    J: Matrix<Double>,
-    r: Vector<Double>,
-    damping: Double,
-    scales: [Double]
-) -> (A: Matrix<Double>, b: Vector<Double>) {
-    let m = J.rows
-    let n = J.columns
-    let sqrtDamping = damping.squareRoot()
-
-    var A: Matrix<Double> = .zeros(rows: m + n, columns: n)
-    var b:Vector<Double> = .zero(m + n)
-
-    for i in 0..<m {
-        for j in 0..<n {
-            A[i, j] = J[i, j]
+package func cminpackLMDERCallback(_ contextPtr: UnsafeMutableRawPointer?, _ m: Int32, _ n: Int32, _ x: UnsafePointer<Double>?, _ fvec: UnsafeMutablePointer<Double>?, _ fjac: UnsafeMutablePointer<Double>?, _ ldfjac: Int32, _ iflag: Int32) -> Int32 {
+    // iflag == 0 is an optional printing / progress callback
+    guard iflag != 0 else { return 0 }
+    guard let contextPtr, let x else { return -1 }
+    
+    let context = Unmanaged<Optimize.LevenbergMarquardtContext>.fromOpaque(contextPtr).takeUnretainedValue()
+    let parameters: Vector<Double> = .init(Array(UnsafeBufferPointer(start: x, count: Int(n))))
+    switch iflag {
+    case 1:
+        guard let fvec else { return -1 }
+        let residuals = context.residuals(parameters)
+        guard residuals.count == Int(m) else {
+            context.error = .residualCountChanged(expected: Int(m), actual: residuals.count)
+            return -1
         }
-
-        b[i] = -r[i]
-    }
-
-    for j in 0..<n {
-        A[m + j, j] = sqrtDamping * scales[j]
-    }
-
-    return (A, b)
-}
-
-@inlinable
-package func columnScales(_ J: Matrix<Float>) -> [Float] {
-    var scales = [Float](repeating: 1.0, count: J.columns)
-
-    for j in 0..<J.columns {
-        var s: Float = 0.0
-        for i in 0..<J.rows {
-            let Jij = J[i, j]
-            s += Jij * Jij
+        guard residuals.components.allSatisfy(\.isFinite) else {
+            context.error = .nonFiniteResidual
+            return -1
         }
-
-        scales[j] = max(s.squareRoot(), 1e-12)
-    }
-
-    return scales
-}
-
-@inlinable
-package func augmentedLevenbergMarquardtSystem(
-    J: Matrix<Float>,
-    r: Vector<Float>,
-    damping: Float,
-    scales: [Float]
-) -> (A: Matrix<Float>, b: Vector<Float>) {
-    let m = J.rows
-    let n = J.columns
-    let sqrtDamping = damping.squareRoot()
-
-    var A: Matrix<Float> = .zeros(rows: m + n, columns: n)
-    var b:Vector<Float> = .zero(m + n)
-
-    for i in 0..<m {
-        for j in 0..<n {
-            A[i, j] = J[i, j]
+        for i in 0..<Int(m) {
+            fvec[i] = residuals[i]
         }
-
-        b[i] = -r[i]
+    case 2:
+        guard let fjac, let jacobian = context.jacobian else { return -1 }
+        let J = jacobian(parameters)
+        guard J.rows == Int(m), J.columns == Int(n) else {
+            context.error = .invalidJacobianShape(expectedRows: Int(m), expectedColumns: Int(n), actualRows: J.rows, actualColumns: J.columns)
+            return -1
+        }
+        guard J.elements.allSatisfy(\.isFinite) else {
+            context.error = .nonFiniteJacobian
+            return -1
+        }
+        let leadingDimension = Int(ldfjac)
+        for column in 0..<Int(n) {
+            for row in 0..<Int(m) {
+                // cminpack expects column-major layout
+                fjac[row + column * leadingDimension] = J[row, column]
+            }
+        }
+    default:
+        break
     }
-
-    for j in 0..<n {
-        A[m + j, j] = sqrtDamping * scales[j]
-    }
-
-    return (A, b)
+    return 0
 }
