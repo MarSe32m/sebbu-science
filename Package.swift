@@ -17,7 +17,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-collections", from: "1.5.0"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
         .package(url: "https://github.com/MarSe32m/sebbu-collections", branch: "main"),
-        .package(url: "https://github.com/MarSe32m/sebbu-copenblas", from: "0.3.32"),
+        .package(url: "https://github.com/MarSe32m/sebbu-copenblas", from: "0.3.34"),
         .package(url: "https://github.com/MarSe32m/sebbu-cminpack", branch: "main"),
         .package(url: "https://github.com/pvieito/PythonKit", branch: "main")
     ],
