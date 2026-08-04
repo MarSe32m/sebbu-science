@@ -1,9 +1,5 @@
-//
-//  VectorTests.swift
-//  sebbu-science
-//
-//  Created by Sebastian Toivonen on 21.4.2025.
-//
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: Apache-2.0
 
 import Testing
 @testable import SebbuScience

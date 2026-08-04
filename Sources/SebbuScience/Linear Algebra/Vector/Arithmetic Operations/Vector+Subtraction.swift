@@ -1,9 +1,5 @@
-//
-//  Vector+Subtraction.swift
-//  sebbu-science
-//
-//  Created by Sebastian Toivonen on 11.5.2025.
-//
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
 

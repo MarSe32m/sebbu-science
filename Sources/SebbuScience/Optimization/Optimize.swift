@@ -1,8 +1,4 @@
-//
-//  Optimize.swift
-//  swift-science
-//
-//  Created by Sebastian Toivonen on 13.9.2025.
-//
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: Apache-2.0
 
 public enum Optimize {}

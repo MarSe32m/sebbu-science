@@ -1,15 +1,5 @@
-//
-//  CSRMatrix.swift
-//  
-//
-//  Created by Sebastian Toivonen on 23.8.2023.
-//
-
-//#if canImport(COpenBLAS)
-//import COpenBLAS
-//#elseif canImport(Accelerate)
-//import Accelerate
-//#endif
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
 import BasicContainers

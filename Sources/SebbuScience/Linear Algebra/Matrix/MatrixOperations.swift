@@ -1,14 +1,12 @@
-//
-//  MatrixOperations.swift
-//  swift-science
-//
-//  Created by Sebastian Toivonen on 11.10.2024.
-//
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: Apache-2.0
 
 import RealModule
 import ComplexModule
 import SebbuCollections
 import NumericsExtensions
+
+import Foundation
 
 public enum MatrixOperations {
     public enum MatrixOperationError: Error {

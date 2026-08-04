@@ -1,9 +1,6 @@
-//
-//  SparseMatrix.swift
-//  swift-phd-toivonen
-//
-//  Created by Sebastian Toivonen on 22.10.2024.
-//
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: Apache-2.0
+
 import RealModule
 import ComplexModule
 

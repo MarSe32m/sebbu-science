@@ -1,9 +1,5 @@
-//
-//  SymbolLoading.swift
-//  swift-science
-//
-//  Created by Sebastian Toivonen on 19.4.2025.
-//
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: Apache-2.0
 
 #if canImport(WinSDK)
 import WinSDK

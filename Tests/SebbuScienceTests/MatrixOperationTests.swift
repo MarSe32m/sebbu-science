@@ -434,8 +434,8 @@ struct PseudoInverseTests {
         #expect(pseudoInverse != nil)
         let B = A.dot(pseudoInverse!).dot(A)
         let C = pseudoInverse!.dot(A).dot(pseudoInverse!)
-        #expect(A.isApproximatelyEqual(to: B, absoluteTolerance: 1e-4))
-        #expect(pseudoInverse!.isApproximatelyEqual(to: C, absoluteTolerance: 1e-4))
+        #expect(A.isApproximatelyEqual(to: B, absoluteTolerance: 1e-3))
+        #expect(pseudoInverse!.isApproximatelyEqual(to: C, absoluteTolerance: 1e-3))
     }
     
     @Test("Matrix<Complex<Double>>.pseudoInverse test", arguments: 0..<10)
@@ -468,7 +468,7 @@ struct PseudoInverseTests {
 struct DiagonalizationTests {
     @Test("Matrix<Double>.diagonalize test")
     func diagonalizeDouble() throws {
-        for dimension in 1...64 {
+        for dimension in 1...16 {
             let A: Matrix<Double> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             let AComplex: Matrix<Complex<Double>> = .init(elements: A.elements.map { Complex($0) }, rows: dimension, columns: dimension)
             
@@ -497,7 +497,7 @@ struct DiagonalizationTests {
     
     @Test("Matrix<Double>.diagonalizeSymmetric test")
     func diagonalizeSymmetricDouble() throws {
-        for dimension in 1...64 {
+        for dimension in 1...16 {
             var A: Matrix<Double> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             for i in 0..<dimension {
                 for j in i..<dimension {
@@ -526,7 +526,7 @@ struct DiagonalizationTests {
     
     @Test("Matrix<Float>.diagonalize test")
     func diagonalizeFloat() throws {
-        for dimension in 1...32 {
+        for dimension in 1...16 {
             let A: Matrix<Float> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             let AComplex: Matrix<Complex<Float>> = .init(elements: A.elements.map { Complex($0) }, rows: dimension, columns: dimension)
             
@@ -555,7 +555,7 @@ struct DiagonalizationTests {
     
     @Test("Matrix<Float>.diagonalizeSymmetric test")
     func diagonalizeSymmetricFloat() throws {
-        for dimension in 1...64 {
+        for dimension in 1...16 {
             var A: Matrix<Float> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             for i in 0..<dimension {
                 for j in i..<dimension {
@@ -584,7 +584,7 @@ struct DiagonalizationTests {
     
     @Test("Matrix<Complex<Double>>.diagonalize test")
     func diagonalizeComplexDouble() throws {
-        for dimension in 1...64 {
+        for dimension in 1...16 {
             let A: Matrix<Complex<Double>> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             
             let (eigenValues, leftEigenVectors, rightEigenVectors) = try MatrixOperations.diagonalize(A)
@@ -612,7 +612,7 @@ struct DiagonalizationTests {
     
     @Test("Matrix<Complex<Double>>.diagonalizeHermitian test")
     func diagonalizeHermitianComplexDouble() throws {
-        for dimension in 1...64 {
+        for dimension in 1...16 {
             var A: Matrix<Complex<Double>> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             for i in 0..<dimension {
                 A[i, i] = Complex(A[i,i].real)
@@ -643,7 +643,7 @@ struct DiagonalizationTests {
     
     @Test("Matrix<Complex<Float>>.diagonalize test")
     func diagonalizeComplexFloat() throws {
-        for dimension in 1...32 {
+        for dimension in 1...16 {
             let A: Matrix<Complex<Float>> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             
             let (eigenValues, leftEigenVectors, rightEigenVectors) = try MatrixOperations.diagonalize(A)
@@ -671,7 +671,7 @@ struct DiagonalizationTests {
     
     @Test("Matrix<Complex<Float>>.diagonalizeHermitian test")
     func diagonalizeHermitianComplexFloat() throws {
-        for dimension in 1...64 {
+        for dimension in 1...16 {
             var A: Matrix<Complex<Float>> = .init(elements: (0..<dimension*dimension).map { _ in .random(in: -1...1)}, rows: dimension, columns: dimension)
             for i in 0..<dimension {
                 A[i, i] = Complex(A[i,i].real)

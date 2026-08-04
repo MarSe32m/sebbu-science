@@ -1,9 +1,5 @@
-//
-//  LevenbergMarquardt.swift
-//  sebbu-science
-//
-//  Created by Sebastian Toivonen on 7.6.2026.
-//
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: Apache-2.0
 
 import CMinpack
 

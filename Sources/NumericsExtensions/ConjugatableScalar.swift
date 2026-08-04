@@ -1,9 +1,6 @@
-//
-//  ConjugatableScalar.swift
-//  sebbu-science
-//
-//  Created by Sebastian Toivonen on 23.5.2026.
-//
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: Apache-2.0
+
 import Numerics
 
 public protocol ConjugatableScalar: AlgebraicField {

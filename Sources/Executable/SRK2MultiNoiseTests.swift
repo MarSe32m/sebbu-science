@@ -1,9 +1,5 @@
-//
-//  SRK2MultiNoiseTests.swift
-//  sebbu-science
-//
-//  Created by Sebastian Toivonen on 12.10.2025.
-//
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: Apache-2.0
 
 import PythonKit
 import PythonKitUtilities

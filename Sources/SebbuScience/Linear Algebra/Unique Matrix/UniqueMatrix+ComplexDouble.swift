@@ -1,9 +1,6 @@
-//
-//  Matrix+ComplexDouble.swift
-//  swift-science
-//
-//  Created by Sebastian Toivonen on 13.10.2024.
-//
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: Apache-2.0
+
 #if canImport(COpenBLAS)
 import COpenBLAS
 #elseif canImport(Accelerate)

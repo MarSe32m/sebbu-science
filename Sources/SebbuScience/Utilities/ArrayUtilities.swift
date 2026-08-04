@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: Apache-2.0
+
 extension Array where Element: FloatingPoint {
     /// Finds the start index of the interval in the given array in which the value t belongs in.
     /// Uses binary search, i.e., complexity O(log n)

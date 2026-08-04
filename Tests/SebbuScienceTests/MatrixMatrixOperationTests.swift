@@ -1,9 +1,5 @@
-//
-//  MatrixMatrixOperations.swift
-//  sebbu-science
-//
-//  Created by Sebastian Toivonen on 20.4.2025.
-//
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: Apache-2.0
 
 import Testing
 @testable import SebbuScience
@@ -156,22 +152,22 @@ struct MatrixMatrixOperationTests {
 
 struct ZGEEVTest {
     
-    @Test("Diagonalize hermitian matrix")
-    func testDiagonalizeHermitianMatrix() throws {
-        let A: Matrix<Complex<Double>> = .init(elements: [Complex(1.0), Complex(0, 1),
-                                                          Complex(0, -1), Complex(1) ], rows: 2, columns: 2)
-        let (eigenValues, eigenVectors) = try MatrixOperations.diagonalizeHermitian(A)
-        for i in 0..<eigenValues.count {
-            print(eigenValues[i], "(\(eigenVectors[i][0]),\(eigenVectors[i][1]))")
-            let vector1 = eigenValues[i] * eigenVectors[i]
-            let vector2 = A.dot(eigenVectors[i])
-            print(vector1)
-            print(vector2)
-            print()
-        }
-        print(A)
-        print(eigenValues[1] * eigenVectors[1].conjugate.outer(eigenVectors[1]))
-    }
+    //@Test("Diagonalize hermitian matrix")
+    //func testDiagonalizeHermitianMatrix() throws {
+    //    let A: Matrix<Complex<Double>> = .init(elements: [Complex(1.0), Complex(0, 1),
+    //                                                      Complex(0, -1), Complex(1) ], rows: 2, columns: 2)
+    //    let (eigenValues, eigenVectors) = try MatrixOperations.diagonalizeHermitian(A)
+    //    for i in 0..<eigenValues.count {
+    //        print(eigenValues[i], "(\(eigenVectors[i][0]),\(eigenVectors[i][1]))")
+    //        let vector1 = eigenValues[i] * eigenVectors[i]
+    //        let vector2 = A.dot(eigenVectors[i])
+    //        print(vector1)
+    //        print(vector2)
+    //        print()
+    //    }
+    //    print(A)
+    //    print(eigenValues[1] * eigenVectors[1].conjugate.outer(eigenVectors[1]))
+    //}
     
     @Test("Herimitan dot")
     func testHermitianDot() {

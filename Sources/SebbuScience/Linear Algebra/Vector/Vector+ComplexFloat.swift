@@ -1,9 +1,5 @@
-//
-//  Vector+ComplexFloat.swift
-//  swift-science
-//
-//  Created by Sebastian Toivonen on 11.4.2025.
-//
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: Apache-2.0
 
 import RealModule
 import ComplexModule

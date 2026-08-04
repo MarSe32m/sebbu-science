@@ -1,9 +1,5 @@
-//
-//  UniqueMatrix.swift
-//  sebbu-science
-//
-//  Created by Sebastian Toivonen on 16.5.2026.
-//
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: Apache-2.0
 
 import RealModule
 import ComplexModule
