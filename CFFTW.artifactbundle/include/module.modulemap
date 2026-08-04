@@ -1,4 +1,0 @@
-module CFFTW {
-    header "include.h"
-    export *
-}
