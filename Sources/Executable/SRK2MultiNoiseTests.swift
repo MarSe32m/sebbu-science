@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import PythonKit
-import PythonKitUtilities
+import SebbuPythonKit
 import SebbuScience
 
 func testMultiNoiseSRK2() {

@@ -4,7 +4,7 @@
 
 import SebbuScience
 import Numerics
-import PythonKitUtilities
+import SebbuPythonKit
 
 
 @usableFromInline

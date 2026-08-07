@@ -7,7 +7,6 @@ let package = Package(
     platforms: [.macOS(.v26)],
     products: [
         .library(name: "SebbuScience", targets: ["SebbuScience"]),
-        .library(name: "PythonKitUtilities", targets: ["PythonKitUtilities"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-numerics", from: "1.1.0"),
@@ -18,7 +17,7 @@ let package = Package(
         .package(url: "https://github.com/MarSe32m/sebbu-copenblas", from: "0.3.34"),
         .package(url: "https://github.com/MarSe32m/sebbu-cminpack", from: "1.3.14"),
         .package(url: "https://github.com/MarSe32m/sebbu-fft", from: "0.2.0"),
-        .package(url: "https://github.com/pvieito/PythonKit", from: "0.5.1")
+        .package(url: "https://github.com/MarSe32m/sebbu-python-kit", from: "0.0.1")
     ],
     targets: [
         .target(name: "CMath"),
@@ -33,13 +32,6 @@ let package = Package(
             dependencies: [
                 .product(name: "Numerics", package: "swift-numerics"),
                 .target(name: "CMath")
-            ]
-        ),
-        .target(
-            name: "PythonKitUtilities",
-            dependencies: [
-                .product(name: "Numerics", package: "swift-numerics"),
-                .product(name: "PythonKit", package: "PythonKit")
             ]
         ),
         .target(
@@ -71,7 +63,7 @@ let package = Package(
             name: "Executable",
             dependencies: [
                 "SebbuScience",
-                .target(name: "PythonKitUtilities")
+                .product(name: "SebbuPythonKit", package: "sebbu-python-kit")
             ],
             cSettings: [
                 .define("ACCELERATE_NEW_LAPACK", .when(platforms: [.macOS])),

@@ -3,7 +3,7 @@
 
 import SebbuScience
 import Numerics
-import PythonKitUtilities
+import SebbuPythonKit
 
 public func _testGaussNewtonDouble() {
     let initialParameters: Vector<Double> = [0.0, 0.0, 0.0, 0.0]

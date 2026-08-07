@@ -6,7 +6,7 @@ import SebbuFFT
 import Foundation
 
 import PythonKit
-import PythonKitUtilities
+import SebbuPythonKit
 
 typealias Field = Complex<Double>
 

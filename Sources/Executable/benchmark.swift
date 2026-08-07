@@ -4,7 +4,7 @@
 import SebbuScience
 
 import PythonKit
-import PythonKitUtilities
+import SebbuPythonKit
 
 public struct BenchmarkResult: Codable {
     let name: String
