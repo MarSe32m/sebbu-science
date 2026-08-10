@@ -74,7 +74,7 @@ public struct UniqueDOPRISolver<State: ~Copyable & AdaptiveStepODESolverState, R
     @inlinable
     public mutating func step(y: inout State) -> Double {
         while true {
-            if hasCachedK1 { rhs.evaluate(t: t, y: y, dy: &k1) }
+            if !hasCachedK1 { rhs.evaluate(t: t, y: y, dy: &k1) }
             temporary.assign(y, adding: k1, multipliedBy: Relaxed.product(1.0 / 5.0, dt))
             rhs.evaluate(t: Relaxed.multiplyAdd(1.0 / 5.0, dt, t), y: temporary, dy: &k2)
             
@@ -130,7 +130,7 @@ public struct UniqueDOPRISolver<State: ~Copyable & AdaptiveStepODESolverState, R
             if error > errorScale {
                 // Reject step
                 hasCachedK1 = false
-                let scale = 0.9 * .pow(errorScale / error, 1 / 6.0)
+                let scale = 0.9 * .pow(errorScale / error, 1 / 5.0)
                 dt *= Swift.max(Swift.min(scale, 2.0), 0.1)
                 dt = Swift.min(maxStep, dt)
                 continue
