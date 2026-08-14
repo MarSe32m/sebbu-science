@@ -36,6 +36,11 @@ public extension UniqueVector<Double> {
             divide(by: by)
         }
     }
+    
+    @inlinable
+    mutating func normalize() {
+        components._unsafeDivide(by: norm, count: count)
+    }
 }
 
 //MARK: Scaling for Float
@@ -47,6 +52,11 @@ public extension UniqueVector<Float> {
         } else {
             divide(by: by)
         }
+    }
+    
+    @inlinable
+    mutating func normalize() {
+        components._unsafeDivide(by: norm, count: count)
     }
 }
 
@@ -89,6 +99,11 @@ public extension UniqueVector<Complex<Double>> {
             divide(by: by)
         }
     }
+    
+    @inlinable
+    mutating func normalize() {
+        components._unsafeDivide(by: norm, count: count)
+    }
 }
 
 //MARK: Scaling for Complex<Float>
@@ -129,5 +144,10 @@ public extension UniqueVector<Complex<Float>> {
         } else {
             divide(by: by)
         }
+    }
+    
+    @inlinable
+    mutating func normalize() {
+        components._unsafeDivide(by: norm, count: count)
     }
 }

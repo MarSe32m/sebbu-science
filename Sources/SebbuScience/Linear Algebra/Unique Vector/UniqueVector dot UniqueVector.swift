@@ -107,6 +107,12 @@ public extension UniqueVector where T: ConjugatableScalar {
         }
         return result
     }
+    
+    @inlinable
+    mutating func normalize() {
+        let norm = self.inner(self)
+        components._unsafeDivide(by: norm, count: count)
+    }
 }
 
 //MARK: Dot, inner and outer product for Double
