@@ -19,6 +19,11 @@ struct DecayingRHS: ODERHSFunction {
 
 extension Double: FixedStepODESolverState {
     @inlinable
+    public mutating func assign(_ a: borrowing Double) {
+        self = Double(a)
+    }
+
+    @inlinable
     public mutating func add(_ a: borrowing Double, multiplied: Double) {
         self += a * multiplied
     }
@@ -37,13 +42,8 @@ extension Double: AdaptiveStepODESolverState {
     }
     
     @inlinable
-    public mutating func assign(_ a: borrowing Double) {
-        self = Double(a)
-    }
-    
-    @inlinable
-    public mutating func assign(_ a: borrowing Double, multiplied: Double) {
-        self = a * multiplied
+    public func errorNorm(to other: borrowing Double) -> Double {
+        (self - other).magnitude
     }
     
 }
@@ -60,7 +60,7 @@ func testUniqueRK4FixedStep() {
     tSpace.append(addingCapacity: samples) { tSpan in
         y.append(addingCapacity: samples) { ySpan in
             while solver.t < endTime {
-                let t = solver.step(y: &currentState)
+                let t = solver.step(y: &currentState, upTo: endTime).endTime
                 tSpan.append(t)
                 ySpan.append(currentState)
             }
@@ -88,7 +88,7 @@ func testUniqueRK4AdaptiveStep() {
     tSpace.append(addingCapacity: samples) { tSpan in
         y.append(addingCapacity: samples) { ySpan in
             while solver.t < endTime {
-                let t = solver.step(y: &currentState)
+                let t = try! solver.step(y: &currentState, upTo: endTime).endTime
                 tSpan.append(t)
                 ySpan.append(currentState)
             }
@@ -113,7 +113,7 @@ func testUniqueSolverWithCustomState() {
     var adaptiveTSpace: [Double] = [0.0]
     var adaptiveY: [Double] = [y5.state]
     while adaptiveSolver.t < endTime {
-        let t = adaptiveSolver.step(y: &y5)
+        let t = try! adaptiveSolver.step(y: &y5, upTo: endTime).endTime
         adaptiveTSpace.append(t)
         adaptiveY.append(y5.state)
     }
@@ -121,7 +121,7 @@ func testUniqueSolverWithCustomState() {
     var fixedTSpace: [Double] = []
     var fixedY: [Double] = []
     while fixedSolver.t < endTime {
-        let t = fixedSolver.step(y: &y)
+        let t = fixedSolver.step(y: &y, upTo: endTime).endTime
         fixedTSpace.append(t)
         fixedY.append(y.state)
     }
@@ -222,11 +222,6 @@ extension State: AdaptiveStepODESolverState {
     }
     
     @inlinable
-    mutating func assign(_ a: borrowing State, multiplied: Double) {
-        self.state = a.state * multiplied
-    }
-    
-    @inlinable
     mutating func add(_ a: borrowing State, multiplied: Double) {
         self.state += a.state * multiplied
     }
@@ -237,7 +232,7 @@ extension State: AdaptiveStepODESolverState {
     }
     
     @inlinable
-    func distance(to: borrowing State) -> Double {
+    func errorNorm(to: borrowing State) -> Double {
         (self.state - to.state).magnitude
     }
 }
