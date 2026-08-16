@@ -149,7 +149,7 @@ func testUniqueSRK2SolverWithCustomState() {
     tSpace.append(addingCapacity: samples) { tSpan in
         y.append(addingCapacity: samples) { ySpan in
             while solver.t < endTime {
-                let t = solver.step(y: &state)
+                let t = solver.step(y: &state, upTo: endTime).endTime
                 tSpan.append(t)
                 ySpan.append(state.state)
             }
@@ -178,9 +178,7 @@ struct DecayingStateFunc: ODERHSFunction {
 struct DecayingSDEFunc: SDERHSFunction {
     @inlinable
     init() {}
-    
-    @usableFromInline
-    typealias NoiseType = Double
+
     @inlinable
     func drift(t: Double, y: borrowing State, into dy: inout State) {
         dy.state = -.sin(t)
@@ -192,7 +190,11 @@ struct DecayingSDEFunc: SDERHSFunction {
     }
     
     @inlinable
-    func sampleWhiteNoise(t: Double, noises: inout MutableSpan<NoiseType>) {
+    func sampleNormalizedNoises(
+        t: Double,
+        stepSize: Double,
+        into noises: inout MutableSpan<Double>
+    ) {
         for i in noises.indices {
             noises[unchecked: i] = .zero
         }
@@ -243,31 +245,14 @@ extension State: FixedStepSDESolverState {
         state = .zero
     }
     
-    @inlinable
-    mutating func scale(by: Double) {
-        state *= by
-    }
-    
     @usableFromInline
     typealias NoiseType = Double
-    
+
     @inlinable
-    mutating func add(_ a: borrowing State) {
-        state += a.state
-    }
-    
-    @inlinable
-    mutating func add(_ a: borrowing State, multiplied dtSqrt: Double, noise: borrowing Double) {
-        state += a.state * dtSqrt * noise
-    }
-    
-    @inlinable
-    mutating func assign(_ base: borrowing State, adding direction: borrowing State) {
-        state = base.state + direction.state
-    }
-    
-    @inlinable
-    mutating func assign(_ base: borrowing State, adding direction: borrowing State, multipliedBy dtSqrt: Double, noise: borrowing Double) {
-        state = base.state + direction.state * dtSqrt * noise
+    mutating func add(
+        _ other: borrowing State,
+        scaledBy noise: borrowing Double
+    ) {
+        state += other.state * noise
     }
 }
