@@ -96,6 +96,123 @@ public extension UniqueMatrix<Complex<Double>> {
 }
 
 public extension MatrixOperations {
+    /// Diagonalizes a Hermitian matrix in place.
+    ///
+    /// On return, the columns of `A` contain the orthonormal eigenvectors and
+    /// the returned eigenvalues are in ascending order. LAPACK only reads the
+    /// upper triangle of `A`.
+    ///
+    /// This overload is useful for large temporary matrices because it avoids
+    /// copying a `UniqueMatrix` through the copyable `Matrix` representation.
+    /// Row-major LAPACKE backends operate on its storage directly; Accelerate
+    /// uses the column-major workspace required by its Fortran interface.
+    ///
+    /// - Parameter A: The Hermitian matrix to diagonalize. It is overwritten
+    ///   by its eigenvectors.
+    /// - Returns: The eigenvalues in ascending order.
+    /// - Throws: ``MatrixOperationError`` if LAPACK reports a failure.
+    static func diagonalizeHermitianInPlace(
+        _ A: inout UniqueMatrix<Complex<Double>>
+    ) throws -> [Double] {
+        precondition(A.rows == A.columns)
+
+        #if canImport(COpenBLAS)
+        let n = A.rows
+        var eigenValues = [Double](repeating: .zero, count: n)
+        let vectors = Int8(bitPattern: UInt8(ascii: "V"))
+        let upperTriangle = Int8(bitPattern: UInt8(ascii: "U"))
+        let info = LAPACKE_zheevd(
+            LAPACK_ROW_MAJOR,
+            vectors,
+            upperTriangle,
+            .init(n),
+            .init(A.elements),
+            .init(n),
+            &eigenValues
+        )
+        if info != 0 { throw MatrixOperationError.info(Int(info)) }
+        return eigenValues
+        #elseif canImport(Accelerate)
+        let dimension = A.rows
+        var n = dimension
+        var lda = dimension
+        var eigenValues = [Double](repeating: .zero, count: dimension)
+        var columnMajor = [Complex<Double>](repeating: .zero, count: dimension * dimension)
+
+        for column in 0..<dimension {
+            for row in 0..<dimension {
+                columnMajor[column * dimension + row] = A[row, column]
+            }
+        }
+
+        var work = [Complex<Double>](repeating: .zero, count: 1)
+        var lwork = -1
+        var realWork = [Double](repeating: .zero, count: 1)
+        var lrwork = -1
+        var integerWork = [Int](repeating: .zero, count: 1)
+        var liwork = -1
+        var info = 0
+
+        columnMajor.withUnsafeMutableBufferPointer { matrix in
+            work.withUnsafeMutableBufferPointer { work in
+                zheevd_(
+                    "V",
+                    "U",
+                    &n,
+                    OpaquePointer(matrix.baseAddress),
+                    &lda,
+                    &eigenValues,
+                    OpaquePointer(work.baseAddress!),
+                    &lwork,
+                    &realWork,
+                    &lrwork,
+                    &integerWork,
+                    &liwork,
+                    &info
+                )
+            }
+        }
+        if info != 0 { throw MatrixOperationError.info(info) }
+
+        lwork = Int(work[0].real)
+        lrwork = Int(realWork[0])
+        liwork = integerWork[0]
+        work = [Complex<Double>](repeating: .zero, count: lwork)
+        realWork = [Double](repeating: .zero, count: lrwork)
+        integerWork = [Int](repeating: .zero, count: liwork)
+
+        columnMajor.withUnsafeMutableBufferPointer { matrix in
+            work.withUnsafeMutableBufferPointer { work in
+                zheevd_(
+                    "V",
+                    "U",
+                    &n,
+                    OpaquePointer(matrix.baseAddress),
+                    &lda,
+                    &eigenValues,
+                    OpaquePointer(work.baseAddress!),
+                    &lwork,
+                    &realWork,
+                    &lrwork,
+                    &integerWork,
+                    &liwork,
+                    &info
+                )
+            }
+        }
+        if info != 0 { throw MatrixOperationError.info(info) }
+
+        for column in 0..<dimension {
+            for row in 0..<dimension {
+                A[row, column] = columnMajor[column * dimension + row]
+            }
+        }
+        return eigenValues
+        #else
+        fatalError("No LAPACK implementation is available")
+        #endif
+    }
+
     /// Diagonalizes the given hermitian matrix, i.e., computes it's eigenvalues and eigenvectors.
     /// - Parameters:
     ///   - A: Symmteric matrix with a column-major layout. Only the lower triangular needs to be filled in.
