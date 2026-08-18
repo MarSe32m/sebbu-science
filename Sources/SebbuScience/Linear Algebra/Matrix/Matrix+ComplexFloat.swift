@@ -24,7 +24,7 @@ public extension Matrix<Complex<Float>> {
         var a = elements
         var m = rows
         var lda = columns
-        var ipiv: [lapack_int] = .init(repeating: .zero, count: m)
+        var ipiv: [Int32] = .init(repeating: .zero, count: m)
         var info = a.withUnsafeMutableBufferPointer { a in 
             LAPACKE_cgetrf(LAPACK_ROW_MAJOR, .init(m), .init(m), .init(a.baseAddress), .init(lda), &ipiv)
         }
@@ -692,10 +692,10 @@ public extension MatrixOperations {
     static func solve(A: Matrix<Complex<Float>>, b: Vector<Complex<Float>>) throws -> Vector<Complex<Float>> {
         #if canImport(COpenBLAS)
         let N = A.rows
-        let nrhs: lapack_int = 1
-        let lda: lapack_int = lapack_int(N)
-        let ldb: lapack_int = 1
-        var ipiv = [lapack_int](repeating: .zero, count: N)
+        let nrhs: Int32 = 1
+        let lda: Int32 = Int32(N)
+        let ldb: Int32 = 1
+        var ipiv = [Int32](repeating: .zero, count: N)
         var _A = Array(A.elements)
         var _b = Array(b.components)
         let info = _A.withUnsafeMutableBufferPointer { A in 
@@ -738,10 +738,10 @@ public extension MatrixOperations {
     static func solve(A: Matrix<Complex<Float>>, B: Matrix<Complex<Float>>) throws -> Matrix<Complex<Float>> {
         #if canImport(COpenBLAS)
         let N = A.rows
-        let nrhs: lapack_int = numericCast(B.columns)
-        let lda: lapack_int = numericCast(N)
-        let ldb: lapack_int = nrhs
-        var ipiv = [lapack_int](repeating: .zero, count: N)
+        let nrhs: Int32 = numericCast(B.columns)
+        let lda: Int32 = numericCast(N)
+        let ldb: Int32 = nrhs
+        var ipiv = [Int32](repeating: .zero, count: N)
         var _A = Array(A.elements)
         var _B = Array(B.elements)
         let info = _A.withUnsafeMutableBufferPointer { A in
@@ -775,8 +775,8 @@ public extension MatrixOperations {
     //@inlinable
     static func singularValueDecomposition(A: Matrix<Complex<Float>>) throws -> (U: Matrix<Complex<Float>>, singularValues: [Float], VH: Matrix<Complex<Float>>) {
         #if canImport(COpenBLAS)
-        let m = lapack_int(A.rows)
-        let n = lapack_int(A.columns)
+        let m = Int32(A.rows)
+        let n = Int32(A.columns)
         var _A = Array(A.elements)
         var U: Matrix<Complex<Float>> = .zeros(rows: A.rows, columns: A.rows)
         var VH: Matrix<Complex<Float>> = .zeros(rows: A.columns, columns: A.columns)
@@ -861,8 +861,8 @@ public extension MatrixOperations {
 #if canImport(COpenBLAS)
         let VChar = Int8(bitPattern: UInt8(ascii: "V"))
         let NChar = Int8(bitPattern: UInt8(ascii: "N"))
-        let n = lapack_int(A.rows)
-        var sdim: lapack_int = .zero
+        let n = Int32(A.rows)
+        var sdim: Int32 = .zero
         var eigenValues: [Complex<Float>] = .init(repeating: .zero, count: A.rows)
         var schurVectors: [Complex<Float>] = .init(repeating: .zero, count: A.elements.count)
         var AElements = Array(A.elements)

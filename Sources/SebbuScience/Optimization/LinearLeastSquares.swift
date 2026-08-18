@@ -21,9 +21,9 @@ public extension Optimize {
     @inlinable
     static func linearLeastSquares(A: Matrix<Double>, _ B: Matrix<Double>) throws -> (result: Matrix<Double>, residuals: Matrix<Double>?) {
         #if canImport(COpenBLAS)
-        let m = lapack_int(A.rows)
-        let n = lapack_int(A.columns)
-        let nrhs = lapack_int(B.columns)
+        let m = Int32(A.rows)
+        let n = Int32(A.columns)
+        let nrhs = Int32(B.columns)
 
         let lda = n
         let ldb = nrhs
@@ -122,9 +122,9 @@ public extension Optimize {
     @inlinable
     static func linearLeastSquares(A: Matrix<Float>, _ B: Matrix<Float>) throws -> (result: Matrix<Float>, residuals: Matrix<Float>?) {
         #if canImport(COpenBLAS)
-        let m = lapack_int(A.rows)
-        let n = lapack_int(A.columns)
-        let nrhs = lapack_int(B.columns)
+        let m = Int32(A.rows)
+        let n = Int32(A.columns)
+        let nrhs = Int32(B.columns)
 
         let lda = n
         let ldb = nrhs
@@ -223,9 +223,9 @@ public extension Optimize {
     @inlinable
     static func linearLeastSquares(A: Matrix<Complex<Float>>, _ B: Matrix<Complex<Float>>) throws -> (result: Matrix<Complex<Float>>, residuals: Matrix<Complex<Float>>?) {
         #if canImport(COpenBLAS)
-        let m = lapack_int(A.rows)
-        let n = lapack_int(A.columns)
-        let nrhs = lapack_int(B.columns)
+        let m = Int32(A.rows)
+        let n = Int32(A.columns)
+        let nrhs = Int32(B.columns)
 
         let lda = n
         let ldb = nrhs
@@ -324,9 +324,9 @@ public extension Optimize {
     @inlinable
     static func linearLeastSquares(A: Matrix<Complex<Double>>, _ B: Matrix<Complex<Double>>) throws -> (result: Matrix<Complex<Double>>, residuals: Matrix<Complex<Double>>?) {
         #if canImport(COpenBLAS)
-        let m = lapack_int(A.rows)
-        let n = lapack_int(A.columns)
-        let nrhs = lapack_int(B.columns)
+        let m = Int32(A.rows)
+        let n = Int32(A.columns)
+        let nrhs = Int32(B.columns)
 
         let lda = n
         let ldb = nrhs

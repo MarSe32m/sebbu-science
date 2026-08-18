@@ -24,7 +24,7 @@ public extension Matrix<Complex<Double>> {
         var a = elements
         var m = rows
         var lda = columns
-        var ipiv: [lapack_int] = .init(repeating: .zero, count: m)
+        var ipiv: [Int32] = .init(repeating: .zero, count: m)
         var info = a.withUnsafeMutableBufferPointer { a in 
             LAPACKE_zgetrf(LAPACK_ROW_MAJOR, .init(m), .init(m), .init(a.baseAddress), .init(lda), &ipiv)
         }
@@ -625,7 +625,7 @@ public extension MatrixOperations {
     static func eigenValues(_ A: Matrix<Complex<Double>>) throws -> [Complex<Double>] {
         precondition(A.rows == A.columns)
         #if canImport(COpenBLAS)
-        let N = lapack_int(A.rows)
+        let N = Int32(A.rows)
         let lda = N
         let ldvl = N
         let ldvr = N
@@ -689,10 +689,10 @@ public extension MatrixOperations {
     static func solve(A: Matrix<Complex<Double>>, b: Vector<Complex<Double>>) throws -> Vector<Complex<Double>> {
         #if canImport(COpenBLAS)
         let N = A.rows
-        let nrhs: lapack_int = 1
-        let lda: lapack_int = numericCast(N)
-        let ldb: lapack_int = 1
-        var ipiv = [lapack_int](repeating: .zero, count: N)
+        let nrhs: Int32 = 1
+        let lda: Int32 = numericCast(N)
+        let ldb: Int32 = 1
+        var ipiv = [Int32](repeating: .zero, count: N)
         var _A = Array(A.elements)
         var _b = Array(b.components)
         let info = _A.withUnsafeMutableBufferPointer { A in
@@ -735,10 +735,10 @@ public extension MatrixOperations {
     static func solve(A: Matrix<Complex<Double>>, B: Matrix<Complex<Double>>) throws -> Matrix<Complex<Double>> {
         #if canImport(COpenBLAS)
         let N = A.rows
-        let nrhs: lapack_int = numericCast(B.columns)
-        let lda: lapack_int = numericCast(N)
-        let ldb: lapack_int = nrhs
-        var ipiv = [lapack_int](repeating: .zero, count: N)
+        let nrhs: Int32 = numericCast(B.columns)
+        let lda: Int32 = numericCast(N)
+        let ldb: Int32 = nrhs
+        var ipiv = [Int32](repeating: .zero, count: N)
         var _A = Array(A.elements)
         var _B = Array(B.elements)
         let info = _A.withUnsafeMutableBufferPointer { A in
@@ -772,8 +772,8 @@ public extension MatrixOperations {
     //@inlinable
     static func singularValueDecomposition(A: Matrix<Complex<Double>>) throws -> (U: Matrix<Complex<Double>>, singularValues: [Double], VH: Matrix<Complex<Double>>) {
         #if canImport(COpenBLAS)
-        let m = lapack_int(A.rows)
-        let n = lapack_int(A.columns)
+        let m = Int32(A.rows)
+        let n = Int32(A.columns)
         var _A = Array(A.elements)
         var U: Matrix<Complex<Double>> = .zeros(rows: A.rows, columns: A.rows)
         var VH: Matrix<Complex<Double>> = .zeros(rows: A.columns, columns: A.columns)
@@ -858,8 +858,8 @@ public extension MatrixOperations {
 #if canImport(COpenBLAS)
         let VChar = Int8(bitPattern: UInt8(ascii: "V"))
         let NChar = Int8(bitPattern: UInt8(ascii: "N"))
-        let n = lapack_int(A.rows)
-        var sdim: lapack_int = .zero
+        let n = Int32(A.rows)
+        var sdim: Int32 = .zero
         var eigenValues: [Complex<Double>] = .init(repeating: .zero, count: A.rows)
         var schurVectors: [Complex<Double>] = .init(repeating: .zero, count: A.elements.count)
         var AElements = Array(A.elements)

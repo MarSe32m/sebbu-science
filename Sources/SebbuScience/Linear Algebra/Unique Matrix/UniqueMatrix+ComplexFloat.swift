@@ -24,7 +24,7 @@ public extension UniqueMatrix<Complex<Float>> {
         var a: UniqueMatrix<Complex<Float>> = .init(copying: self)
         var m = rows
         var lda = columns
-        var ipiv: [lapack_int] = .init(repeating: .zero, count: m)
+        var ipiv: [Int32] = .init(repeating: .zero, count: m)
         var info = LAPACKE_cgetrf(LAPACK_ROW_MAJOR, .init(m), .init(m), .init(a.elements), .init(lda), &ipiv)
         if info != 0 { return nil }
         info = LAPACKE_cgetri(LAPACK_ROW_MAJOR, .init(m), .init(a.elements), .init(lda), ipiv)

@@ -23,7 +23,7 @@ public extension Matrix<Float> {
         var a = elements
         var m = rows
         var lda = columns
-        var ipiv: [lapack_int] = .init(repeating: .zero, count: m)
+        var ipiv: [Int32] = .init(repeating: .zero, count: m)
         var info = LAPACKE_sgetrf(LAPACK_ROW_MAJOR, .init(m), .init(m), &a, .init(lda), &ipiv)
         if info != 0 { return nil }
         info = LAPACKE_sgetri(LAPACK_ROW_MAJOR, .init(m), &a, .init(lda), ipiv)
@@ -574,10 +574,10 @@ public extension MatrixOperations {
     static func solve(A: Matrix<Float>, b: Vector<Float>) throws -> Vector<Float> {
         #if canImport(COpenBLAS)
         let N = A.rows
-        let nrhs: lapack_int = 1
-        let lda: lapack_int = lapack_int(N)
-        let ldb: lapack_int = 1
-        var ipiv = [lapack_int](repeating: .zero, count: N)
+        let nrhs: Int32 = 1
+        let lda: Int32 = Int32(N)
+        let ldb: Int32 = 1
+        var ipiv = [Int32](repeating: .zero, count: N)
         var _A = Array(A.elements)
         var _b = Array(b.components)
         let info = LAPACKE_sgesv(LAPACK_ROW_MAJOR, .init(N), nrhs, &_A, lda, &ipiv, &_b, ldb)
@@ -612,10 +612,10 @@ public extension MatrixOperations {
     static func solve(A: Matrix<Float>, B: Matrix<Float>) throws -> Matrix<Float> {
         #if canImport(COpenBLAS)
         let N = A.rows
-        let nrhs: lapack_int = numericCast(B.columns)
-        let lda: lapack_int = numericCast(N)
-        let ldb: lapack_int = nrhs
-        var ipiv = [lapack_int](repeating: .zero, count: N)
+        let nrhs: Int32 = numericCast(B.columns)
+        let lda: Int32 = numericCast(N)
+        let ldb: Int32 = nrhs
+        var ipiv = [Int32](repeating: .zero, count: N)
         var _A = Array(A.elements)
         var _B = Array(B.elements)
         let info = _A.withUnsafeMutableBufferPointer { A in
@@ -649,8 +649,8 @@ public extension MatrixOperations {
     //@inlinable
     static func singularValueDecomposition(A: Matrix<Float>) throws -> (U: Matrix<Float>, singularValues: [Float], VT: Matrix<Float>) {
         #if canImport(COpenBLAS)
-        let m = lapack_int(A.rows)
-        let n = lapack_int(A.columns)
+        let m = Int32(A.rows)
+        let n = Int32(A.columns)
         var _A = Array(A.elements)
         var U: Matrix<Float> = .zeros(rows: A.rows, columns: A.rows)
         var VT: Matrix<Float> = .zeros(rows: A.columns, columns: A.columns)
@@ -734,8 +734,8 @@ public extension MatrixOperations {
 #if canImport(COpenBLAS)
         let VChar = Int8(bitPattern: UInt8(ascii: "V"))
         let NChar = Int8(bitPattern: UInt8(ascii: "N"))
-        let n = lapack_int(A.rows)
-        var sdim: lapack_int = .zero
+        let n = Int32(A.rows)
+        var sdim: Int32 = .zero
         var eigenValuesReal: [Float] = .init(repeating: .zero, count: A.rows)
         var eigenValuesImaginary: [Float] = .init(repeating: .zero, count: A.rows)
         var schurVectors: [Float] = .init(repeating: .zero, count: A.elements.count)

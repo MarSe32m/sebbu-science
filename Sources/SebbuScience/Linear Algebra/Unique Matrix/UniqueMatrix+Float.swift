@@ -23,7 +23,7 @@ public extension UniqueMatrix<Float> {
         var a: UniqueMatrix<Float> = .init(copying: self)
         var m = rows
         var lda = columns
-        var ipiv: [lapack_int] = .init(repeating: .zero, count: m)
+        var ipiv: [Int32] = .init(repeating: .zero, count: m)
         var info = LAPACKE_sgetrf(LAPACK_ROW_MAJOR, .init(m), .init(m), a.elements, .init(lda), &ipiv)
         if info != 0 { return nil }
         info = LAPACKE_sgetri(LAPACK_ROW_MAJOR, .init(m), a.elements, .init(lda), ipiv)

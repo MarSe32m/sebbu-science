@@ -24,7 +24,7 @@ public extension UniqueMatrix<Complex<Double>> {
         var a: UniqueMatrix<Complex<Double>> = .init(copying: self)
         var m = rows
         var lda = columns
-        var ipiv: [lapack_int] = .init(repeating: .zero, count: m)
+        var ipiv: [Int32] = .init(repeating: .zero, count: m)
         var info = LAPACKE_zgetrf(LAPACK_ROW_MAJOR, .init(m), .init(m), .init(a.elements), .init(lda), &ipiv)
         if info != 0 { return nil }
         info = LAPACKE_zgetri(LAPACK_ROW_MAJOR, .init(m), .init(a.elements), .init(lda), ipiv)
