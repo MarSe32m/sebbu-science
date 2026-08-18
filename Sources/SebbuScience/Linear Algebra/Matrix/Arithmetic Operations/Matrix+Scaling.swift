@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Scaling for AlgebraicField
 public extension Matrix where T: AlgebraicField {
@@ -50,18 +51,13 @@ public extension Matrix<Double> {
     
     @inlinable
     mutating func multiply(by: T) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark against basic implementation and find threshold
-            _multiplyBLAS(by: by)
-        } else {
-            _multiply(by: by)
-        }
+        _multiply(by: by)
     }
 
     @inlinable
     @_transparent
     mutating func _multiplyBLAS(by: T) {
-        BLAS.dscal(elements.count, by, &elements, 1)
+        BLAS.dscal(n: elements.count, alpha: by, x: &elements, incX: 1)
     }
 }
 
@@ -82,18 +78,13 @@ public extension Matrix<Float> {
     
     @inlinable
     mutating func multiply(by: T) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark against basic implementation and find threshold
-            _multiplyBLAS(by: by)
-        } else {
-            _multiply(by: by)
-        }
+        _multiply(by: by)
     }
 
     @inlinable
     @_transparent
     mutating func _multiplyBLAS(by: T) {
-        BLAS.sscal(elements.count, by, &elements, 1)
+        BLAS.sscal(n: elements.count, alpha: by, x: &elements, incX: 1)
     }
 }
 
@@ -127,22 +118,12 @@ public extension Matrix<Complex<Double>> {
     
     @inlinable
     mutating func multiply(by: T) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark against basic implementation and find threshold
-            _multiplyBLAS(by: by)
-        } else {
-            _multiply(by: by)
-        }
+        _multiply(by: by)
     }
     
     @inlinable
     mutating func multiply(by: Double) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark against basic implementation and find threshold
-            _multiplyBLAS(by: by)
-        } else {
-            _multiply(by: by)
-        }
+        _multiply(by: by)
     }
 
     @inlinable
@@ -162,13 +143,13 @@ public extension Matrix<Complex<Double>> {
     @inlinable
     @_transparent
     mutating func _multiplyBLAS(by: T) {
-        BLAS.zscal(elements.count, by, &elements, 1)
+        BLAS.zscal(n: elements.count, alpha: by, x: &elements, incX: 1)
     }
 
     @inlinable
     @_transparent
     mutating func _multiplyBLAS(by: Double) {
-        BLAS.zdscal(elements.count, by, &elements, 1)
+        BLAS.zdscal(n: elements.count, alpha: by, x: &elements, incX: 1)
     }
 }
 
@@ -201,22 +182,12 @@ public extension Matrix<Complex<Float>> {
     
     @inlinable
     mutating func multiply(by: T) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark against basic implementation and find threshold
-            _multiplyBLAS(by: by)
-        } else {
-            _multiply(by: by)
-        }
+        _multiply(by: by)
     }
     
     @inlinable
     mutating func multiply(by: Float) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark against basic implementation and find threshold
-            _multiplyBLAS(by: by)
-        } else {
-            _multiply(by: by)
-        }
+        _multiply(by: by)
     }
 
     @inlinable
@@ -236,12 +207,12 @@ public extension Matrix<Complex<Float>> {
     @inlinable
     @_transparent
     mutating func _multiplyBLAS(by: T) {
-        BLAS.cscal(elements.count, by, &elements, 1)
+        BLAS.cscal(n: elements.count, alpha: by, x: &elements, incX: 1)
     }
 
     @inlinable
     @_transparent
     mutating func _multiplyBLAS(by: Float) {
-        BLAS.csscal(elements.count, by, &elements, 1)
+        BLAS.csscal(n: elements.count, alpha: by, x: &elements, incX: 1)
     }
 }

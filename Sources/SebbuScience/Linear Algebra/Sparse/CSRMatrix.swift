@@ -1,12 +1,7 @@
 // Copyright (c) 2026 Sebastian Toivonen
 // SPDX-License-Identifier: Apache-2.0
 
-#if canImport(COpenBLAS)
-import COpenBLAS
-#elseif canImport(Accelerate)
-import Accelerate
-#endif
-
+import SebbuBLAS
 import NumericsExtensions
 import SebbuCollections
 
@@ -386,24 +381,7 @@ public extension CSRMatrix<Complex<Double>> {
     @_optimize(speed)
     @inlinable
     mutating func multiply(by: Double) {
-        #if canImport(COpenBLAS)
-        let N = blasint(values.count)
-        withUnsafePointer(to: by) { alpha in
-            cblas_zscal(N, alpha, &values, 1)
-        }
-        #elseif canImport(Accelerate)
-        let N = blasint(values.count)
-        withUnsafePointer(to: by) { alpha in
-            values.withUnsafeMutableBufferPointer { values in 
-                cblas_zscal(N, .init(alpha), .init(values.baseAddress), 1)
-            }
-        }
-        #else
-        var span = values.mutableSpan
-        for i in 0..<span.count {
-            span[unchecked: i] = Relaxed.product(span[unchecked: i], by)
-        }
-        #endif
+        BLAS.zscal(n: values.count, alpha: Complex(by), x: &values, incX: 1)
     }
     
     

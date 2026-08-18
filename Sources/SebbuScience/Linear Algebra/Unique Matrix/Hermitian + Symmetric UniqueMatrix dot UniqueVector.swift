@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Hermitian and Symmetric Matrix-Vector multiplication for Complex<Double>
 public extension UniqueMatrix where T: ConjugatableScalar {
@@ -110,22 +111,22 @@ public extension UniqueMatrix<Double> {
     
     @inlinable
     func unsafeSymmetricDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = 1.0, into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let beta: T = .zero
-        BLAS.dsymv(order, uplo, N, multiplied, elements, lda, vector, 1, beta, into, 1)
+        BLAS.dsymv(layout: order, triangle: uplo, n: N, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
     
     @inlinable
     func unsafeSymmetricDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = 1.0, addingInto into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let beta: T = 1.0
-        BLAS.dsymv(order, uplo, N, multiplied, elements, lda, vector, 1, beta, into, 1)
+        BLAS.dsymv(layout: order, triangle: uplo, n: N, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
 }
 
@@ -157,22 +158,22 @@ public extension UniqueMatrix<Float> {
     
     @inlinable
     func unsafeSymmetricDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = 1.0, into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let beta: T = .zero
-        BLAS.ssymv(order, uplo, N, multiplied, elements, lda, vector, 1, beta, into, 1)
+        BLAS.ssymv(layout: order, triangle: uplo, n: N, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
     
     @inlinable
     func unsafeSymmetricDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = 1.0, addingInto into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let beta: T = 1.0
-        BLAS.ssymv(order, uplo, N, multiplied, elements, lda, vector, 1, beta, into, 1)
+        BLAS.ssymv(layout: order, triangle: uplo, n: N, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
 }
 
@@ -199,22 +200,22 @@ public extension UniqueMatrix<Complex<Double>> {
     
     @inlinable
     func unsafeHermitianDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = .one, into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let beta: T = .zero
-        BLAS.zhemv(order, uplo, N, multiplied, elements, lda, vector, 1, beta, into, 1)
+        BLAS.zhemv(layout: order, triangle: uplo, n: N, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
     
     @inlinable
     func unsafeHermitianDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = .one, addingInto into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let beta: T = .one
-        BLAS.zhemv(order, uplo, N, multiplied, elements, lda, vector, 1, beta, into, 1)
+        BLAS.zhemv(layout: order, triangle: uplo, n: N, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
 }
 
@@ -241,21 +242,21 @@ public extension UniqueMatrix<Complex<Float>> {
     
     @inlinable
     func unsafeHermitianDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = .one, into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let beta: T = .zero
-        BLAS.chemv(order, uplo, N, multiplied, elements, lda, vector, 1, beta, into, 1)
+        BLAS.chemv(layout: order, triangle: uplo, n: N, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
     
     @inlinable
     func unsafeHermitianDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = .one, addingInto into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let beta: T = .one
-        BLAS.chemv(order, uplo, N, multiplied, elements, lda, vector, 1, beta, into, 1)
+        BLAS.chemv(layout: order, triangle: uplo, n: N, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
 }

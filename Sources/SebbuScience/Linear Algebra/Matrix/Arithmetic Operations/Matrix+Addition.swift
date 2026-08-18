@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Addition for AlgebraicField
 public extension Matrix where T: AlgebraicField {
@@ -69,36 +70,26 @@ public extension Matrix<Double> {
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
         precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold after which we dispatch to BLAS
-            _addBLAS(other, multiplied: multiplied)
-        } else {
-            _add(other, multiplied: multiplied)
-        }
+        _add(other, multiplied: multiplied)
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
         precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold after which we dispatch to BLAS
-            _addBLAS(other)
-        } else {
-            _add(other)
-        }
+        _add(other)
     }
 
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self, multiplied: T) {
-        BLAS.daxpy(elements.count, multiplied, other.elements, 1, &elements, 1)
+        BLAS.daxpy(n: elements.count, alpha: multiplied, x: other.elements, incX: 1, y: &elements, incY: 1)
     }
 
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self) {
-        BLAS.daxpy(elements.count, 1, other.elements, 1, &elements, 1)
+        BLAS.daxpy(n: elements.count, alpha: 1, x: other.elements, incX: 1, y: &elements, incY: 1)
     }
 }
 
@@ -120,36 +111,26 @@ public extension Matrix<Float> {
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
         precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold after which we dispatch to BLAS
-            _addBLAS(other, multiplied: multiplied)
-        } else {
-            _add(other, multiplied: multiplied)
-        }
+        _add(other, multiplied: multiplied)
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
         precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold after which we dispatch to BLAS
-            _addBLAS(other)
-        } else {
-            _add(other)
-        }
+        _add(other)
     }
 
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self, multiplied: T) {
-        BLAS.saxpy(elements.count, multiplied, other.elements, 1, &elements, 1)
+        BLAS.saxpy(n: elements.count, alpha: multiplied, x: other.elements, incX: 1, y: &elements, incY: 1)
     }
 
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self) {
-        BLAS.saxpy(elements.count, 1, other.elements, 1, &elements, 1)
+        BLAS.saxpy(n: elements.count, alpha: 1, x: other.elements, incX: 1, y: &elements, incY: 1)
     }
 }
 
@@ -171,36 +152,21 @@ public extension Matrix<Complex<Double>> {
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
         precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold after which we dispatch to BLAS
-            _addBLAS(other, multiplied: multiplied)
-        } else {
-            _add(other, multiplied: multiplied)
-        }
+        _add(other, multiplied: multiplied)
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
         precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold after which we dispatch to BLAS
-            _addBLAS(other)
-        } else {
-            _add(other)
-        }
+        _add(other)
     }
 
     @inlinable
     @_transparent
     mutating func add(_ other: Self, multiplied: Double) {
         precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold after which we dispatch to BLAS
-            _addBLAS(other, multiplied: multiplied)
-        } else {
-            _add(other, multiplied: multiplied)
-        }
+        _add(other, multiplied: multiplied)
     }
 
     @inlinable
@@ -231,7 +197,7 @@ public extension Matrix<Complex<Double>> {
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self, multiplied: T) {
-        BLAS.zaxpy(elements.count, multiplied, other.elements, 1, &elements, 1)
+        BLAS.zaxpy(n: elements.count, alpha: multiplied, x: other.elements, incX: 1, y: &elements, incY: 1)
     }
 
     @inlinable
@@ -243,7 +209,7 @@ public extension Matrix<Complex<Double>> {
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self, multiplied: Double) {
-        BLAS.zaxpy(elements.count, multiplied, other.elements, 1, &elements, 1)
+        BLAS.zaxpy(n: elements.count, alpha: Complex(multiplied), x: other.elements, incX: 1, y: &elements, incY: 1)
     }
 }
 
@@ -265,36 +231,21 @@ public extension Matrix<Complex<Float>> {
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
         precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold after which we dispatch to BLAS
-            _addBLAS(other, multiplied: multiplied)
-        } else {
-            _add(other, multiplied: multiplied)
-        }
+        _add(other, multiplied: multiplied)
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
         precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold after which we dispatch to BLAS
-            _addBLAS(other)
-        } else {
-            _add(other)
-        }
+        _add(other)
     }
 
     @inlinable
     @_transparent
     mutating func add(_ other: Self, multiplied: Float) {
         precondition(rows == other.rows && columns == other.columns, "The dimensions of the matrices do not match")
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold after which we dispatch to BLAS
-            _addBLAS(other, multiplied: multiplied)
-        } else {
-            _add(other, multiplied: multiplied)
-        }
+        _add(other, multiplied: multiplied)
     }
 
     @inlinable
@@ -325,7 +276,7 @@ public extension Matrix<Complex<Float>> {
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self, multiplied: T) {
-        BLAS.caxpy(elements.count, multiplied, other.elements, 1, &elements, 1)
+        BLAS.caxpy(n: elements.count, alpha: multiplied, x: other.elements, incX: 1, y: &elements, incY: 1)
     }
 
     @inlinable
@@ -337,6 +288,6 @@ public extension Matrix<Complex<Float>> {
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self, multiplied: Float) {
-        BLAS.caxpy(elements.count, multiplied, other.elements, 1, &elements, 1)
+        BLAS.caxpy(n: elements.count, alpha: Complex(multiplied), x: other.elements, incX: 1, y: &elements, incY: 1)
     }
 }

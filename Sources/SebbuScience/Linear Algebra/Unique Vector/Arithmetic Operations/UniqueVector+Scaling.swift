@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Scaling for AlgebraicField
 public extension UniqueVector where T: AlgebraicField {
@@ -28,7 +29,7 @@ public extension UniqueVector<Double> {
     @inlinable
     @inline(always)
     mutating func multiplyBLAS(by: T) {
-        BLAS.dscal(count, by, components, 1)
+        BLAS.dscal(n: count, alpha: by, x: components, incX: 1)
     }
 }
 
@@ -37,7 +38,7 @@ public extension UniqueVector<Float> {
     @inlinable
     @inline(always)
     mutating func multiplyBLAS(by: T) {
-        BLAS.sscal(count, by, components, 1)
+        BLAS.sscal(n: count, alpha: by, x: components, incX: 1)
     }
 }
 
@@ -62,13 +63,13 @@ public extension UniqueVector<Complex<Double>> {
     @inlinable
     @inline(always)
     mutating func multiplyBLAS(by: T) {
-        BLAS.zscal(count, by, components, 1)
+        BLAS.zscal(n: count, alpha: by, x: components, incX: 1)
     }
 
     @inlinable
     @inline(always)
     mutating func multiplyBLAS(by: Double) {
-        BLAS.zdscal(count, by, components, 1)
+        BLAS.zdscal(n: count, alpha: by, x: components, incX: 1)
     }
 }
 
@@ -93,13 +94,13 @@ public extension UniqueVector<Complex<Float>> {
     @inlinable
     @inline(always)
     mutating func multiplyBLAS(by: T) {
-        BLAS.cscal(count, by, components, 1)
+        BLAS.cscal(n: count, alpha: by, x: components, incX: 1)
     }
 
     @inlinable
     @inline(always)
     mutating func multiplyBLAS(by: Float) {
-        BLAS.csscal(count, by, components, 1)
+        BLAS.csscal(n: count, alpha: by, x: components, incX: 1)
     }
 }
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Scaling for AlgebraicField
 public extension UniqueMatrix where T: AlgebraicField {
@@ -28,7 +29,7 @@ public extension UniqueMatrix<Double> {
     @inlinable
     @_transparent
     mutating func multiplyBLAS(by: T) {
-        BLAS.dscal(count, by, elements, 1)
+        BLAS.dscal(n: count, alpha: by, x: elements, incX: 1)
     }
 }
 
@@ -37,7 +38,7 @@ public extension UniqueMatrix<Float> {
     @inlinable
     @_transparent
     mutating func multiplyBLAS(by: T) {
-        BLAS.sscal(count, by, elements, 1)
+        BLAS.sscal(n: count, alpha: by, x: elements, incX: 1)
     }
 }
 
@@ -62,13 +63,13 @@ public extension UniqueMatrix<Complex<Double>> {
     @inlinable
     @_transparent
     mutating func multiplyBLAS(by: T) {
-        BLAS.zscal(count, by, elements, 1)
+        BLAS.zscal(n: count, alpha: by, x: elements, incX: 1)
     }
 
     @inlinable
     @_transparent
     mutating func multiplyBLAS(by: Double) {
-        BLAS.zdscal(count, by, elements, 1)
+        BLAS.zdscal(n: count, alpha: by, x: elements, incX: 1)
     }
 }
 
@@ -93,12 +94,12 @@ public extension UniqueMatrix<Complex<Float>> {
     @inlinable
     @_transparent
     mutating func multiplyBLAS(by: T) {
-        BLAS.cscal(count, by, elements, 1)
+        BLAS.cscal(n: count, alpha: by, x: elements, incX: 1)
     }
 
     @inlinable
     @_transparent
     mutating func multiplyBLAS(by: Float) {
-        BLAS.csscal(count, by, elements, 1)
+        BLAS.csscal(n: count, alpha: by, x: elements, incX: 1)
     }
 }

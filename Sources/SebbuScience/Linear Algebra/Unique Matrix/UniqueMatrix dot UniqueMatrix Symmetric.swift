@@ -3,6 +3,7 @@
 
 import NumericsExtensions
 import Numerics
+import SebbuBLAS
 
 public extension UniqueMatrix where T: AlgebraicField {
     @inlinable
@@ -55,37 +56,37 @@ public extension UniqueMatrix<Double> {
     
     @inlinable
     func dotBLAS(symmetricSide: SymmetricSide, _ other: borrowing Self, multiplied: T = 1.0, into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let beta: T = .zero
         switch symmetricSide {
         case .left:
             let m = self.rows, n = other.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.dsymm(order, side, uplo, m, n, multiplied, self.elements, lda, other.elements, ldb, beta, into.elements, ldc)
+            BLAS.dsymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: self.elements, lda: lda, b: other.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         case .right:
             let m = other.rows, n = self.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.dsymm(order, side, uplo, m, n, multiplied, other.elements, lda, self.elements, ldb, beta, into.elements, ldc)
+            BLAS.dsymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: other.elements, lda: lda, b: self.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         }
     }
 
     @inlinable
     func dotBLAS(symmetricSide: SymmetricSide, _ other: borrowing Self, multiplied: T = 1.0, addingInto into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let beta: T = 1.0
         switch symmetricSide {
         case .left:
             let m = self.rows, n = other.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.dsymm(order, side, uplo, m, n, multiplied, self.elements, lda, other.elements, ldb, beta, into.elements, ldc)
+            BLAS.dsymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: self.elements, lda: lda, b: other.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         case .right:
             let m = other.rows, n = self.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.dsymm(order, side, uplo, m, n, multiplied, other.elements, lda, self.elements, ldb, beta, into.elements, ldc)
+            BLAS.dsymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: other.elements, lda: lda, b: self.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         }
     }
 }
@@ -101,37 +102,37 @@ public extension UniqueMatrix<Float> {
     
     @inlinable
     func dotBLAS(symmetricSide: SymmetricSide, _ other: borrowing Self, multiplied: T = 1.0, into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let beta: T = .zero
         switch symmetricSide {
         case .left:
             let m = self.rows, n = other.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.ssymm(order, side, uplo, m, n, multiplied, self.elements, lda, other.elements, ldb, beta, into.elements, ldc)
+            BLAS.ssymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: self.elements, lda: lda, b: other.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         case .right:
             let m = other.rows, n = self.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.ssymm(order, side, uplo, m, n, multiplied, other.elements, lda, self.elements, ldb, beta, into.elements, ldc)
+            BLAS.ssymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: other.elements, lda: lda, b: self.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         }
     }
 
     @inlinable
     func dotBLAS(symmetricSide: SymmetricSide, _ other: borrowing Self, multiplied: T = 1.0, addingInto into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let beta: T = 1.0
         switch symmetricSide {
         case .left:
             let m = self.rows, n = other.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.ssymm(order, side, uplo, m, n, multiplied, self.elements, lda, other.elements, ldb, beta, into.elements, ldc)
+            BLAS.ssymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: self.elements, lda: lda, b: other.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         case .right:
             let m = other.rows, n = self.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.ssymm(order, side, uplo, m, n, multiplied, other.elements, lda, self.elements, ldb, beta, into.elements, ldc)
+            BLAS.ssymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: other.elements, lda: lda, b: self.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         }
     }
 }
@@ -147,37 +148,37 @@ public extension UniqueMatrix<Complex<Double>> {
     
     @inlinable
     func dotBLAS(symmetricSide: SymmetricSide, _ other: borrowing Self, multiplied: T = .one, into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let beta: T = .zero
         switch symmetricSide {
         case .left:
             let m = self.rows, n = other.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.zsymm(order, side, uplo, m, n, multiplied, self.elements, lda, other.elements, ldb, beta, into.elements, ldc)
+            BLAS.zsymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: self.elements, lda: lda, b: other.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         case .right:
             let m = other.rows, n = self.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.zsymm(order, side, uplo, m, n, multiplied, other.elements, lda, self.elements, ldb, beta, into.elements, ldc)
+            BLAS.zsymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: other.elements, lda: lda, b: self.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         }
     }
 
     @inlinable
     func dotBLAS(symmetricSide: SymmetricSide, _ other: borrowing Self, multiplied: T = .one, addingInto into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let beta: T = .one
         switch symmetricSide {
         case .left:
             let m = self.rows, n = other.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.zsymm(order, side, uplo, m, n, multiplied, self.elements, lda, other.elements, ldb, beta, into.elements, ldc)
+            BLAS.zsymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: self.elements, lda: lda, b: other.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         case .right:
             let m = other.rows, n = self.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.zsymm(order, side, uplo, m, n, multiplied, other.elements, lda, self.elements, ldb, beta, into.elements, ldc)
+            BLAS.zsymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: other.elements, lda: lda, b: self.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         }
     }
 }
@@ -193,37 +194,37 @@ public extension UniqueMatrix<Complex<Float>> {
     
     @inlinable
     func dotBLAS(symmetricSide: SymmetricSide, _ other: borrowing Self, multiplied: T = .one, into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let beta: T = .zero
         switch symmetricSide {
         case .left:
             let m = self.rows, n = other.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.csymm(order, side, uplo, m, n, multiplied, self.elements, lda, other.elements, ldb, beta, into.elements, ldc)
+            BLAS.csymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: self.elements, lda: lda, b: other.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         case .right:
             let m = other.rows, n = self.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.csymm(order, side, uplo, m, n, multiplied, other.elements, lda, self.elements, ldb, beta, into.elements, ldc)
+            BLAS.csymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: other.elements, lda: lda, b: self.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         }
     }
 
     @inlinable
     func dotBLAS(symmetricSide: SymmetricSide, _ other: borrowing Self, multiplied: T = .one, addingInto into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let beta: T = .one
         switch symmetricSide {
         case .left:
             let m = self.rows, n = other.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.csymm(order, side, uplo, m, n, multiplied, self.elements, lda, other.elements, ldb, beta, into.elements, ldc)
+            BLAS.csymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: self.elements, lda: lda, b: other.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         case .right:
             let m = other.rows, n = self.columns
             let lda = columns, ldb = n, ldc = n
-            BLAS.csymm(order, side, uplo, m, n, multiplied, other.elements, lda, self.elements, ldb, beta, into.elements, ldc)
+            BLAS.csymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: other.elements, lda: lda, b: self.elements, ldb: ldb, beta: beta, c: into.elements, ldc: ldc)
         }
     }
 }

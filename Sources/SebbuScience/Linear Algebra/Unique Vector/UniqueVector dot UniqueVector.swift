@@ -3,6 +3,7 @@
 
 import Numerics
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Dot, inner and outer product for AlgebraicField
 public extension UniqueVector where T: AlgebraicField {
@@ -119,12 +120,12 @@ public extension UniqueVector where T: ConjugatableScalar {
 public extension UniqueVector<Double> {
     @inlinable
     func dotBLAS(_ other: borrowing Self) -> T {
-        BLAS.ddot(count, components, 1, other.components, 1)
+        BLAS.ddot(n: count, x: components, incX: 1, y: other.components, incY: 1)
     }
     
     @inlinable
     func innerBLAS(_ other: borrowing Self) -> T {
-        BLAS.ddot(count, components, 1, other.components, 1)
+        BLAS.ddot(n: count, x: components, incX: 1, y: other.components, incY: 1)
     }
 }
 
@@ -132,12 +133,12 @@ public extension UniqueVector<Double> {
 public extension UniqueVector<Float> {
     @inlinable
     func dotBLAS(_ other: borrowing Self) -> T {
-        BLAS.sdot(count, components, 1, other.components, 1)
+        BLAS.sdot(n: count, x: components, incX: 1, y: other.components, incY: 1)
     }
     
     @inlinable
     func innerBLAS(_ other: borrowing Self) -> T {
-        BLAS.sdot(count, components, 1, other.components, 1)
+        BLAS.sdot(n: count, x: components, incX: 1, y: other.components, incY: 1)
     }
 }
 
@@ -145,12 +146,12 @@ public extension UniqueVector<Float> {
 public extension UniqueVector<Complex<Double>> {
     @inlinable
     func dotBLAS(_ other: borrowing Self) -> T {
-        BLAS.zdotu(count, components, 1, other.components, 1)
+        BLAS.zdotu(n: count, x: components, incX: 1, y: other.components, incY: 1)
     }
 
     @inlinable
     func innerBLAS(_ other: borrowing Self) -> T {
-        BLAS.zdotc(count, components, 1, other.components, 1)
+        BLAS.zdotc(n: count, x: components, incX: 1, y: other.components, incY: 1)
     }
 }
 
@@ -158,11 +159,11 @@ public extension UniqueVector<Complex<Double>> {
 public extension UniqueVector<Complex<Float>> {
     @inlinable
     func dotBLAS(_ other: borrowing Self) -> T {
-        BLAS.cdotu(count, components, 1, other.components, 1)
+        BLAS.cdotu(n: count, x: components, incX: 1, y: other.components, incY: 1)
     }
 
     @inlinable
     func innerBLAS(_ other: borrowing Self) -> T {
-        BLAS.cdotc(count, components, 1, other.components, 1)
+        BLAS.cdotc(n: count, x: components, incX: 1, y: other.components, incY: 1)
     }
 }

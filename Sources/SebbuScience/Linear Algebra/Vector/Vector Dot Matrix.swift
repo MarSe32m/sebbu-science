@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Vector-Matrix multiplication for AlgebraicField
 public extension Vector where T: AlgebraicField {
@@ -129,12 +130,7 @@ public extension Vector<Double> {
     func dot(_ matrix: Matrix<T>, into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, into: &into)
-        } else {
-            _dot(matrix, into: &into)
-        }
+        _dot(matrix, into: &into)
     }
 
     @inlinable
@@ -142,12 +138,7 @@ public extension Vector<Double> {
     func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, multiplied: multiplied, into: &into)
-        } else {
-            _dot(matrix, multiplied: multiplied, into: &into)
-        }
+        _dot(matrix, multiplied: multiplied, into: &into)
     }
 
     @inlinable
@@ -155,12 +146,7 @@ public extension Vector<Double> {
     func dot(_ matrix: Matrix<T>, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, addingInto: &into)
-        } else {
-            _dot(matrix, addingInto: &into)
-        }
+        _dot(matrix, addingInto: &into)
     }
     
     @inlinable
@@ -168,12 +154,7 @@ public extension Vector<Double> {
     func dot(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, multiplied: multiplied, addingInto: &into)
-        } else {
-            _dot(matrix, multiplied: multiplied, addingInto: &into)
-        }
+        _dot(matrix, multiplied: multiplied, addingInto: &into)
     }
 
     @inlinable
@@ -185,7 +166,7 @@ public extension Vector<Double> {
         let lda = matrix.columns
         let alpha: T = 1.0
         let beta: T = .zero
-        BLAS.dgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.dgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 
     @inlinable
@@ -197,7 +178,7 @@ public extension Vector<Double> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = .zero
-        BLAS.dgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.dgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 
     @inlinable
@@ -209,7 +190,7 @@ public extension Vector<Double> {
         let lda = matrix.columns
         let alpha: T = 1.0
         let beta: T = 1.0
-        BLAS.dgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.dgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 
     @inlinable
@@ -221,7 +202,7 @@ public extension Vector<Double> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = 1.0
-        BLAS.dgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.dgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 }
 
@@ -244,27 +225,13 @@ public extension Vector<Float> {
     @inlinable
     @_transparent
     func dot(_ matrix: Matrix<T>, into: inout Self) {
-        precondition(matrix.rows == count)
-        precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, into: &into)
-        } else {
-            _dot(matrix, into: &into)
-        }
+        _dot(matrix, into: &into)
     }
 
     @inlinable
     @_transparent
     func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
-        precondition(matrix.rows == count)
-        precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, multiplied: multiplied, into: &into)
-        } else {
-            _dot(matrix, multiplied: multiplied, into: &into)
-        }
+        _dot(matrix, multiplied: multiplied, into: &into)
     }
 
     @inlinable
@@ -272,12 +239,7 @@ public extension Vector<Float> {
     func dot(_ matrix: Matrix<T>, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, addingInto: &into)
-        } else {
-            _dot(matrix, addingInto: &into)
-        }
+        _dot(matrix, addingInto: &into)
     }
     
     @inlinable
@@ -285,12 +247,7 @@ public extension Vector<Float> {
     func dot(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, multiplied: multiplied, addingInto: &into)
-        } else {
-            _dot(matrix, multiplied: multiplied, addingInto: &into)
-        }
+        _dot(matrix, multiplied: multiplied, addingInto: &into)
     }
 
     @inlinable
@@ -302,7 +259,7 @@ public extension Vector<Float> {
         let lda = matrix.columns
         let alpha: T = 1.0
         let beta: T = .zero
-        BLAS.sgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.sgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 
     @inlinable
@@ -314,7 +271,7 @@ public extension Vector<Float> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = .zero
-        BLAS.sgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.sgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 
     @inlinable
@@ -326,7 +283,7 @@ public extension Vector<Float> {
         let lda = matrix.columns
         let alpha: T = 1.0
         let beta: T = 1.0
-        BLAS.sgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.sgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 
     @inlinable
@@ -338,7 +295,7 @@ public extension Vector<Float> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = 1.0
-        BLAS.sgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.sgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 }
 
@@ -363,12 +320,7 @@ public extension Vector<Complex<Double>> {
     func dot(_ matrix: Matrix<T>, into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, into: &into)
-        } else {
-            _dot(matrix, into: &into)
-        }
+        _dot(matrix, into: &into)
     }
 
     @inlinable
@@ -376,12 +328,7 @@ public extension Vector<Complex<Double>> {
     func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, multiplied: multiplied, into: &into)
-        } else {
-            _dot(matrix, multiplied: multiplied, into: &into)
-        }
+        _dot(matrix, multiplied: multiplied, into: &into)
     }
 
     @inlinable
@@ -389,12 +336,7 @@ public extension Vector<Complex<Double>> {
     func dot(_ matrix: Matrix<T>, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, addingInto: &into)
-        } else {
-            _dot(matrix, addingInto: &into)
-        }
+        _dot(matrix, addingInto: &into)
     }
     
     @inlinable
@@ -402,12 +344,7 @@ public extension Vector<Complex<Double>> {
     func dot(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, multiplied: multiplied, addingInto: &into)
-        } else {
-            _dot(matrix, multiplied: multiplied, addingInto: &into)
-        }
+        _dot(matrix, multiplied: multiplied, addingInto: &into)
     }
 
     @inlinable
@@ -419,7 +356,7 @@ public extension Vector<Complex<Double>> {
         let lda = matrix.columns
         let alpha: T = .one
         let beta: T = .zero
-        BLAS.zgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.zgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 
     @inlinable
@@ -431,7 +368,7 @@ public extension Vector<Complex<Double>> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = .zero
-        BLAS.zgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.zgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 
     @inlinable
@@ -443,7 +380,7 @@ public extension Vector<Complex<Double>> {
         let lda = matrix.columns
         let alpha: T = .one
         let beta: T = .one
-        BLAS.zgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.zgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 
     @inlinable
@@ -455,7 +392,7 @@ public extension Vector<Complex<Double>> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = .one
-        BLAS.zgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.zgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 }
 
@@ -480,12 +417,7 @@ public extension Vector<Complex<Float>> {
     func dot(_ matrix: Matrix<T>, into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, into: &into)
-        } else {
-            _dot(matrix, into: &into)
-        }
+        _dot(matrix, into: &into)
     }
 
     @inlinable
@@ -493,12 +425,7 @@ public extension Vector<Complex<Float>> {
     func dot(_ matrix: Matrix<T>, multiplied: T, into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, multiplied: multiplied, into: &into)
-        } else {
-            _dot(matrix, multiplied: multiplied, into: &into)
-        }
+        _dot(matrix, multiplied: multiplied, into: &into)
     }
 
     @inlinable
@@ -506,12 +433,7 @@ public extension Vector<Complex<Float>> {
     func dot(_ matrix: Matrix<T>, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, addingInto: &into)
-        } else {
-            _dot(matrix, addingInto: &into)
-        }
+        _dot(matrix, addingInto: &into)
     }
     
     @inlinable
@@ -519,12 +441,7 @@ public extension Vector<Complex<Float>> {
     func dot(_ matrix: Matrix<T>, multiplied: T, addingInto into: inout Self) {
         precondition(matrix.rows == count)
         precondition(matrix.columns == into.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _dotBLAS(matrix, multiplied: multiplied, addingInto: &into)
-        } else {
-            _dot(matrix, multiplied: multiplied, addingInto: &into)
-        }
+        _dot(matrix, multiplied: multiplied, addingInto: &into)
     }
 
     @inlinable
@@ -536,7 +453,7 @@ public extension Vector<Complex<Float>> {
         let lda = matrix.columns
         let alpha: T = .one
         let beta: T = .zero
-        BLAS.cgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.cgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 
     @inlinable
@@ -548,7 +465,7 @@ public extension Vector<Complex<Float>> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = .zero
-        BLAS.cgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.cgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 
     @inlinable
@@ -560,7 +477,7 @@ public extension Vector<Complex<Float>> {
         let lda = matrix.columns
         let alpha: T = .one
         let beta: T = .one
-        BLAS.cgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.cgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 
     @inlinable
@@ -572,30 +489,30 @@ public extension Vector<Complex<Float>> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = .one
-        BLAS.cgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, &into.components, 1)
+        BLAS.cgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: &into.components, incY: 1)
     }
 }
 
 @inlinable
 public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Double, _ matrix: UnsafePointer<Double>, _ vector: UnsafePointer<Double>, _ resultMultiplier: Double, _ resultVector: UnsafeMutablePointer<Double>) {
     precondition(matrixColumns == vectorComponents)
-    BLAS.dgemv(.rowMajor, .transpose, matrixRows, matrixColumns, multiplier, matrix, matrixColumns, vector, 1, resultMultiplier, resultVector, 1)
+    BLAS.dgemv(layout: .rowMajor, transpose: .transpose, m: matrixRows, n: matrixColumns, alpha: multiplier, a: matrix, lda: matrixColumns, x: vector, incX: 1, beta: resultMultiplier, y: resultVector, incY: 1)
 }
 
 @inlinable
 public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Float, _ matrix: UnsafePointer<Float>, _ vector: UnsafePointer<Float>, _ resultMultiplier: Float, _ resultVector: UnsafeMutablePointer<Float>) {
     precondition(matrixColumns == vectorComponents)
-    BLAS.sgemv(.rowMajor, .transpose, matrixRows, matrixColumns, multiplier, matrix, matrixColumns, vector, 1, resultMultiplier, resultVector, 1)
+    BLAS.sgemv(layout: .rowMajor, transpose: .transpose, m: matrixRows, n: matrixColumns, alpha: multiplier, a: matrix, lda: matrixColumns, x: vector, incX: 1, beta: resultMultiplier, y: resultVector, incY: 1)
 }
 
 @inlinable
 public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Double>, _ matrix: UnsafePointer<Complex<Double>>, _ vector: UnsafePointer<Complex<Double>>, _ resultMultiplier: Complex<Double>, _ resultVector: UnsafeMutablePointer<Complex<Double>>) {
     precondition(matrixColumns == vectorComponents)
-    BLAS.zgemv(.rowMajor, .transpose, matrixRows, matrixColumns, multiplier, matrix, matrixColumns, vector, 1, resultMultiplier, resultVector, 1)
+    BLAS.zgemv(layout: .rowMajor, transpose: .transpose, m: matrixRows, n: matrixColumns, alpha: multiplier, a: matrix, lda: matrixColumns, x: vector, incX: 1, beta: resultMultiplier, y: resultVector, incY: 1)
 }
 
 @inlinable
 public func vecMatMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Complex<Float>, _ matrix: UnsafePointer<Complex<Float>>, _ vector: UnsafePointer<Complex<Float>>, _ resultMultiplier: Complex<Float>, _ resultVector: UnsafeMutablePointer<Complex<Float>>) {
     precondition(matrixColumns == vectorComponents)
-    BLAS.cgemv(.rowMajor, .transpose, matrixRows, matrixColumns, multiplier, matrix, matrixColumns, vector, 1, resultMultiplier, resultVector, 1)
+    BLAS.cgemv(layout: .rowMajor, transpose: .transpose, m: matrixRows, n: matrixColumns, alpha: multiplier, a: matrix, lda: matrixColumns, x: vector, incX: 1, beta: resultMultiplier, y: resultVector, incY: 1)
 }

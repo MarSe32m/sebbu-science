@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Scaling for AlgebraicField
 public extension Vector where T: AlgebraicField {
@@ -64,12 +65,7 @@ public extension Vector<Double> {
     
     @inlinable
     mutating func multiply(by: T) {
-        if BLAS.isAvailable {
-            //TODO: Bechmark threshold
-            _multiplyBLAS(by: by)
-        } else {
-            _multiply(by: by)
-        }
+        _multiply(by: by)
     }
 
     @inlinable
@@ -84,7 +80,7 @@ public extension Vector<Double> {
     @inlinable
     @_transparent
     mutating func _multiplyBLAS(by: T) {
-        BLAS.dscal(components.count, by, &components, 1)
+        BLAS.dscal(n: components.count, alpha: by, x: &components, incX: 1)
     }
 }
 
@@ -105,12 +101,7 @@ public extension Vector<Float> {
     
     @inlinable
     mutating func multiply(by: T) {
-        if BLAS.isAvailable {
-            //TODO: Bechmark threshold
-            _multiplyBLAS(by: by)
-        } else {
-            _multiply(by: by)
-        }
+        _multiply(by: by)
     }
 
     @inlinable
@@ -125,7 +116,7 @@ public extension Vector<Float> {
     @inlinable
     @_transparent
     mutating func _multiplyBLAS(by: T) {
-        BLAS.sscal(components.count, by, &components, 1)
+        BLAS.sscal(n: components.count, alpha: by, x: &components, incX: 1)
     }
 }
 
@@ -159,22 +150,12 @@ public extension Vector<Complex<Double>> {
     
     @inlinable
     mutating func multiply(by: T) {
-        if BLAS.isAvailable {
-            //TODO: Bechmark threshold
-            _multiplyBLAS(by: by)
-        } else {
-            _multiply(by: by)
-        }
+        _multiply(by: by)
     }
 
     @inlinable
     mutating func multiply(by: Double) {
-        if BLAS.isAvailable {
-            //TODO: Bechmark threshold
-            _multiplyBLAS(by: by)
-        } else {
-            _multiply(by: by)
-        }
+        _multiply(by: by)
     }
 
     @inlinable
@@ -198,13 +179,13 @@ public extension Vector<Complex<Double>> {
     @inlinable
     @_transparent
     mutating func _multiplyBLAS(by: T) {
-        BLAS.zscal(components.count, by, &components, 1)
+        BLAS.zscal(n: components.count, alpha: by, x: &components, incX: 1)
     }
     
     @inlinable
     @_transparent
     mutating func _multiplyBLAS(by: Double) {
-        BLAS.zdscal(components.count, by, &components, 1)
+        BLAS.zdscal(n: components.count, alpha: by, x: &components, incX: 1)
     }
 }
 
@@ -238,22 +219,12 @@ public extension Vector<Complex<Float>> {
     
     @inlinable
     mutating func multiply(by: T) {
-        if BLAS.isAvailable {
-            //TODO: Bechmark threshold
-            _multiplyBLAS(by: by)
-        } else {
-            _multiply(by: by)
-        }
+        _multiply(by: by)
     }
 
     @inlinable
     mutating func multiply(by: Float) {
-        if BLAS.isAvailable {
-            //TODO: Bechmark threshold
-            _multiplyBLAS(by: by)
-        } else {
-            _multiply(by: by)
-        }
+        _multiply(by: by)
     }
 
     @inlinable
@@ -277,12 +248,12 @@ public extension Vector<Complex<Float>> {
     @inlinable
     @_transparent
     mutating func _multiplyBLAS(by: T) {
-        BLAS.cscal(components.count, by, &components, 1)
+        BLAS.cscal(n: components.count, alpha: by, x: &components, incX: 1)
     }
     
     @inlinable
     @_transparent
     mutating func _multiplyBLAS(by: Float) {
-        BLAS.csscal(components.count, by, &components, 1)
+        BLAS.csscal(n: components.count, alpha: by, x: &components, incX: 1)
     }
 }

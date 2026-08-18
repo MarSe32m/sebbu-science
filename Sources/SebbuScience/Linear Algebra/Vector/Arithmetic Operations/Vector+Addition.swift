@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Addition for AlgebraicField
 public extension Vector where T: AlgebraicField {
@@ -68,35 +69,25 @@ public extension Vector<Double> {
     
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _addBLAS(other, multiplied: multiplied)
-        } else {
-            _add(other, multiplied: multiplied)
-        }
+        _add(other, multiplied: multiplied)
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _addBLAS(other)
-        } else {
-            _add(other)
-        }
+        _add(other)
     }
 
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self, multiplied: T) {
-        BLAS.daxpy(components.count, multiplied, other.components, 1, &components, 1)
+        BLAS.daxpy(n: components.count, alpha: multiplied, x: other.components, incX: 1, y: &components, incY: 1)
     }
 
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self) {
-        BLAS.daxpy(components.count, 1.0, other.components, 1, &components, 1)
+        BLAS.daxpy(n: components.count, alpha: 1.0, x: other.components, incX: 1, y: &components, incY: 1)
     }
 }
 
@@ -117,35 +108,25 @@ public extension Vector<Float> {
     
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _addBLAS(other, multiplied: multiplied)
-        } else {
-            _add(other, multiplied: multiplied)
-        }
+        _add(other, multiplied: multiplied)
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _addBLAS(other)
-        } else {
-            _add(other)
-        }
+        _add(other)
     }
 
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self, multiplied: T) {
-        BLAS.saxpy(components.count, multiplied, other.components, 1, &components, 1)
+        BLAS.saxpy(n: components.count, alpha: multiplied, x: other.components, incX: 1, y: &components, incY: 1)
     }
 
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self) {
-        BLAS.saxpy(components.count, 1.0, other.components, 1, &components, 1)
+        BLAS.saxpy(n: components.count, alpha: 1.0, x: other.components, incX: 1, y: &components, incY: 1)
     }
 }
 
@@ -166,34 +147,19 @@ public extension Vector<Complex<Double>> {
     
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _addBLAS(other, multiplied: multiplied)
-        } else {
-            _add(other, multiplied: multiplied)
-        }
+        _add(other, multiplied: multiplied)
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _addBLAS(other)
-        } else {
-            _add(other)
-        }
+        _add(other)
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self, multiplied: Double) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _addBLAS(other, multiplied: multiplied)
-        } else {
-            _add(other, multiplied: multiplied)
-        }
+        _add(other, multiplied: multiplied)
     }
 
     @inlinable
@@ -224,19 +190,19 @@ public extension Vector<Complex<Double>> {
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self, multiplied: T) {
-        BLAS.zaxpy(components.count, multiplied, other.components, 1, &components, 1)
+        BLAS.zaxpy(n: components.count, alpha: multiplied, x: other.components, incX: 1, y: &components, incY: 1)
     }
 
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self, multiplied: Double) {
-        BLAS.zaxpy(components.count, multiplied, other.components, 1, &components, 1)
+        BLAS.zaxpy(n: components.count, alpha: Complex(multiplied), x: other.components, incX: 1, y: &components, incY: 1)
     }
 
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self) {
-        BLAS.zaxpy(components.count, 1.0, other.components, 1, &components, 1)
+        BLAS.zaxpy(n: components.count, alpha: .one, x: other.components, incX: 1, y: &components, incY: 1)
     }
 }
 
@@ -257,34 +223,19 @@ public extension Vector<Complex<Float>> {
     
     @inlinable
     mutating func add(_ other: Self, multiplied: T) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _addBLAS(other, multiplied: multiplied)
-        } else {
-            _add(other, multiplied: multiplied)
-        }
+        _add(other, multiplied: multiplied)
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _addBLAS(other)
-        } else {
-            _add(other)
-        }
+        _add(other)
     }
     
     @inlinable
     @_transparent
     mutating func add(_ other: Self, multiplied: Float) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _addBLAS(other, multiplied: multiplied)
-        } else {
-            _add(other, multiplied: multiplied)
-        }
+        _add(other, multiplied: multiplied)
     }
 
     @inlinable
@@ -315,18 +266,18 @@ public extension Vector<Complex<Float>> {
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self, multiplied: T) {
-        BLAS.caxpy(components.count, multiplied, other.components, 1, &components, 1)
+        BLAS.caxpy(n: components.count, alpha: multiplied, x: other.components, incX: 1, y: &components, incY: 1)
     }
 
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self, multiplied: Float) {
-        BLAS.caxpy(components.count, multiplied, other.components, 1, &components, 1)
+        BLAS.caxpy(n: components.count, alpha: Complex(multiplied), x: other.components, incX: 1, y: &components, incY: 1)
     }
 
     @inlinable
     @_transparent
     mutating func _addBLAS(_ other: Self) {
-        BLAS.caxpy(components.count, 1.0, other.components, 1, &components, 1)
+        BLAS.caxpy(n: components.count, alpha: .one, x: other.components, incX: 1, y: &components, incY: 1)
     }
 }

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Division for AlgebraicField
 public extension UniqueVector where T: AlgebraicField {
@@ -31,7 +32,7 @@ public extension UniqueVector<Double> {
     @inlinable
     mutating func divideBLAS(by: T) {
         if let reciprocal = by.reciprocal {
-            BLAS.dscal(count, reciprocal, components, 1)
+            BLAS.dscal(n: count, alpha: reciprocal, x: components, incX: 1)
         } else {
             divide(by: by)
         }
@@ -48,7 +49,7 @@ public extension UniqueVector<Float> {
     @inlinable
     mutating func divideBLAS(by: T) {
         if let reciprocal = by.reciprocal {
-            BLAS.sscal(count, reciprocal, components, 1)
+            BLAS.sscal(n: count, alpha: reciprocal, x: components, incX: 1)
         } else {
             divide(by: by)
         }
@@ -85,7 +86,7 @@ public extension UniqueVector<Complex<Double>> {
     @inlinable
     mutating func divideBLAS(by: T) {
         if let reciprocal = by.reciprocal {
-            BLAS.zscal(count, reciprocal, components, 1)
+            BLAS.zscal(n: count, alpha: reciprocal, x: components, incX: 1)
         } else {
             divide(by: by)
         }
@@ -94,7 +95,7 @@ public extension UniqueVector<Complex<Double>> {
     @inlinable
     mutating func divideBLAS(by: Double) {
         if let reciprocal = by.reciprocal {
-            BLAS.zdscal(count, reciprocal, components, 1)
+            BLAS.zdscal(n: count, alpha: reciprocal, x: components, incX: 1)
         } else {
             divide(by: by)
         }
@@ -131,7 +132,7 @@ public extension UniqueVector<Complex<Float>> {
     @inlinable
     mutating func divideBLAS(by: T) {
         if let reciprocal = by.reciprocal {
-            BLAS.cscal(count, reciprocal, components, 1)
+            BLAS.cscal(n: count, alpha: reciprocal, x: components, incX: 1)
         } else {
             divide(by: by)
         }
@@ -140,7 +141,7 @@ public extension UniqueVector<Complex<Float>> {
     @inlinable
     mutating func divideBLAS(by: Float) {
         if let reciprocal = by.reciprocal {
-            BLAS.csscal(count, reciprocal, components, 1)
+            BLAS.csscal(n: count, alpha: reciprocal, x: components, incX: 1)
         } else {
             divide(by: by)
         }

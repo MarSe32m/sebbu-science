@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Addition for AlgebraicField
 public extension UniqueMatrix where T: AlgebraicField {
@@ -34,7 +35,7 @@ public extension UniqueMatrix<Double> {
     @inlinable
     @_transparent
     mutating func addBLAS(_ other: borrowing Self, multiplied: T = 1.0) {
-        BLAS.daxpy(count, multiplied, other.elements, 1, elements, 1)
+        BLAS.daxpy(n: count, alpha: multiplied, x: other.elements, incX: 1, y: elements, incY: 1)
     }
 }
 
@@ -43,7 +44,7 @@ public extension UniqueMatrix<Float> {
     @inlinable
     @_transparent
     mutating func addBLAS(_ other: borrowing Self, multiplied: T = 1.0) {
-        BLAS.saxpy(count, multiplied, other.elements, 1, elements, 1)
+        BLAS.saxpy(n: count, alpha: multiplied, x: other.elements, incX: 1, y: elements, incY: 1)
     }
 }
 
@@ -58,13 +59,13 @@ public extension UniqueMatrix<Complex<Double>> {
     @inlinable
     @_transparent
     mutating func addBLAS(_ other: borrowing Self, multiplied: T = .one) {
-        BLAS.zaxpy(count, multiplied, other.elements, 1, elements, 1)
+        BLAS.zaxpy(n: count, alpha: multiplied, x: other.elements, incX: 1, y: elements, incY: 1)
     }
     
     @inlinable
     @_transparent
     mutating func addBLAS(_ other: borrowing Self, multiplied: Double) {
-        BLAS.zaxpy(count, multiplied, other.elements, 1, elements, 1)
+        BLAS.zaxpy(n: count, alpha: Complex(multiplied), x: other.elements, incX: 1, y: elements, incY: 1)
     }
 }
 
@@ -79,13 +80,13 @@ public extension UniqueMatrix<Complex<Float>> {
     @inlinable
     @_transparent
     mutating func addBLAS(_ other: borrowing Self, multiplied: T = .one) {
-        BLAS.caxpy(count, multiplied, other.elements, 1, elements, 1)
+        BLAS.caxpy(n: count, alpha: multiplied, x: other.elements, incX: 1, y: elements, incY: 1)
     }
     
     @inlinable
     @_transparent
     mutating func addBLAS(_ other: borrowing Self, multiplied: Float) {
-        BLAS.caxpy(count, multiplied, other.elements, 1, elements, 1)
+        BLAS.caxpy(n: count, alpha: Complex(multiplied), x: other.elements, incX: 1, y: elements, incY: 1)
     }
 }
 

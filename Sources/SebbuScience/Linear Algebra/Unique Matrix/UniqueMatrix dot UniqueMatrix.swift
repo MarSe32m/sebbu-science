@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Matrix-Matrix multiplication for AlgebraicField
 public extension UniqueMatrix where T: AlgebraicField {
@@ -90,7 +91,7 @@ public extension UniqueMatrix<Double> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.dgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 0.0, into.elements, ldc)
+        BLAS.dgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: 0.0, c: into.elements, ldc: ldc)
     }
 
     @inlinable
@@ -100,7 +101,7 @@ public extension UniqueMatrix<Double> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.dgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 1.0, into.elements, ldc)
+        BLAS.dgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: 1.0, c: into.elements, ldc: ldc)
     }
 }
 
@@ -120,7 +121,7 @@ public extension UniqueMatrix<Float> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.sgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 0.0, into.elements, ldc)
+        BLAS.sgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: 0.0, c: into.elements, ldc: ldc)
     }
     
     @inlinable
@@ -130,7 +131,7 @@ public extension UniqueMatrix<Float> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.sgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 1.0, into.elements, ldc)
+        BLAS.sgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: 1.0, c: into.elements, ldc: ldc)
     }
 }
 
@@ -150,7 +151,7 @@ public extension UniqueMatrix<Complex<Double>> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.zgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, .zero, into.elements, ldc)
+        BLAS.zgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: .zero, c: into.elements, ldc: ldc)
     }
 
     @inlinable
@@ -160,7 +161,7 @@ public extension UniqueMatrix<Complex<Double>> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.zgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, .one, into.elements, ldc)
+        BLAS.zgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: .one, c: into.elements, ldc: ldc)
     }
 }
 
@@ -180,7 +181,7 @@ public extension UniqueMatrix<Complex<Float>> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.cgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, .zero, into.elements, ldc)
+        BLAS.cgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: .zero, c: into.elements, ldc: ldc)
     }
     
     @inlinable
@@ -190,7 +191,7 @@ public extension UniqueMatrix<Complex<Float>> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.cgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, .one, into.elements, ldc)
+        BLAS.cgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: .one, c: into.elements, ldc: ldc)
     }
 }
 

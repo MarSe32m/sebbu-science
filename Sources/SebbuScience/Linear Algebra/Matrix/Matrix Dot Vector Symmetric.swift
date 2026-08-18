@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Symmetric Matrix-Vector multiplication for Double
 public extension Matrix<Double> {
@@ -57,85 +58,65 @@ public extension Matrix<Double> {
     
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _symmetricDotBLAS(vector, multiplied: multiplied, into: into)
-        } else {
-            _dot(vector, multiplied: multiplied, into: into)
-        }
+        _dot(vector, multiplied: multiplied, into: into)
     }
     
     @inlinable
     func _symmetricDotBLAS(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let beta: T = .zero
-        BLAS.dsymv(order, uplo, N, multiplied, elements, lda, vector, 1, beta, into, 1)
+        BLAS.dsymv(layout: order, triangle: uplo, n: N, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
 
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _symmetricDotBLAS(vector, into: into)
-        } else {
-            _dot(vector, into: into)
-        }
+        _dot(vector, into: into)
     }
 
     @inlinable
     func _symmetricDotBLAS(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let alpha: T = 1.0
         let beta: T = .zero
-        BLAS.dsymv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+        BLAS.dsymv(layout: order, triangle: uplo, n: N, alpha: alpha, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
     
     //TODO: Make a version that takes vector as a UnsafePointer<Complex<Double>> and take addingInto as UnsafeMutablePointer<Complex<Double>>
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _symmetricDotBLAS(vector, multiplied: multiplied, addingInto: into)
-        } else {
-            _dot(vector, multiplied: multiplied, addingInto: into)
-        }
+        _dot(vector, multiplied: multiplied, addingInto: into)
     }
 
     @inlinable
     func _symmetricDotBLAS(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let beta: T = 1.0
-        BLAS.dsymv(order, uplo, N, multiplied, elements, lda, vector, 1, beta, into, 1)
+        BLAS.dsymv(layout: order, triangle: uplo, n: N, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
     
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _symmetricDotBLAS(vector, addingInto: into)
-        } else {
-            _dot(vector, addingInto: into)
-        }
+        _dot(vector, addingInto: into)
     }
 
     @inlinable
     func _symmetricDotBLAS(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let alpha: T = 1.0
         let beta: T = 1.0
-        BLAS.dsymv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+        BLAS.dsymv(layout: order, triangle: uplo, n: N, alpha: alpha, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
 }
 
@@ -193,96 +174,76 @@ public extension Matrix<Float> {
     
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _symmetricDotBLAS(vector, multiplied: multiplied, into: into)
-        } else {
-            _dot(vector, multiplied: multiplied, into: into)
-        }
+        _dot(vector, multiplied: multiplied, into: into)
     }
     
     @inlinable
     func _symmetricDotBLAS(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let beta: T = .zero
-        BLAS.ssymv(order, uplo, N, multiplied, elements, lda, vector, 1, beta, into, 1)
+        BLAS.ssymv(layout: order, triangle: uplo, n: N, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
 
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _symmetricDotBLAS(vector, into: into)
-        } else {
-            _dot(vector, into: into)
-        }
+        _dot(vector, into: into)
     }
 
     @inlinable
     func _symmetricDotBLAS(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let alpha: T = 1.0
         let beta: T = .zero
-        BLAS.ssymv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+        BLAS.ssymv(layout: order, triangle: uplo, n: N, alpha: alpha, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
     
     //TODO: Make a version that takes vector as a UnsafePointer<Complex<Double>> and take addingInto as UnsafeMutablePointer<Complex<Double>>
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _symmetricDotBLAS(vector, multiplied: multiplied, addingInto: into)
-        } else {
-            _dot(vector, multiplied: multiplied, addingInto: into)
-        }
+        _dot(vector, multiplied: multiplied, addingInto: into)
     }
 
     @inlinable
     func _symmetricDotBLAS(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let beta: T = 1.0
-        BLAS.ssymv(order, uplo, N, multiplied, elements, lda, vector, 1, beta, into, 1)
+        BLAS.ssymv(layout: order, triangle: uplo, n: N, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
     
     @inlinable
     func symmetricDot(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            _symmetricDotBLAS(vector, addingInto: into)
-        } else {
-            _dot(vector, addingInto: into)
-        }
+        _dot(vector, addingInto: into)
     }
 
     @inlinable
     func _symmetricDotBLAS(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
-        let order: BLAS.Order = .rowMajor
-        let uplo: BLAS.UpLo = .upper
+        let order: BLAS.Layout = .rowMajor
+        let uplo: BLAS.Triangle = .upper
         let N = rows
         let lda = N
         let alpha: T = 1.0
         let beta: T = 1.0
-        BLAS.ssymv(order, uplo, N, alpha, elements, lda, vector, 1, beta, into, 1)
+        BLAS.ssymv(layout: order, triangle: uplo, n: N, alpha: alpha, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
 }
 
 @inlinable
 public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Double, _ matrix: UnsafePointer<Double>, _ vector: UnsafePointer<Double>, _ resultMultiplier: Double, _ resultVector: UnsafeMutablePointer<Double>) {
     precondition(matrixColumns == vectorComponents)
-    BLAS.dsymv(.rowMajor, .upper, matrixRows, multiplier, matrix, matrixRows, vector, 1, resultMultiplier, resultVector, 1)
+    BLAS.dsymv(layout: .rowMajor, triangle: .upper, n: matrixRows, alpha: multiplier, a: matrix, lda: matrixRows, x: vector, incX: 1, beta: resultMultiplier, y: resultVector, incY: 1)
 }
 
 @inlinable
 public func symmetricMatVecMul(_ matrixRows: Int, _ matrixColumns: Int, _ vectorComponents: Int, _ multiplier: Float, _ matrix: UnsafePointer<Float>, _ vector: UnsafePointer<Float>, _ resultMultiplier: Float, _ resultVector: UnsafeMutablePointer<Float>) {
     precondition(matrixColumns == vectorComponents)
-    BLAS.ssymv(.rowMajor, .upper, matrixRows, multiplier, matrix, matrixRows, vector, 1, resultMultiplier, resultVector, 1)
+    BLAS.ssymv(layout: .rowMajor, triangle: .upper, n: matrixRows, alpha: multiplier, a: matrix, lda: matrixRows, x: vector, incX: 1, beta: resultMultiplier, y: resultVector, incY: 1)
 }

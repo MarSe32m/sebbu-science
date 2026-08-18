@@ -1,6 +1,8 @@
 // Copyright (c) 2026 Sebastian Toivonen
 // SPDX-License-Identifier: Apache-2.0
 
+import SebbuBLAS
+
 //MARK: Vector-Matrix multiplication for AlgebraicField
 public extension UniqueVector where T: AlgebraicField {
     @inlinable
@@ -78,7 +80,7 @@ public extension UniqueVector<Double> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = .zero
-        BLAS.dgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, into.components, 1)
+        BLAS.dgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: into.components, incY: 1)
     }
 
     @inlinable
@@ -89,7 +91,7 @@ public extension UniqueVector<Double> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = 1.0
-        BLAS.dgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, into.components, 1)
+        BLAS.dgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: into.components, incY: 1)
     }
 }
 
@@ -110,7 +112,7 @@ public extension UniqueVector<Float> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = .zero
-        BLAS.sgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, into.components, 1)
+        BLAS.sgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: into.components, incY: 1)
     }
 
     @inlinable
@@ -121,7 +123,7 @@ public extension UniqueVector<Float> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = 1.0
-        BLAS.sgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, into.components, 1)
+        BLAS.sgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: into.components, incY: 1)
     }
 }
 
@@ -142,7 +144,7 @@ public extension UniqueVector<Complex<Double>> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = .zero
-        BLAS.zgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, into.components, 1)
+        BLAS.zgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: into.components, incY: 1)
     }
 
     @inlinable
@@ -153,7 +155,7 @@ public extension UniqueVector<Complex<Double>> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = .one
-        BLAS.zgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, into.components, 1)
+        BLAS.zgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: into.components, incY: 1)
     }
 }
 
@@ -174,7 +176,7 @@ public extension UniqueVector<Complex<Float>> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = .zero
-        BLAS.cgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, into.components, 1)
+        BLAS.cgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: into.components, incY: 1)
     }
 
     @inlinable
@@ -185,6 +187,6 @@ public extension UniqueVector<Complex<Float>> {
         let lda = matrix.columns
         let alpha: T = multiplied
         let beta: T = .one
-        BLAS.cgemv(layout, trans, m, n, alpha, matrix.elements, lda, components, 1, beta, into.components, 1)
+        BLAS.cgemv(layout: layout, transpose: trans, m: m, n: n, alpha: alpha, a: matrix.elements, lda: lda, x: components, incX: 1, beta: beta, y: into.components, incY: 1)
     }
 }

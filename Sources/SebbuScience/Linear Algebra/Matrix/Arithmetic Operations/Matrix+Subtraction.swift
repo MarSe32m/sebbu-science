@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Subtraction for AlgebraicField
 public extension Matrix where T: AlgebraicField {
@@ -65,11 +66,7 @@ public extension Matrix<Double> {
     @inlinable
     @_transparent
     mutating func subtract(_ other: Self) {
-        if BLAS.isAvailable {
-            subtract(other, multiplied: 1.0)
-        } else {
-            _subtract(other)
-        }
+        _subtract(other)
     }
 }
 

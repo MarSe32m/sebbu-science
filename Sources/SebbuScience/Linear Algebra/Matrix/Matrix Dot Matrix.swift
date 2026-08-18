@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Matrix-Matrix multiplication for AlgebraicField
 public extension Matrix where T: AlgebraicField {
@@ -132,12 +133,7 @@ public extension Matrix<Double> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: 1.0, into: &into)
-        } else {
-            _dot(other, into: &into)
-        }
+        _dot(other, into: &into)
     }
 
     @inlinable
@@ -145,12 +141,7 @@ public extension Matrix<Double> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: multiplied, into: &into)
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
-        }
+        _dot(other, multiplied: multiplied, into: &into)
     }
 
     @inlinable
@@ -161,7 +152,7 @@ public extension Matrix<Double> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.dgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 0.0, &into.elements, ldc)
+        BLAS.dgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: 0.0, c: &into.elements, ldc: ldc)
     }
     
     @inlinable
@@ -170,12 +161,7 @@ public extension Matrix<Double> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: 1.0, addingInto: &into)
-        } else {
-            _dot(other, addingInto: &into)
-        }
+        _dot(other, addingInto: &into)
     }
     
     @inlinable
@@ -183,12 +169,7 @@ public extension Matrix<Double> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: multiplied, addingInto: &into)
-        } else {
-            _dot(other, multiplied: multiplied, addingInto: &into)
-        }
+        _dot(other, multiplied: multiplied, addingInto: &into)
     }
 
     @inlinable
@@ -199,7 +180,7 @@ public extension Matrix<Double> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.dgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 1.0, &into.elements, ldc)
+        BLAS.dgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: 1.0, c: &into.elements, ldc: ldc)
     }
 }
 
@@ -224,12 +205,7 @@ public extension Matrix<Float> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: 1.0, into: &into)
-        } else {
-            _dot(other, into: &into)
-        }
+        _dot(other, into: &into)
     }
 
     @inlinable
@@ -237,12 +213,7 @@ public extension Matrix<Float> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: multiplied, into: &into)
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
-        }
+        _dot(other, multiplied: multiplied, into: &into)
     }
 
     @inlinable
@@ -253,7 +224,7 @@ public extension Matrix<Float> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.sgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 0.0, &into.elements, ldc)
+        BLAS.sgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: 0.0, c: &into.elements, ldc: ldc)
     }
     
     @inlinable
@@ -262,12 +233,7 @@ public extension Matrix<Float> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: 1.0, addingInto: &into)
-        } else {
-            _dot(other, addingInto: &into)
-        }
+        _dot(other, addingInto: &into)
     }
     
     @inlinable
@@ -275,12 +241,7 @@ public extension Matrix<Float> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: multiplied, addingInto: &into)
-        } else {
-            _dot(other, multiplied: multiplied, addingInto: &into)
-        }
+        _dot(other, multiplied: multiplied, addingInto: &into)
     }
 
     @inlinable
@@ -291,7 +252,7 @@ public extension Matrix<Float> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.sgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, 1.0, &into.elements, ldc)
+        BLAS.sgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: 1.0, c: &into.elements, ldc: ldc)
     }
 }
 
@@ -316,12 +277,7 @@ public extension Matrix<Complex<Double>> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: .one, into: &into)
-        } else {
-            _dot(other, into: &into)
-        }
+        _dot(other, into: &into)
     }
 
     @inlinable
@@ -329,12 +285,7 @@ public extension Matrix<Complex<Double>> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: multiplied, into: &into)
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
-        }
+        _dot(other, multiplied: multiplied, into: &into)
     }
 
     @inlinable
@@ -345,7 +296,7 @@ public extension Matrix<Complex<Double>> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.zgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, .zero, &into.elements, ldc)
+        BLAS.zgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: .zero, c: &into.elements, ldc: ldc)
     }
     
     @inlinable
@@ -354,12 +305,7 @@ public extension Matrix<Complex<Double>> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: .one, addingInto: &into)
-        } else {
-            _dot(other, addingInto: &into)
-        }
+        _dot(other, addingInto: &into)
     }
     
     @inlinable
@@ -367,12 +313,7 @@ public extension Matrix<Complex<Double>> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: multiplied, addingInto: &into)
-        } else {
-            _dot(other, multiplied: multiplied, addingInto: &into)
-        }
+        _dot(other, multiplied: multiplied, addingInto: &into)
     }
 
     @inlinable
@@ -383,7 +324,7 @@ public extension Matrix<Complex<Double>> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.zgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, .one, &into.elements, ldc)
+        BLAS.zgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: .one, c: &into.elements, ldc: ldc)
     }
 }
 
@@ -408,12 +349,7 @@ public extension Matrix<Complex<Float>> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: .one, into: &into)
-        } else {
-            _dot(other, into: &into)
-        }
+        _dot(other, into: &into)
     }
 
     @inlinable
@@ -421,12 +357,7 @@ public extension Matrix<Complex<Float>> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: multiplied, into: &into)
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
-        }
+        _dot(other, multiplied: multiplied, into: &into)
     }
 
     @inlinable
@@ -437,7 +368,7 @@ public extension Matrix<Complex<Float>> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.cgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, .zero, &into.elements, ldc)
+        BLAS.cgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: .zero, c: &into.elements, ldc: ldc)
     }
     
     @inlinable
@@ -446,12 +377,7 @@ public extension Matrix<Complex<Float>> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: .one, addingInto: &into)
-        } else {
-            _dot(other, addingInto: &into)
-        }
+        _dot(other, addingInto: &into)
     }
     
     @inlinable
@@ -459,12 +385,7 @@ public extension Matrix<Complex<Float>> {
         precondition(columns == other.rows)
         precondition(into.rows == rows)
         precondition(into.columns == other.columns)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold for BLAS dispatch
-            _dotBLAS(other, multiplied: multiplied, addingInto: &into)
-        } else {
-            _dot(other, multiplied: multiplied, addingInto: &into)
-        }
+        _dot(other, multiplied: multiplied, addingInto: &into)
     }
 
     @inlinable
@@ -475,7 +396,7 @@ public extension Matrix<Complex<Float>> {
         let transB: BLAS.Transpose = .noTranspose
         let m = rows, n = other.columns, k = columns
         let lda = k, ldb = n, ldc = n
-        BLAS.cgemm(layout, transA, transB, m, n, k, multiplied, elements, lda, other.elements, ldb, .one, &into.elements, ldc)
+        BLAS.cgemm(layout: layout, transposeA: transA, transposeB: transB, m: m, n: n, k: k, alpha: multiplied, a: elements, lda: lda, b: other.elements, ldb: ldb, beta: .one, c: &into.elements, ldc: ldc)
     }
 }
 
@@ -483,23 +404,23 @@ public extension Matrix<Complex<Float>> {
 @inlinable
 public func matMulBLAS(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Double, _ leftMatrix: UnsafePointer<Double>, _ rightMatrix: UnsafePointer<Double>, _ resultMultiplier: Double, _ resultMatrix: UnsafeMutablePointer<Double>) {
     assert(leftColumns == rightRows)
-    BLAS.dgemm(.rowMajor, .noTranspose, .noTranspose, leftRows, rightColumns, leftColumns, multiplier, leftMatrix, leftColumns, rightMatrix, rightColumns, resultMultiplier, resultMatrix, leftColumns)
+    BLAS.dgemm(layout: .rowMajor, transposeA: .noTranspose, transposeB: .noTranspose, m: leftRows, n: rightColumns, k: leftColumns, alpha: multiplier, a: leftMatrix, lda: leftColumns, b: rightMatrix, ldb: rightColumns, beta: resultMultiplier, c: resultMatrix, ldc: leftColumns)
 }
 
 @inlinable
 public func matMulBLAS(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Float, _ leftMatrix: UnsafePointer<Float>, _ rightMatrix: UnsafePointer<Float>, _ resultMultiplier: Float, _ resultMatrix: UnsafeMutablePointer<Float>) {
     assert(leftColumns == rightRows)
-    BLAS.sgemm(.rowMajor, .noTranspose, .noTranspose, leftRows, rightColumns, leftColumns, multiplier, leftMatrix, leftColumns, rightMatrix, rightColumns, resultMultiplier, resultMatrix, leftColumns)
+    BLAS.sgemm(layout: .rowMajor, transposeA: .noTranspose, transposeB: .noTranspose, m: leftRows, n: rightColumns, k: leftColumns, alpha: multiplier, a: leftMatrix, lda: leftColumns, b: rightMatrix, ldb: rightColumns, beta: resultMultiplier, c: resultMatrix, ldc: leftColumns)
 }
 
 @inlinable
 public func matMulBLAS(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Complex<Double>, _ leftMatrix: UnsafePointer<Complex<Double>>, _ rightMatrix: UnsafePointer<Complex<Double>>, _ resultMultiplier: Complex<Double>, _ resultMatrix: UnsafeMutablePointer<Complex<Double>>) {
     assert(leftColumns == rightRows)
-    BLAS.zgemm(.rowMajor, .noTranspose, .noTranspose, leftRows, rightColumns, leftColumns, multiplier, leftMatrix, leftColumns, rightMatrix, rightColumns, resultMultiplier, resultMatrix, leftColumns)
+    BLAS.zgemm(layout: .rowMajor, transposeA: .noTranspose, transposeB: .noTranspose, m: leftRows, n: rightColumns, k: leftColumns, alpha: multiplier, a: leftMatrix, lda: leftColumns, b: rightMatrix, ldb: rightColumns, beta: resultMultiplier, c: resultMatrix, ldc: leftColumns)
 }
 
 @inlinable
 public func matMulBLAS(_ leftRows: Int, _ leftColumns: Int, _ rightRows: Int, _ rightColumns: Int, _ multiplier: Complex<Float>, _ leftMatrix: UnsafePointer<Complex<Float>>, _ rightMatrix: UnsafePointer<Complex<Float>>, _ resultMultiplier: Complex<Float>, _ resultMatrix: UnsafeMutablePointer<Complex<Float>>) {
     assert(leftColumns == rightRows)
-    BLAS.cgemm(.rowMajor, .noTranspose, .noTranspose, leftRows, rightColumns, leftColumns, multiplier, leftMatrix, leftColumns, rightMatrix, rightColumns, resultMultiplier, resultMatrix, leftColumns)
+    BLAS.cgemm(layout: .rowMajor, transposeA: .noTranspose, transposeB: .noTranspose, m: leftRows, n: rightColumns, k: leftColumns, alpha: multiplier, a: leftMatrix, lda: leftColumns, b: rightMatrix, ldb: rightColumns, beta: resultMultiplier, c: resultMatrix, ldc: leftColumns)
 }

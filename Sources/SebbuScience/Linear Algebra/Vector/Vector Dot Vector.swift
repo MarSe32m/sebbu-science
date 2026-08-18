@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Dot, inner and outer product for AlgebraicField
 public extension Vector where T: AlgebraicField {
@@ -147,18 +148,13 @@ public extension Vector<Double> {
     @inlinable
     func dot(_ other: Self) -> T {
         precondition(count == other.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            return _dotBLAS(other)
-        } else {
-            return _dot(other)
-        }
+        return _dot(other)
     }
     
     @inlinable
     @_transparent
     func _dotBLAS(_ other: Self) -> T {
-        BLAS.ddot(count, components, 1, other.components, 1)
+        BLAS.ddot(n: count, x: components, incX: 1, y: other.components, incY: 1)
     }
 
     @inlinable
@@ -173,18 +169,13 @@ public extension Vector<Float> {
     @inlinable
     func dot(_ other: Self) -> T {
         precondition(count == other.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            return _dotBLAS(other)
-        } else {
-            return _dot(other)
-        }
+        return _dot(other)
     }
     
     @inlinable
     @_transparent
     func _dotBLAS(_ other: Self) -> T {
-        BLAS.sdot(count, components, 1, other.components, 1)
+        BLAS.sdot(n: count, x: components, incX: 1, y: other.components, incY: 1)
     }
 
     @inlinable
@@ -199,35 +190,25 @@ public extension Vector<Complex<Double>> {
     @inlinable
     func dot(_ other: Self) -> T {
         precondition(count == other.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            return _dotBLAS(other)
-        } else {
-            return _dot(other)
-        }
+        return _dot(other)
     }
 
     @inlinable
     @_transparent
     func _dotBLAS(_ other: Self) -> T {
-        BLAS.zdotu(count, components, 1, other.components, 1)
+        BLAS.zdotu(n: count, x: components, incX: 1, y: other.components, incY: 1)
     }
     
     @inlinable
     func inner(_ other: Self) -> T {
         precondition(count == other.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            return _innerBLAS(other)
-        } else {
-            return _inner(other)
-        }
+        return _inner(other)
     }
 
     @inlinable
     @_transparent
     func _innerBLAS(_ other: Self) -> T {
-        BLAS.zdotc(count, components, 1, other.components, 1)
+        BLAS.zdotc(n: count, x: components, incX: 1, y: other.components, incY: 1)
     }
 
     @inlinable
@@ -259,35 +240,25 @@ public extension Vector<Complex<Float>> {
     @inlinable
     func dot(_ other: Self) -> T {
         precondition(count == other.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            return _dotBLAS(other)
-        } else {
-            return _dot(other)
-        }
+        return _dot(other)
     }
     
     @inlinable
     @_transparent
     func _dotBLAS(_ other: Self) -> T {
-        BLAS.cdotu(count, components, 1, other.components, 1)
+        BLAS.cdotu(n: count, x: components, incX: 1, y: other.components, incY: 1)
     }
 
     @inlinable
     func inner(_ other: Self) -> T {
         precondition(count == other.count)
-        if BLAS.isAvailable {
-            //TODO: Benchmark threshold
-            return _innerBLAS(other)
-        } else {
-            return _inner(other)
-        }
+        return _inner(other)
     }
 
     @inlinable
     @_transparent
     func _innerBLAS(_ other: Self) -> T {
-        BLAS.cdotc(count, components, 1, other.components, 1)
+        BLAS.cdotc(n: count, x: components, incX: 1, y: other.components, incY: 1)
     }
 
     @inlinable

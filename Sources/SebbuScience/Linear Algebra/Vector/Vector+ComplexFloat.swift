@@ -5,6 +5,7 @@ import RealModule
 import ComplexModule
 import SebbuCollections
 import NumericsExtensions
+import SebbuBLAS
 
 public extension Vector<Complex<Float>> {
     @inlinable
@@ -89,7 +90,7 @@ public extension Vector<Complex<Float>> {
     @inlinable
     @_transparent
     mutating func copyComponentsBLAS(from other: Self) {
-        BLAS.ccopy(count, other.components, 1, &components, 1)
+        BLAS.ccopy(n: count, x: other.components, incX: 1, y: &components, incY: 1)
     }
     
     @inlinable

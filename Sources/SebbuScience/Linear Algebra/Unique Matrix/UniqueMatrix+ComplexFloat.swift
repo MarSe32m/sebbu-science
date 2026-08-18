@@ -7,6 +7,8 @@ import COpenBLAS
 import Accelerate
 #endif
 
+import SebbuBLAS
+
 import RealModule
 import ComplexModule
 import NumericsExtensions
@@ -91,7 +93,7 @@ public extension UniqueMatrix<Complex<Float>> {
 public extension UniqueMatrix<Complex<Float>> {
     @inlinable
     mutating func copyElementsBLAS(from other: borrowing Self) {
-        BLAS.ccopy(count, other.elements, 1, elements, 1)
+        BLAS.ccopy(n: count, x: other.elements, incX: 1, y: elements, incY: 1)
     }
 }
 

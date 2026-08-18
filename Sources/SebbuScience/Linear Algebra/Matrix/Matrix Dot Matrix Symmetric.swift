@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Symmetric Matrix-Matrix multiplication for Double
 public extension Matrix<Double> {
@@ -81,100 +82,80 @@ public extension Matrix<Double> {
 
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(symmetricSide: symmetricSide, other, into: &into)
-        } else {
-            _dot(other, into: &into)
-        }
+        _dot(other, into: &into)
     }
 
     @inlinable
     @_transparent
     func _dotBLAS(symmetricSide: SymmetricSide, _ other: Self, into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = symmetricSide == .left ? self : other
         let B = symmetricSide == .right ? self : other
         let m = A.rows, n = B.columns
         let alpha: T = 1.0
         let beta: T = .zero
         let lda = columns, ldb = n, ldc = n
-        BLAS.dsymm(order, side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.dsymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: alpha, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(symmetricSide: symmetricSide, other, multiplied: multiplied, into: &into)
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
-        }
+        _dot(other, multiplied: multiplied, into: &into)
     }
     
     @inlinable
     @_transparent
     func _dotBLAS(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = symmetricSide == .left ? self : other
         let B = symmetricSide == .right ? self : other
         let m = A.rows, n = B.columns
         let beta: T = .zero
         let lda = columns, ldb = n, ldc = n
-        BLAS.dsymm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.dsymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, addingInto into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(symmetricSide: symmetricSide, other, addingInto: &into)
-        } else {
-            _dot(other, addingInto: &into)
-        }
+        _dot(other, addingInto: &into)
     }
 
     @inlinable
     @_transparent
     func _dotBLAS(symmetricSide: SymmetricSide, _ other: Self, addingInto into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = symmetricSide == .left ? self : other
         let B = symmetricSide == .right ? self : other
         let m = A.rows, n = B.columns
         let alpha: T = 1.0
         let beta: T = 1.0
         let lda = columns, ldb = n, ldc = n
-        BLAS.dsymm(order, side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.dsymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: alpha, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, addingInto into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(symmetricSide: symmetricSide, other, multiplied: multiplied, addingInto: &into)
-        } else {
-            _dot(other, multiplied: multiplied, addingInto: &into)
-        }
+        _dot(other, multiplied: multiplied, addingInto: &into)
     }
 
     @inlinable
     @_transparent
     func _dotBLAS(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, addingInto into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = symmetricSide == .left ? self : other
         let B = symmetricSide == .right ? self : other
         let m = A.rows, n = B.columns
         let beta: T = 1.0
         let lda = columns, ldb = n, ldc = n
-        BLAS.dsymm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.dsymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 }
 
@@ -256,99 +237,79 @@ public extension Matrix<Float> {
 
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(symmetricSide: symmetricSide, other, into: &into)
-        } else {
-            _dot(other, into: &into)
-        }
+        _dot(other, into: &into)
     }
 
     @inlinable
     @_transparent
     func _dotBLAS(symmetricSide: SymmetricSide, _ other: Self, into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = symmetricSide == .left ? self : other
         let B = symmetricSide == .right ? self : other
         let m = A.rows, n = B.columns
         let alpha: T = 1.0
         let beta: T = .zero
         let lda = columns, ldb = n, ldc = n
-        BLAS.ssymm(order, side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.ssymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: alpha, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(symmetricSide: symmetricSide, other, multiplied: multiplied, into: &into)
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
-        }
+        _dot(other, multiplied: multiplied, into: &into)
     }
     
     @inlinable
     @_transparent
     func _dotBLAS(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = symmetricSide == .left ? self : other
         let B = symmetricSide == .right ? self : other
         let m = A.rows, n = B.columns
         let beta: T = .zero
         let lda = columns, ldb = n, ldc = n
-        BLAS.ssymm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.ssymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, addingInto into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(symmetricSide: symmetricSide, other, addingInto: &into)
-        } else {
-            _dot(other, addingInto: &into)
-        }
+        _dot(other, addingInto: &into)
     }
 
     @inlinable
     @_transparent
     func _dotBLAS(symmetricSide: SymmetricSide, _ other: Self, addingInto into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = symmetricSide == .left ? self : other
         let B = symmetricSide == .right ? self : other
         let m = A.rows, n = B.columns
         let alpha: T = 1.0
         let beta: T = 1.0
         let lda = columns, ldb = n, ldc = n
-        BLAS.ssymm(order, side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.ssymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: alpha, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 
     @inlinable
     func dot(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, addingInto into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(symmetricSide: symmetricSide, other, multiplied: multiplied, addingInto: &into)
-        } else {
-            _dot(other, multiplied: multiplied, addingInto: &into)
-        }
+        _dot(other, multiplied: multiplied, addingInto: &into)
     }
 
     @inlinable
     @_transparent
     func _dotBLAS(symmetricSide: SymmetricSide, _ other: Self, multiplied: T, addingInto into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = symmetricSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = symmetricSide == .left ? self : other
         let B = symmetricSide == .right ? self : other
         let m = A.rows, n = B.columns
         let beta: T = 1.0
         let lda = columns, ldb = n, ldc = n
-        BLAS.ssymm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.ssymm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 }

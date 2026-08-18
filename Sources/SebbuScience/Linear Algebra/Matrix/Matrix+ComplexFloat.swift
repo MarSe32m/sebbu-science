@@ -7,6 +7,8 @@ import COpenBLAS
 import Accelerate
 #endif
 
+import SebbuBLAS
+
 import RealModule
 import ComplexModule
 import NumericsExtensions
@@ -149,7 +151,7 @@ public extension Matrix<Complex<Float>> {
     @inlinable
     @_transparent
     mutating func copyElementsBLAS(from other: Self) {
-        BLAS.ccopy(elements.count, other.elements, 1, &elements, 1)
+        BLAS.ccopy(n: elements.count, x: other.elements, incX: 1, y: &elements, incY: 1)
     }
 
     @inlinable
@@ -878,10 +880,10 @@ public extension MatrixOperations {
 #elseif canImport(Accelerate)
         var VChar = Int8(bitPattern: UInt8(ascii: "V"))
         var NChar = Int8(bitPattern: UInt8(ascii: "N"))
-        var n = lapack_int(A.rows)
+        var n = A.rows
         var AElements = A.transpose.elements
         
-        var sdim: lapack_int = .zero
+        var sdim: Int = .zero
         var eigenValues: [Complex<Float>] = .init(repeating: .zero, count: A.rows)
         var schurVectors: [Complex<Float>] = .init(repeating: .zero, count: A.elements.count)
         

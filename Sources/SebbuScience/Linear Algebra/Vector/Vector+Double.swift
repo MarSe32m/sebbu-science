@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import RealModule
+import SebbuBLAS
 
 public extension Vector<Double> {
     @inlinable
@@ -64,7 +65,7 @@ public extension Vector<Double> {
     @inlinable
     @_transparent
     mutating func copyComponentsBLAS(from other: Self) {
-        BLAS.dcopy(count, other.components, 1, &components, 1)
+        BLAS.dcopy(n: count, x: other.components, incX: 1, y: &components, incY: 1)
     }
     
     @inlinable

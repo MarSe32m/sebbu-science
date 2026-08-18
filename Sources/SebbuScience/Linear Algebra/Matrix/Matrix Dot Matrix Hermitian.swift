@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
+import SebbuBLAS
 
 //MARK: Hermitian Matrix-Matrix multiplication for Complex<Double>
 public extension Matrix<Complex<Double>> {
@@ -81,100 +82,80 @@ public extension Matrix<Complex<Double>> {
 
     @inlinable
     func dot(hermitianSide: HermitianSide, _ other: Self, into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(hermitianSide: hermitianSide, other, into: &into)
-        } else {
-            _dot(other, into: &into)
-        }
+        _dot(other, into: &into)
     }
 
     @inlinable
     @_transparent
     func _dotBLAS(hermitianSide: HermitianSide, _ other: Self, into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = hermitianSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = hermitianSide == .left ? self : other
         let B = hermitianSide == .right ? self : other
         let m = A.rows, n = B.columns
         let alpha: T = .one
         let beta: T = .zero
         let lda = columns, ldb = n, ldc = n
-        BLAS.zhemm(order, side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.zhemm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: alpha, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 
     @inlinable
     func dot(hermitianSide: HermitianSide, _ other: Self, multiplied: T, into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(hermitianSide: hermitianSide, other, multiplied: multiplied, into: &into)
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
-        }
+        _dot(other, multiplied: multiplied, into: &into)
     }
     
     @inlinable
     @_transparent
     func _dotBLAS(hermitianSide: HermitianSide, _ other: Self, multiplied: T, into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = hermitianSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = hermitianSide == .left ? self : other
         let B = hermitianSide == .right ? self : other
         let m = A.rows, n = B.columns
         let beta: T = .zero
         let lda = columns, ldb = n, ldc = n
-        BLAS.zhemm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.zhemm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 
     @inlinable
     func dot(hermitianSide: HermitianSide, _ other: Self, addingInto into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(hermitianSide: hermitianSide, other, addingInto: &into)
-        } else {
-            _dot(other, addingInto: &into)
-        }
+        _dot(other, addingInto: &into)
     }
 
     @inlinable
     @_transparent
     func _dotBLAS(hermitianSide: HermitianSide, _ other: Self, addingInto into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = hermitianSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = hermitianSide == .left ? self : other
         let B = hermitianSide == .right ? self : other
         let m = A.rows, n = B.columns
         let alpha: T = .one
         let beta: T = .one
         let lda = columns, ldb = n, ldc = n
-        BLAS.zhemm(order, side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.zhemm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: alpha, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 
     @inlinable
     func dot(hermitianSide: HermitianSide, _ other: Self, multiplied: T, addingInto into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(hermitianSide: hermitianSide, other, multiplied: multiplied, addingInto: &into)
-        } else {
-            _dot(other, multiplied: multiplied, addingInto: &into)
-        }
+        _dot(other, multiplied: multiplied, addingInto: &into)
     }
 
     @inlinable
     @_transparent
     func _dotBLAS(hermitianSide: HermitianSide, _ other: Self, multiplied: T, addingInto into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = hermitianSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = hermitianSide == .left ? self : other
         let B = hermitianSide == .right ? self : other
         let m = A.rows, n = B.columns
         let beta: T = .one
         let lda = columns, ldb = n, ldc = n
-        BLAS.zhemm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.zhemm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 }
 
@@ -256,99 +237,79 @@ public extension Matrix<Complex<Float>> {
 
     @inlinable
     func dot(hermitianSide: HermitianSide, _ other: Self, into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(hermitianSide: hermitianSide, other, into: &into)
-        } else {
-            _dot(other, into: &into)
-        }
+        _dot(other, into: &into)
     }
 
     @inlinable
     @_transparent
     func _dotBLAS(hermitianSide: HermitianSide, _ other: Self, into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = hermitianSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = hermitianSide == .left ? self : other
         let B = hermitianSide == .right ? self : other
         let m = A.rows, n = B.columns
         let alpha: T = .one
         let beta: T = .zero
         let lda = columns, ldb = n, ldc = n
-        BLAS.chemm(order, side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.chemm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: alpha, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 
     @inlinable
     func dot(hermitianSide: HermitianSide, _ other: Self, multiplied: T, into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(hermitianSide: hermitianSide, other, multiplied: multiplied, into: &into)
-        } else {
-            _dot(other, multiplied: multiplied, into: &into)
-        }
+        _dot(other, multiplied: multiplied, into: &into)
     }
     
     @inlinable
     @_transparent
     func _dotBLAS(hermitianSide: HermitianSide, _ other: Self, multiplied: T, into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = hermitianSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = hermitianSide == .left ? self : other
         let B = hermitianSide == .right ? self : other
         let m = A.rows, n = B.columns
         let beta: T = .zero
         let lda = columns, ldb = n, ldc = n
-        BLAS.chemm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.chemm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 
     @inlinable
     func dot(hermitianSide: HermitianSide, _ other: Self, addingInto into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(hermitianSide: hermitianSide, other, addingInto: &into)
-        } else {
-            _dot(other, addingInto: &into)
-        }
+        _dot(other, addingInto: &into)
     }
 
     @inlinable
     @_transparent
     func _dotBLAS(hermitianSide: HermitianSide, _ other: Self, addingInto into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = hermitianSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = hermitianSide == .left ? self : other
         let B = hermitianSide == .right ? self : other
         let m = A.rows, n = B.columns
         let alpha: T = .one
         let beta: T = .one
         let lda = columns, ldb = n, ldc = n
-        BLAS.chemm(order, side, uplo, m, n, alpha, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.chemm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: alpha, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 
     @inlinable
     func dot(hermitianSide: HermitianSide, _ other: Self, multiplied: T, addingInto into: inout Self) {
-        if BLAS.isAvailable {
-            //TODO: Benchmark when to dispatch to BLAS
-            _dotBLAS(hermitianSide: hermitianSide, other, multiplied: multiplied, addingInto: &into)
-        } else {
-            _dot(other, multiplied: multiplied, addingInto: &into)
-        }
+        _dot(other, multiplied: multiplied, addingInto: &into)
     }
 
     @inlinable
     @_transparent
     func _dotBLAS(hermitianSide: HermitianSide, _ other: Self, multiplied: T, addingInto into: inout Self) {
-        let order: BLAS.Order = .rowMajor
+        let order: BLAS.Layout = .rowMajor
         let side: BLAS.Side = hermitianSide == .left ? .left : .right
-        let uplo: BLAS.UpLo = .upper
+        let uplo: BLAS.Triangle = .upper
         let A = hermitianSide == .left ? self : other
         let B = hermitianSide == .right ? self : other
         let m = A.rows, n = B.columns
         let beta: T = .one
         let lda = columns, ldb = n, ldc = n
-        BLAS.chemm(order, side, uplo, m, n, multiplied, A.elements, lda, B.elements, ldb, beta, &into.elements, ldc)
+        BLAS.chemm(layout: order, side: side, triangle: uplo, m: m, n: n, alpha: multiplied, a: A.elements, lda: lda, b: B.elements, ldb: ldb, beta: beta, c: &into.elements, ldc: ldc)
     }
 }
