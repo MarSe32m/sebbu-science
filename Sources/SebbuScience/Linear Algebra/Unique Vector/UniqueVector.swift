@@ -60,6 +60,32 @@ public struct UniqueVector<T: ~Copyable>: ~Copyable {
     }
     
     @inlinable
+    public init(copying span: borrowing Span<T>) where T: Copyable {
+        precondition(!span.isEmpty, "Cannot create a `UniqueVector` from an empty `Span`.")
+        let newComponents: UnsafeMutablePointer<T> = .allocate(capacity: span.count)
+        span.withUnsafeBufferPointer { buffer in
+            guard let baseAddress = buffer.baseAddress else {
+                fatalError("Buffer didn't have a baseaddress")
+            }
+            newComponents._unsafeCopy(from: baseAddress, count: buffer.count)
+        }
+        self.init(_unsafeComponents: newComponents, count: span.count)
+    }
+    
+    @inlinable
+    public init(copying span: borrowing MutableSpan<T>) where T: Copyable {
+        precondition(!span.isEmpty, "Cannot create a `UniqueVector` from an empty `MutableSpan`.")
+        let newComponents: UnsafeMutablePointer<T> = .allocate(capacity: span.count)
+        span.withUnsafeBufferPointer { buffer in
+            guard let baseAddress = buffer.baseAddress else {
+                fatalError("Buffer didn't have a baseaddress")
+            }
+            newComponents._unsafeCopy(from: baseAddress, count: buffer.count)
+        }
+        self.init(_unsafeComponents: newComponents, count: span.count)
+    }
+    
+    @inlinable
     @_disfavoredOverload
     public init(_unsafeComponents: consuming UnsafeMutablePointer<T>, count: Int) {
         self.components = _unsafeComponents
@@ -71,6 +97,13 @@ public struct UniqueVector<T: ~Copyable>: ~Copyable {
         self.count = count
         self.components = .allocate(capacity: count)
         try initializingElementsWith(.init(start: components, count: count))
+    }
+    
+    @inlinable
+    public init() {
+        //TODO: Is this going to crash?
+        self.count = 0
+        self.components = .init(bitPattern: 1)!
     }
     
     @inlinable
@@ -160,6 +193,7 @@ public struct UniqueVector<T: ~Copyable>: ~Copyable {
     
     @inlinable
     deinit {
+        if count == 0 { return }
         components.deinitialize(count: count)
         components.deallocate()
     }

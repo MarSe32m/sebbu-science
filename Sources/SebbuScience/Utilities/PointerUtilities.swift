@@ -239,4 +239,10 @@ extension UnsafeMutablePointer {
     func _unsafeCopy(from: Self, count: Int) {
         for i in 0..<count { self[i] = from[i] }
     }
+    
+    @inlinable
+    @inline(always)
+    func _unsafeCopy(from: UnsafePointer<Pointee>, count: Int) {
+        for i in 0..<count { self[i] = from[i] }
+    }
 }
