@@ -15,7 +15,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
         .package(url: "https://github.com/MarSe32m/sebbu-collections", from: "0.0.1"),
         .package(url: "https://github.com/MarSe32m/sebbu-blas", from: "0.2.0"),
-        .package(url: "https://github.com/MarSe32m/sebbu-copenblas", from: "0.3.34"),
+        .package(url: "https://github.com/MarSe32m/sebbu-lapack", from: "0.3.0"),
         .package(url: "https://github.com/MarSe32m/sebbu-cminpack", from: "1.3.14"),
         .package(url: "https://github.com/MarSe32m/sebbu-fft", from: "0.2.0"),
         .package(url: "https://github.com/MarSe32m/sebbu-python-kit", from: "0.0.1")
@@ -45,7 +45,7 @@ let package = Package(
                 .product(name: "Numerics", package: "swift-numerics"),
                 .product(name: "SebbuCollections", package: "sebbu-collections"),
                 .product(name: "SebbuBLAS", package: "sebbu-blas"),
-                .product(name: "COpenBLAS", package: "sebbu-copenblas", condition: .when(platforms: [.linux, .windows])),
+                .product(name: "SebbuLAPACK", package: "sebbu-lapack"),
                 .product(name: "CMinpack", package: "sebbu-cminpack"),
                 .product(name: "SebbuFFT", package: "sebbu-fft")
             ],

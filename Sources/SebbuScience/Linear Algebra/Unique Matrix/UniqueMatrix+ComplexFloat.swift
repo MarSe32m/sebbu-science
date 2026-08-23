@@ -1,13 +1,8 @@
 // Copyright (c) 2026 Sebastian Toivonen
 // SPDX-License-Identifier: Apache-2.0
 
-#if canImport(COpenBLAS)
-import COpenBLAS
-#elseif canImport(Accelerate)
-import Accelerate
-#endif
-
 import SebbuBLAS
+import SebbuLAPACK
 
 import RealModule
 import ComplexModule
@@ -19,57 +14,15 @@ public extension UniqueMatrix<Complex<Float>> {
     /// Thus you should store the inverse if you need it later again.
     @inlinable
     var inverse: Self? {
-        if rows != columns { return nil }
-        #if canImport(COpenBLAS)
-        var a: UniqueMatrix<Complex<Float>> = .init(copying: self)
-        var m = rows
-        var lda = columns
-        var ipiv: [Int32] = .init(repeating: .zero, count: m)
-        var info = LAPACKE_cgetrf(LAPACK_ROW_MAJOR, .init(m), .init(m), .init(a.elements), .init(lda), &ipiv)
+        if isSquare { return nil }
+        let a: UniqueMatrix<Complex<Float>> = .init(copying: self)
+        let N = rows
+        var ipiv: [Int] = .init(repeating: .zero, count: N)
+        var info = LAPACK.cgetrf(layout: .rowMajor, m: N, n: N, a: a.elements, lda: N, ipiv: &ipiv)
         if info != 0 { return nil }
-        info = LAPACKE_cgetri(LAPACK_ROW_MAJOR, .init(m), .init(a.elements), .init(lda), ipiv)
+        info = LAPACK.cgetri(layout: .rowMajor, n: N, a: a.elements, lda: N, ipiv: ipiv)
         if info != 0 { return nil }
         return a
-        #elseif canImport(Accelerate)
-        var m = rows
-        var n = columns
-        var lda = rows
-        var info = 0
-        return withUnsafeTemporaryAllocation(of: Complex<Float>.self, capacity: count) { a in
-            var index = 0
-            for j in 0..<columns {
-                for i in 0..<rows {
-                    a[index] = self[i, j]
-                    index += 1
-                }
-            }
-            return withUnsafeTemporaryAllocation(of: Int.self, capacity: Swift.min(m, n)) { ipiv in
-                for i in 0..<Swift.min(m, n) { ipiv[i] = .zero }
-                cgetrf_(&m, &n, OpaquePointer(a.baseAddress), &lda, ipiv.baseAddress, &info)
-                if info != 0 { return nil }
-                var work: Complex<Float> = .zero
-                var lwork = -1
-                withUnsafeMutablePointer(to: &work) { work in
-                    cgetri_(&n, .init(a.baseAddress), &lda, ipiv.baseAddress, .init(work), &lwork, &info)
-                }
-                if info != 0 { return nil }
-                lwork = Int(work.real)
-                withUnsafeTemporaryAllocation(of: Complex<Float>.self, capacity: lwork) { work in
-                    cgetri_(&n, .init(a.baseAddress), &lda, ipiv.baseAddress, .init(work.baseAddress!), &lwork, &info)
-                }
-                if info != 0 { return nil }
-                return .init(rows: rows, columns: columns) { buffer in
-                    for i in 0..<rows {
-                        for j in 0..<columns {
-                            buffer[i * n + j] = a[j * n + i]
-                        }
-                    }
-                }
-            }
-        }
-        #else
-        fatalError("Default implementation not yet implemented")
-        #endif
     }
     
     @inlinable
@@ -98,6 +51,30 @@ public extension UniqueMatrix<Complex<Float>> {
 }
 
 public extension MatrixOperations {
+    /// Diagonalizes a Hermitian matrix in place.
+    ///
+    /// On return, the columns of `A` contain the orthonormal eigenvectors and
+    /// the returned eigenvalues are in ascending order. LAPACK only reads the
+    /// upper triangle of `A`.
+    ///
+    /// This overload is useful for large temporary matrices because it avoids
+    /// copying a `UniqueMatrix` through the copyable `Matrix` representation.
+    ///
+    /// - Parameter A: The Hermitian matrix to diagonalize. It is overwritten
+    ///   by its eigenvectors.
+    /// - Returns: The eigenvalues in ascending order.
+    /// - Throws: ``MatrixOperationError`` if LAPACK reports a failure.
+    static func diagonalizeHermitianInPlace(
+        _ A: inout UniqueMatrix<Complex<Float>>
+    ) throws -> [Float] {
+        precondition(A.isSquare, "Diagonalization requires a square matrix")
+        let N = A.rows
+        var eigenValues: [Float] = .init(repeating: .zero, count: N)
+        let info = LAPACK.cheev(layout: .rowMajor, job: .vectors, triangle: .upper, n: N, a: A.elements, lda: N, w: &eigenValues)
+        if info != 0 { throw MatrixOperationError.info(info) }
+        return eigenValues
+    }
+    
     /// Diagonalizes the given hermitian matrix, i.e., computes it's eigenvalues and eigenvectors.
     /// - Parameters:
     ///   - A: Symmteric matrix with a column-major layout. Only the lower triangular needs to be filled in.

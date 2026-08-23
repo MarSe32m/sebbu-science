@@ -1,13 +1,8 @@
 // Copyright (c) 2026 Sebastian Toivonen
 // SPDX-License-Identifier: Apache-2.0
 
-#if canImport(COpenBLAS)
-import COpenBLAS
-#elseif canImport(Accelerate)
-import Accelerate
-#endif
-
 import SebbuBLAS
+import SebbuLAPACK
 
 import RealModule
 import ComplexModule
@@ -18,52 +13,15 @@ public extension UniqueMatrix<Double> {
     /// Thus you should store the inverse if you need it later again.
     //@inlinable
     var inverse: Self? {
-        if rows != columns { return nil }
-        #if canImport(COpenBLAS)
-        var a: UniqueMatrix<Double> = .init(copying: self)
-        var m = rows
-        var lda = columns
-        var ipiv: [Int32] = .init(repeating: .zero, count: m)
-        var info = LAPACKE_dgetrf(LAPACK_ROW_MAJOR, .init(m), .init(m), a.elements, .init(lda), &ipiv)
+        if isSquare { return nil }
+        let a: UniqueMatrix<Double> = .init(copying: self)
+        let N = rows
+        var ipiv: [Int] = .init(repeating: .zero, count: N)
+        var info = LAPACK.dgetrf(layout: .rowMajor, m: N, n: N, a: a.elements, lda: N, ipiv: &ipiv)
         if info != 0 { return nil }
-        info = LAPACKE_dgetri(LAPACK_ROW_MAJOR, .init(m), a.elements, .init(lda), ipiv)
+        info = LAPACK.dgetri(layout: .rowMajor, n: N, a: a.elements, lda: N, ipiv: ipiv)
         if info != 0 { return nil }
         return a
-        #elseif canImport(Accelerate)
-        var a: [Double] = []
-        a.reserveCapacity(count)
-        for j in 0..<columns {
-            for i in 0..<rows {
-                a.append(self[i, j])
-            }
-        }
-        var m = rows
-        var n = columns
-        var lda = rows
-        var ipiv: [Int] = .init(repeating: .zero, count: Swift.min(m, n))
-        var info = 0
-        dgetrf_(&m, &n, &a, &lda, &ipiv, &info)
-        if info != 0 { return nil }
-        
-        var work: [Double] = [.zero]
-        var lwork = -1
-        
-        dgetri_(&n, &a, &lda, &ipiv, &work, &lwork, &info)
-        if info != 0 { return nil }
-        lwork = Int(work[0])
-        work = .init(repeating: .zero, count: lwork)
-        dgetri_(&n, &a, &lda, &ipiv, &work, &lwork, &info)
-        if info != 0 { return nil }
-        return .init(rows: rows, columns: columns) { buffer in
-            for i in 0..<rows {
-                for j in 0..<columns {
-                    buffer[i * n + j] = a[j * n + i]
-                }
-            }
-        }
-#else
-        fatalError("TODO: Not yet implemented")
-#endif
     }
     
     @inlinable
@@ -94,6 +52,30 @@ public extension UniqueMatrix<Double> {
 }
 
 public extension MatrixOperations {
+    /// Diagonalizes a symmetric matrix in place.
+    ///
+    /// On return, the columns of `A` contain the orthonormal eigenvectors and
+    /// the returned eigenvalues are in ascending order. LAPACK only reads the
+    /// upper triangle of `A`.
+    ///
+    /// This overload is useful for large temporary matrices because it avoids
+    /// copying a `UniqueMatrix` through the copyable `Matrix` representation.
+    ///
+    /// - Parameter A: The symmetric matrix to diagonalize. It is overwritten
+    ///   by its eigenvectors.
+    /// - Returns: The eigenvalues in ascending order.
+    /// - Throws: ``MatrixOperationError`` if LAPACK reports a failure.
+    static func diagonalizeSymmetricInPlace(
+        _ A: inout UniqueMatrix<Double>
+    ) throws -> [Double] {
+        precondition(A.isSquare, "Diagonalization requires a square matrix")
+        let N = A.rows
+        var eigenValues: [Double] = .init(repeating: .zero, count: N)
+        let info = LAPACK.dsyev(layout: .rowMajor, job: .vectors, triangle: .upper, n: N, a: A.elements, lda: N, w: &eigenValues)
+        if info != 0 { throw MatrixOperationError.info(info) }
+        return eigenValues
+    }
+    
     /// Diagonalizes the given symmetric matrix, i.e., computes it's eigenvalues and eigenvectors
     /// - Parameters:
     ///   - A: Symmteric matrix with a column-major layout. Only the lower triangular needs to be filled in.

@@ -6,6 +6,7 @@ import ComplexModule
 import SebbuCollections
 import NumericsExtensions
 
+//TODO: Get rid of this
 import Foundation
 
 public enum MatrixOperations {

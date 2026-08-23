@@ -1,13 +1,8 @@
 // Copyright (c) 2026 Sebastian Toivonen
 // SPDX-License-Identifier: Apache-2.0
 
-#if canImport(COpenBLAS)
-import COpenBLAS
-#elseif canImport(Accelerate)
-import Accelerate
-#endif
-
 import SebbuBLAS
+import SebbuLAPACK
 
 import RealModule
 import ComplexModule
@@ -19,57 +14,15 @@ public extension UniqueMatrix<Complex<Double>> {
     /// Thus you should store the inverse if you need it later again.
     @inlinable
     var inverse: Self? {
-        if rows != columns { return nil }
-        #if canImport(COpenBLAS)
-        var a: UniqueMatrix<Complex<Double>> = .init(copying: self)
-        var m = rows
-        var lda = columns
-        var ipiv: [Int32] = .init(repeating: .zero, count: m)
-        var info = LAPACKE_zgetrf(LAPACK_ROW_MAJOR, .init(m), .init(m), .init(a.elements), .init(lda), &ipiv)
+        if isSquare { return nil }
+        let a: UniqueMatrix<Complex<Double>> = .init(copying: self)
+        let N = rows
+        var ipiv: [Int] = .init(repeating: .zero, count: N)
+        var info = LAPACK.zgetrf(layout: .rowMajor, m: N, n: N, a: a.elements, lda: N, ipiv: &ipiv)
         if info != 0 { return nil }
-        info = LAPACKE_zgetri(LAPACK_ROW_MAJOR, .init(m), .init(a.elements), .init(lda), ipiv)
+        info = LAPACK.zgetri(layout: .rowMajor, n: N, a: a.elements, lda: N, ipiv: ipiv)
         if info != 0 { return nil }
         return a
-        #elseif canImport(Accelerate)
-        var m = rows
-        var n = columns
-        var lda = rows
-        var info = 0
-        return withUnsafeTemporaryAllocation(of: Complex<Double>.self, capacity: count) { a in
-            var index = 0
-            for j in 0..<columns {
-                for i in 0..<rows {
-                    a[index] = self[i, j]
-                    index += 1
-                }
-            }
-            return withUnsafeTemporaryAllocation(of: Int.self, capacity: Swift.min(m, n)) { ipiv in
-                for i in 0..<Swift.min(m, n) { ipiv[i] = .zero }
-                zgetrf_(&m, &n, OpaquePointer(a.baseAddress), &lda, ipiv.baseAddress, &info)
-                if info != 0 { return nil }
-                var work: Complex<Double> = .zero
-                var lwork = -1
-                withUnsafeMutablePointer(to: &work) { work in
-                    zgetri_(&n, .init(a.baseAddress), &lda, ipiv.baseAddress, .init(work), &lwork, &info)
-                }
-                if info != 0 { return nil }
-                lwork = Int(work.real)
-                withUnsafeTemporaryAllocation(of: Complex<Double>.self, capacity: lwork) { work in
-                    zgetri_(&n, .init(a.baseAddress), &lda, ipiv.baseAddress, .init(work.baseAddress!), &lwork, &info)
-                }
-                if info != 0 { return nil }
-                return .init(rows: rows, columns: columns) { buffer in
-                    for i in 0..<rows {
-                        for j in 0..<columns {
-                            buffer[i * n + j] = a[j * n + i]
-                        }
-                    }
-                }
-            }
-        }
-        #else
-        fatalError("Default implementation not yet implemented")
-        #endif
     }
     
     @inlinable
@@ -106,8 +59,6 @@ public extension MatrixOperations {
     ///
     /// This overload is useful for large temporary matrices because it avoids
     /// copying a `UniqueMatrix` through the copyable `Matrix` representation.
-    /// Row-major LAPACKE backends operate on its storage directly; Accelerate
-    /// uses the column-major workspace required by its Fortran interface.
     ///
     /// - Parameter A: The Hermitian matrix to diagonalize. It is overwritten
     ///   by its eigenvectors.
@@ -116,103 +67,12 @@ public extension MatrixOperations {
     static func diagonalizeHermitianInPlace(
         _ A: inout UniqueMatrix<Complex<Double>>
     ) throws -> [Double] {
-        precondition(A.rows == A.columns)
-
-        #if canImport(COpenBLAS)
-        let n = A.rows
-        var eigenValues = [Double](repeating: .zero, count: n)
-        let vectors = Int8(bitPattern: UInt8(ascii: "V"))
-        let upperTriangle = Int8(bitPattern: UInt8(ascii: "U"))
-        let info = LAPACKE_zheevd(
-            LAPACK_ROW_MAJOR,
-            vectors,
-            upperTriangle,
-            .init(n),
-            .init(A.elements),
-            .init(n),
-            &eigenValues
-        )
-        if info != 0 { throw MatrixOperationError.info(Int(info)) }
-        return eigenValues
-        #elseif canImport(Accelerate)
-        let dimension = A.rows
-        var n = dimension
-        var lda = dimension
-        var eigenValues = [Double](repeating: .zero, count: dimension)
-        var columnMajor = [Complex<Double>](repeating: .zero, count: dimension * dimension)
-
-        for column in 0..<dimension {
-            for row in 0..<dimension {
-                columnMajor[column * dimension + row] = A[row, column]
-            }
-        }
-
-        var work = [Complex<Double>](repeating: .zero, count: 1)
-        var lwork = -1
-        var realWork = [Double](repeating: .zero, count: 1)
-        var lrwork = -1
-        var integerWork = [Int](repeating: .zero, count: 1)
-        var liwork = -1
-        var info = 0
-
-        columnMajor.withUnsafeMutableBufferPointer { matrix in
-            work.withUnsafeMutableBufferPointer { work in
-                zheevd_(
-                    "V",
-                    "U",
-                    &n,
-                    OpaquePointer(matrix.baseAddress),
-                    &lda,
-                    &eigenValues,
-                    OpaquePointer(work.baseAddress!),
-                    &lwork,
-                    &realWork,
-                    &lrwork,
-                    &integerWork,
-                    &liwork,
-                    &info
-                )
-            }
-        }
+        precondition(A.isSquare, "Diagonalization requires a square matrix")
+        let N = A.rows
+        var eigenValues: [Double] = .init(repeating: .zero, count: N)
+        let info = LAPACK.zheev(layout: .rowMajor, job: .vectors, triangle: .upper, n: N, a: A.elements, lda: N, w: &eigenValues)
         if info != 0 { throw MatrixOperationError.info(info) }
-
-        lwork = Int(work[0].real)
-        lrwork = Int(realWork[0])
-        liwork = integerWork[0]
-        work = [Complex<Double>](repeating: .zero, count: lwork)
-        realWork = [Double](repeating: .zero, count: lrwork)
-        integerWork = [Int](repeating: .zero, count: liwork)
-
-        columnMajor.withUnsafeMutableBufferPointer { matrix in
-            work.withUnsafeMutableBufferPointer { work in
-                zheevd_(
-                    "V",
-                    "U",
-                    &n,
-                    OpaquePointer(matrix.baseAddress),
-                    &lda,
-                    &eigenValues,
-                    OpaquePointer(work.baseAddress!),
-                    &lwork,
-                    &realWork,
-                    &lrwork,
-                    &integerWork,
-                    &liwork,
-                    &info
-                )
-            }
-        }
-        if info != 0 { throw MatrixOperationError.info(info) }
-
-        for column in 0..<dimension {
-            for row in 0..<dimension {
-                A[row, column] = columnMajor[column * dimension + row]
-            }
-        }
         return eigenValues
-        #else
-        fatalError("No LAPACK implementation is available")
-        #endif
     }
 
     /// Diagonalizes the given hermitian matrix, i.e., computes it's eigenvalues and eigenvectors.
