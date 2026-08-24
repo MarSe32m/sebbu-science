@@ -167,6 +167,14 @@ public struct UniqueMatrix<T: ~Copyable>: ~Copyable {
     }
 }
 
+public extension UniqueMatrix {
+    @inlinable
+    mutating func copyElements(from other: Matrix<T>) where T: Copyable {
+        precondition(count == other.elements.count)
+        elements._unsafeCopy(from: other.elements, count: count)
+    }
+}
+
 public extension UniqueMatrix where T: Copyable {
     @inlinable
     var transpose: Self {

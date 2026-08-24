@@ -48,6 +48,11 @@ public extension UniqueMatrix<Complex<Float>> {
     mutating func copyElementsBLAS(from other: borrowing Self) {
         BLAS.ccopy(n: count, x: other.elements, incX: 1, y: elements, incY: 1)
     }
+    
+    @inlinable
+    mutating func copyElementsBLAS(from other: Matrix<Complex<Float>>) {
+        BLAS.ccopy(n: count, x: other.elements, incX: 1, y: elements, incY: 1)
+    }
 }
 
 public extension MatrixOperations {

@@ -156,6 +156,51 @@ public extension UniqueMatrix where T: AlgebraicField {
     }
 }
 
+// MARK: Interoperability with Matrix
+public extension UniqueMatrix where T: AlgebraicField {
+    @inlinable
+    mutating func copyElements(from other: Matrix<T>, adding: borrowing Self, multiplied: T) {
+        precondition(count == other.elements.count && count == adding.count, "The matrices must have the same size.")
+        elements._unsafeCopy(from: other.elements, adding: adding.elements, multiplied: multiplied, count: count)
+    }
+    
+    @inlinable
+    mutating func copyElements(from other: borrowing Self, adding: Matrix<T>, multiplied: T) {
+        precondition(count == other.count && count == adding.elements.count, "The matrices must have the same size.")
+        elements._unsafeCopy(from: other.elements, adding: adding.elements, multiplied: multiplied, count: count)
+    }
+    
+    @inlinable
+    mutating func copyElements(from other: Matrix<T>, adding: Matrix<T>, multiplied: T) {
+        precondition(count == other.elements.count && count == adding.elements.count, "The matrices must have the same size.")
+        elements._unsafeCopy(from: other.elements, adding: adding.elements, multiplied: multiplied, count: count)
+    }
+    
+    @inlinable
+    mutating func copyElements(from other: Matrix<T>, adding: borrowing Self) {
+        precondition(count == other.elements.count && count == adding.count, "The matrices must have the same size.")
+        elements._unsafeCopy(from: other.elements, adding: adding.elements, count: count)
+    }
+    
+    @inlinable
+    mutating func copyElements(from other: borrowing Self, adding: Matrix<T>) {
+        precondition(count == other.count && count == adding.elements.count, "The matrices must have the same size.")
+        elements._unsafeCopy(from: other.elements, adding: adding.elements, count: count)
+    }
+    
+    @inlinable
+    mutating func copyElements(from other: Matrix<T>, adding: Matrix<T>) {
+        precondition(count == other.elements.count && count == adding.elements.count, "The matrices must have the same size.")
+        elements._unsafeCopy(from: other.elements, adding: adding.elements, count: count)
+    }
+    
+    @inlinable
+    mutating func copyElements(from other: Matrix<T>, multiplied: T) {
+        precondition(count == other.elements.count, "The matrices must have the same size")
+        elements._unsafeCopy(from: other.elements, multiplied: multiplied, count: count)
+    }
+}
+
 public extension UniqueMatrix where T: Real {
     @inlinable
     var conjugateTranspose: Self {

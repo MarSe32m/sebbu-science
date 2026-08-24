@@ -24,7 +24,17 @@ public extension UniqueMatrix where T: AlgebraicField {
     }
     
     @inlinable
+    mutating func subtract(_ other: Matrix<T>, multiplied: T) {
+        elements._unsafeSubtract(other.elements, multiplied: multiplied, count: count)
+    }
+    
+    @inlinable
     mutating func subtract(_ other: borrowing Self) {
+        elements._unsafeSubtract(other.elements, count: count)
+    }
+    
+    @inlinable
+    mutating func subtract(_ other: Matrix<T>) {
         elements._unsafeSubtract(other.elements, count: count)
     }
 }
@@ -35,12 +45,22 @@ public extension UniqueMatrix<Double> {
     mutating func subtractBLAS(_ other: borrowing Self, multiplied: T = 1.0) {
         BLAS.daxpy(n: count, alpha: -multiplied, x: other.elements, incX: 1, y: elements, incY: 1)
     }
+    
+    @inlinable
+    mutating func subtractBLAS(_ other: Matrix<T>, multiplied: T = 1.0) {
+        BLAS.daxpy(n: count, alpha: -multiplied, x: other.elements, incX: 1, y: elements, incY: 1)
+    }
 }
 
 //MARK: Addition for Float
 public extension UniqueMatrix<Float> {
     @inlinable
     mutating func subtractBLAS(_ other: borrowing Self, multiplied: T = 1.0) {
+        BLAS.saxpy(n: count, alpha: -multiplied, x: other.elements, incX: 1, y: elements, incY: 1)
+    }
+    
+    @inlinable
+    mutating func subtractBLAS(_ other: Matrix<T>, multiplied: T = 1.0) {
         BLAS.saxpy(n: count, alpha: -multiplied, x: other.elements, incX: 1, y: elements, incY: 1)
     }
 }
@@ -53,12 +73,27 @@ public extension UniqueMatrix<Complex<Double>> {
     }
     
     @inlinable
+    mutating func subtract(_ other: Matrix<T>, multiplied: Double) {
+        elements._unsafeSubtract(other.elements, multiplied: multiplied, count: count)
+    }
+    
+    @inlinable
     mutating func subtractBLAS(_ other: borrowing Self, multiplied: T = .one) {
         BLAS.zaxpy(n: count, alpha: -multiplied, x: other.elements, incX: 1, y: elements, incY: 1)
     }
     
     @inlinable
+    mutating func subtractBLAS(_ other: Matrix<T>, multiplied: T = .one) {
+        BLAS.zaxpy(n: count, alpha: -multiplied, x: other.elements, incX: 1, y: elements, incY: 1)
+    }
+    
+    @inlinable
     mutating func subtractBLAS(_ other: borrowing Self, multiplied: Double) {
+        BLAS.zaxpy(n: count, alpha: -Complex(multiplied), x: other.elements, incX: 1, y: elements, incY: 1)
+    }
+    
+    @inlinable
+    mutating func subtractBLAS(_ other: Matrix<T>, multiplied: Double) {
         BLAS.zaxpy(n: count, alpha: -Complex(multiplied), x: other.elements, incX: 1, y: elements, incY: 1)
     }
 }
@@ -71,12 +106,27 @@ public extension UniqueMatrix<Complex<Float>> {
     }
     
     @inlinable
+    mutating func subtract(_ other: Matrix<T>, multiplied: Float) {
+        elements._unsafeSubtract(other.elements, multiplied: multiplied, count: count)
+    }
+    
+    @inlinable
     mutating func subtractBLAS(_ other: borrowing Self, multiplied: T = .one) {
         BLAS.caxpy(n: count, alpha: -multiplied, x: other.elements, incX: 1, y: elements, incY: 1)
     }
     
     @inlinable
+    mutating func subtractBLAS(_ other: Matrix<T>, multiplied: T = .one) {
+        BLAS.caxpy(n: count, alpha: -multiplied, x: other.elements, incX: 1, y: elements, incY: 1)
+    }
+    
+    @inlinable
     mutating func subtractBLAS(_ other: borrowing Self, multiplied: Float) {
+        BLAS.caxpy(n: count, alpha: -Complex(multiplied), x: other.elements, incX: 1, y: elements, incY: 1)
+    }
+    
+    @inlinable
+    mutating func subtractBLAS(_ other: Matrix<T>, multiplied: Float) {
         BLAS.caxpy(n: count, alpha: -Complex(multiplied), x: other.elements, incX: 1, y: elements, incY: 1)
     }
 }
