@@ -39,6 +39,8 @@ public extension RandomNumberGenerator {
     /// Generates a random value from a normal distribution with given mean and standard deviation using the Box-Muller transformation.
     /// - Parameter mean: The mean of the distribution.
     /// - Parameter stdev: The standard deviation of the distribution.
+    @inlinable
+    @inline(always)
     mutating func nextNormal(mean: Double = 0.0, stdev: Double = 1.0) -> Double {
         nextGaussian().0 * stdev + mean
     }
@@ -46,6 +48,8 @@ public extension RandomNumberGenerator {
     /// Generates a random value from a normal distribution with given mean and standard deviation using the Box-Muller transformation.
     /// - Parameter mean: The mean of the distribution.
     /// - Parameter stdev: The standard deviation of the distribution.
+    @inlinable
+    @inline(always)
     mutating func nextNormal(mean: Float = 0.0, stdev: Float = 1.0) -> Float {
         Float(nextGaussian().0) * stdev + mean
     }
@@ -53,23 +57,47 @@ public extension RandomNumberGenerator {
     /// Generates a random value from a normal distribution with given mean and standard deviation using the Box-Muller transformation.
     /// - Parameter mean: The mean of the distribution.
     /// - Parameter stdev: The standard deviation of the distribution.
+    @inlinable
+    @inline(always)
     mutating func nextNormal(mean: Double = 0.0, stdev: Double = 1.0) -> Complex<Double> {
-        let gaussian = nextGaussian()
-        return Complex(gaussian.0 * stdev + mean, gaussian.1 * stdev + mean)
+        return nextNormal(mean: Complex(mean, 0), stdev: stdev)
     }
     
     /// Generates a random value from a normal distribution with given mean and standard deviation using the Box-Muller transformation.
     /// - Parameter mean: The mean of the distribution.
     /// - Parameter stdev: The standard deviation of the distribution.
-    mutating func nextNormal(mean: Float = 0.0, stdev: Float = 1.0) -> Complex<Float> {
+    @inlinable
+    @inline(always)
+    mutating func nextNormal(mean: Complex<Double>, stdev: Double = 1.0) -> Complex<Double> {
         let gaussian = nextGaussian()
-        return Complex(Float(gaussian.0), Float(gaussian.1))
+        return Complex(gaussian.0 * stdev, gaussian.1 * stdev) + mean
+    }
+    
+    /// Generates a random value from a normal distribution with given mean and standard deviation using the Box-Muller transformation.
+    /// - Parameter mean: The mean of the distribution.
+    /// - Parameter stdev: The standard deviation of the distribution.
+    @inlinable
+    @inline(always)
+    mutating func nextNormal(mean: Float = 0.0, stdev: Float = 1.0) -> Complex<Float> {
+        return nextNormal(mean: Complex(mean), stdev: stdev)
+    }
+    
+    /// Generates a random value from a normal distribution with given mean and standard deviation using the Box-Muller transformation.
+    /// - Parameter mean: The mean of the distribution.
+    /// - Parameter stdev: The standard deviation of the distribution.
+    @inlinable
+    @inline(always)
+    mutating func nextNormal(mean: Complex<Float>, stdev: Float = 1.0) -> Complex<Float> {
+        let gaussian = nextGaussian()
+        return Complex(Float(gaussian.0) * stdev, Float(gaussian.1) * stdev) + mean
     }
 
     /// Generates an array of random values from a normal distribution with given mean and standard deviation using the Box-Muller transformation.
     /// - Parameter count: The number of values to generate
     /// - Parameter mean: The mean of the distribution where the values are drawn from.
     /// - Parameter stdev: The standard deviation of the distribution where the values are drawn from.
+    @inlinable
+    @inline(always)
     mutating func nextNormal(count: Int, mean: Double = 0.0, stdev: Double = 1.0) -> [Double] {
         nextGaussian(count: count).map { $0 * stdev + mean }
     }
@@ -78,6 +106,8 @@ public extension RandomNumberGenerator {
     /// - Parameter count: The number of values to generate
     /// - Parameter mean: The mean of the distribution where the values are drawn from.
     /// - Parameter stdev: The standard deviation of the distribution where the values are drawn from.
+    @inlinable
+    @inline(always)
     mutating func nextNormal(count: Int, mean: Float = 0.0, stdev: Float = 1.0) -> [Float] {
         (nextNormal(count: count, mean: Double(mean), stdev: Double(stdev)) as [Double]).map { Float($0) }
     }
@@ -86,6 +116,8 @@ public extension RandomNumberGenerator {
     /// - Parameter count: The number of values to generate
     /// - Parameter mean: The mean of the distribution where the values are drawn from.
     /// - Parameter stdev: The standard deviation of the distribution where the values are drawn from.
+    @inlinable
+    @inline(always)
     mutating func nextNormal(count: Int, mean: Double = 0.0, stdev: Double = 1.0) -> [Complex<Double>] {
         let reals: [Double] = nextNormal(count: 2 * count, mean: mean, stdev: stdev)
         return (0..<count).map { Complex(reals[2 * $0], reals[2 * $0 + 1]) }
@@ -95,9 +127,33 @@ public extension RandomNumberGenerator {
     /// - Parameter count: The number of values to generate
     /// - Parameter mean: The mean of the distribution where the values are drawn from.
     /// - Parameter stdev: The standard deviation of the distribution where the values are drawn from.
+    @inlinable
+    @inline(always)
+    mutating func nextNormal(count: Int, mean: Complex<Double>, stdev: Double = 1.0) -> [Complex<Double>] {
+        let reals: [Double] = nextNormal(count: 2 * count, stdev: stdev)
+        return (0..<count).map { Complex(reals[2 * $0], reals[2 * $0 + 1]) + mean }
+    }
+    
+    /// Generates an array of random values from a normal distribution with given mean and standard deviation using the Box-Muller transformation.
+    /// - Parameter count: The number of values to generate
+    /// - Parameter mean: The mean of the distribution where the values are drawn from.
+    /// - Parameter stdev: The standard deviation of the distribution where the values are drawn from.
+    @inlinable
+    @inline(always)
     mutating func nextNormal(count: Int, mean: Float = 0.0, stdev: Float = 1.0) -> [Complex<Float>] {
         let reals: [Float] = nextNormal(count: count * 2, mean: mean, stdev: stdev)
         return (0..<count).map { Complex(reals[2 * $0], reals[2 * $0 + 1]) }
+    }
+    
+    /// Generates an array of random values from a normal distribution with given mean and standard deviation using the Box-Muller transformation.
+    /// - Parameter count: The number of values to generate
+    /// - Parameter mean: The mean of the distribution where the values are drawn from.
+    /// - Parameter stdev: The standard deviation of the distribution where the values are drawn from.
+    @inlinable
+    @inline(always)
+    mutating func nextNormal(count: Int, mean: Complex<Float>, stdev: Float = 1.0) -> [Complex<Float>] {
+        let reals: [Float] = nextNormal(count: count * 2, stdev: stdev)
+        return (0..<count).map { Complex(reals[2 * $0], reals[2 * $0 + 1]) + mean }
     }
 }
 
