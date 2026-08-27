@@ -14,3 +14,15 @@ linkerSettings: [
     .linkedFramework("Accelerate", .when(platforms: [.macOS]))
 ]
 ```
+
+## Credits
+
+`UniqueVerner76Solver` uses the Runge--Kutta 7(6) pair and sixth-order
+interpolant coefficients developed and copyrighted by James H. Verner. They
+are used here with the acknowledgment required by their source. The corrected
+coefficient set `RKV76.IIa.Efficient.000003389335684.240711` is published as
+*An even more “efficient” Runge--Kutta (7)6 Pair with Interpolants* at [Jim
+Verner's Refuge for Runge-Kutta Pairs](https://www.sfu.ca/~jverner/). See also
+J. H. Verner, *Numerically optimal Runge--Kutta pairs with interpolants*,
+Numerical Algorithms 53 (2010), 383--396,
+[doi:10.1007/s11075-009-9290-3](https://doi.org/10.1007/s11075-009-9290-3).
