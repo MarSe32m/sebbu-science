@@ -178,12 +178,10 @@ struct UniqueODESolverTests {
         do {
             _ = try solver.step(y: &state)
             Issue.record("A non-finite trial was unexpectedly accepted")
-        } catch let error as ODESolverError {
+        } catch {
             #expect(
                 error == .maximumStepAttemptsExceeded(time: 0, attempts: 3)
             )
-        } catch {
-            Issue.record("Unexpected error: \(error)")
         }
 
         #expect(state.value == 1)

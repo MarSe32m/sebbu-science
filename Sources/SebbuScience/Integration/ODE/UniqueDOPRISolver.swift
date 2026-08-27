@@ -150,7 +150,10 @@ public struct UniqueDOPRISolver<
     public mutating func step(
         y: inout State,
         upTo endTime: Double = .infinity
-    ) throws -> ODEStep {
+    ) throws(ODESolverError) -> ODEStep {
+        if endTime <= t {
+            throw ODESolverError.requestedEndTimeReached(endTime: endTime, solverTime: t)
+        }
         precondition(endTime > t, "The step bound must be later than the current time")
         precondition(dt.isFinite && dt > .zero, "Proposed time-step must be positive and finite")
         precondition(maxStep > .zero, "Maximum time-step must be positive")

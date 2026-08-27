@@ -7,6 +7,7 @@ public typealias ODEStep = IntegrationStep
 /// Failures which prevent an adaptive solver from producing an accepted step.
 @frozen
 public enum ODESolverError: Error, Equatable, Sendable {
+    case requestedEndTimeReached(endTime: Double, solverTime: Double)
     case stepSizeUnderflow(time: Double, stepSize: Double)
     case maximumStepAttemptsExceeded(time: Double, attempts: Int)
 }
