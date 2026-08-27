@@ -447,8 +447,8 @@ public struct UniqueDOPRISolver<
         _rhsEvaluationCount = 0
     }
 
-    @usableFromInline
-    @inline(__always)
+    @inlinable
+    @inline(always)
     internal static func denseOutputWeights(
         at theta: Double
     ) -> (b1: Double, b3: Double, b4: Double, b5: Double, b6: Double, b7: Double) {
@@ -581,5 +581,33 @@ public struct UniqueDOPRISolver<
         }
 
         return 0.5 * (lowerTime + upperTime)
+    }
+    
+    /// Evaluates a linear complex functional of the dense output without
+    /// constructing an interpolated state.
+    @inlinable
+    public func interpolateLastStep<Functional: ODEStateComplexLinearFunctional>(
+        at time: Double,
+        linearFunctional: borrowing Functional
+    ) -> Complex<Double> where Functional.State == State {
+        guard let lastStep = _lastStep else {
+            preconditionFailure("Dense output is unavailable before an accepted step")
+        }
+        precondition(
+            time >= lastStep.startTime && time <= lastStep.endTime,
+            "Dense-output time lies outside the last accepted step"
+        )
+
+        let theta = (time - lastStep.startTime) / lastStep.stepSize
+        let weights = Self.denseOutputWeights(at: theta)
+        
+        var accumulator: Complex<Double> = .zero
+        accumulator += weights.b1 * linearFunctional.evaluate(k1)
+        accumulator += weights.b3 * linearFunctional.evaluate(k3)
+        accumulator += weights.b4 * linearFunctional.evaluate(k4)
+        accumulator += weights.b5 * linearFunctional.evaluate(k5)
+        accumulator += weights.b6 * linearFunctional.evaluate(k6)
+        accumulator += weights.b7 * linearFunctional.evaluate(k7)
+        return linearFunctional.evaluate(y4) + lastStep.stepSize * accumulator
     }
 }

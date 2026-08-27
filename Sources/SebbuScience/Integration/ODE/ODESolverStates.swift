@@ -90,6 +90,20 @@ public protocol ODEStateLinearFunctional: ~Copyable {
     func evaluate(_ state: borrowing State) -> Double
 }
 
+/// A linear complex functional of an ODE state.
+///
+/// Dense Runge--Kutta output is a linear combination of the step-start state
+/// and stage derivatives. A conforming functional can therefore be evaluated
+/// directly on those stored values without constructing a full interpolated
+/// state. Component extraction, such as reading an accumulated hazard, is a
+/// typical use. Nonlinear event functions must instead be evaluated after
+/// interpolating the complete state.
+public protocol ODEStateComplexLinearFunctional: ~Copyable {
+    associatedtype State: ~Copyable
+
+    func evaluate(_ state: borrowing State) -> Complex<Double>
+}
+
 public protocol ODERHSFunction: ~Copyable, ~Escapable {
     associatedtype State: ~Copyable
 

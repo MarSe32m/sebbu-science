@@ -284,4 +284,34 @@ public struct UniqueRK4Solver<
 
         return 0.5 * (lowerTime + upperTime)
     }
+    
+    /// Evaluates a linear complex functional of the dense output without
+    /// constructing an interpolated state.
+    @inlinable
+    public func interpolateLastStep<Functional: ODEStateComplexLinearFunctional>(
+        at time: Double,
+        linearFunctional: borrowing Functional
+    ) -> Complex<Double> where Functional.State == State {
+        guard let lastStep = _lastStep else {
+            preconditionFailure("Dense output is unavailable before an accepted step")
+        }
+        precondition(
+            time >= lastStep.startTime && time <= lastStep.endTime,
+            "Dense-output time lies outside the last accepted step"
+        )
+
+        let theta = (time - lastStep.startTime) / lastStep.stepSize
+        let theta2 = theta * theta
+        let theta3 = theta2 * theta
+
+        let b1 = theta - 1.5 * theta2 + (2.0 / 3.0) * theta3
+        let b23 = theta2 - (2.0 / 3.0) * theta3
+        let b4 = -0.5 * theta2 + (2.0 / 3.0) * theta3
+        var accumulator: Complex<Double> = .zero
+        accumulator += b1 * linearFunctional.evaluate(k1)
+        accumulator += b23 * linearFunctional.evaluate(k2)
+        accumulator += b23 * linearFunctional.evaluate(k3)
+        accumulator += b4 * linearFunctional.evaluate(k4)
+        return linearFunctional.evaluate(temporary) + lastStep.stepSize * accumulator
+    }
 }
