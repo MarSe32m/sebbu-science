@@ -19,7 +19,7 @@ public extension RandomNumberGenerator {
         } while r2 >= 1.0 || r2 == 0.0
 
         // Box-Muller transform
-        let scale = (-2.0 * log(r2) / r2).squareRoot()
+        let scale = (-2.0 * .log(r2) / r2).squareRoot()
 
         return (x1 * scale, x2 * scale)
     }
