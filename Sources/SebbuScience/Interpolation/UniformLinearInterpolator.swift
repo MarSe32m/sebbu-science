@@ -7,6 +7,7 @@ import Numerics
 public struct UniformLinearInterpolator<Element> {
     public let start: Double
     public let step: Double
+    public var end: Double { start + Double(y.count - 1) * step }
     @usableFromInline
     internal let inverseStep: Double
     public let y: [Element]
