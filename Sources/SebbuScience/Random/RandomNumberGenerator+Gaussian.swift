@@ -5,35 +5,37 @@ import Numerics
 
 public extension RandomNumberGenerator {
     /// Generate next random value from a standard normal
+    /// Two independent standard-normal random variables.
     @inlinable
     mutating func nextGaussian() -> (Double, Double) {
-        var x1, x2, r2: Double
+        var x1: Double
+        var x2: Double
+        var r2: Double
+
         repeat {
-            x1 = Double.random(in: -1...1, using: &self)
-            x2 = Double.random(in: -1...1, using: &self)
+            x1 = nextSignedUnitDouble()
+            x2 = nextSignedUnitDouble()
             r2 = x1 * x1 + x2 * x2
-        } while r2 >= 1.0 || r2 == 0
+        } while r2 >= 1.0 || r2 == 0.0
+
         // Box-Muller transform
-        let f = (-2.0 * Double.log(r2) / r2).squareRoot()
-        return (f * x1, f * x2)
+        let scale = (-2.0 * log(r2) / r2).squareRoot()
+
+        return (x1 * scale, x2 * scale)
     }
     
     @inlinable
     mutating func nextGaussian(count: Int) -> [Double] {
         if count == 0 { return [] }
         if count == 1 { return [nextGaussian().0] }
-        var result: [Double] = [Double](repeating: .zero, count: count)
-        var index = 0
-        while result.count - index > 1 {
-            let gaussian = nextGaussian()
-            result[index] = gaussian.0
-            result[index + 1] = gaussian.1
-            index += 2
+        return .init(capacity: count) { span in 
+            while true {
+                let (gaussian1, gaussian2) = nextGaussian()
+                span.append(gaussian1)
+                if span.isFull { break }
+                span.append(gaussian2)
+            }
         }
-        if result.count - index == 1 {
-            result[index] = nextGaussian().0
-        }
-        return result
     }
 
     /// Generates a random value from a normal distribution with given mean and standard deviation using the Box-Muller transformation.
