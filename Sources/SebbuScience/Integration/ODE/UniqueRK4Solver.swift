@@ -12,7 +12,7 @@
 public struct UniqueRK4Solver<
     State: ~Copyable & FixedStepODESolverState,
     RHS: ~Copyable & ~Escapable & ODERHSFunction
->: ~Copyable, ~Escapable where RHS.State == State {
+>: ~Copyable, ~Escapable, UniqueFixedStepODESolver where RHS.State == State {
     @usableFromInline
     internal var _t: Double
     public var dt: Double

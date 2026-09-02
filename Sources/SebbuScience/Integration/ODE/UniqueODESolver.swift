@@ -117,3 +117,44 @@ public protocol ODERHSFunction: ~Copyable, ~Escapable {
         dy: inout State
     )
 }
+
+public protocol UniqueDenseOutputODESolver: ~Copyable, ~Escapable {
+    associatedtype State: ~Copyable, FixedStepODESolverState
+
+    var t: Double { get }
+    var lastStep: ODEStep? { get }
+
+    mutating func step(
+        y: inout State,
+        upTo endTime: Double
+    ) throws(ODESolverError) -> ODEStep
+
+    /// Restarts after a rollback or discontinuity.
+    mutating func restart(at time: Double)
+
+    /// Invalidates dense output and cached derivatives without changing time.
+    mutating func stateDidChange()
+
+    func interpolateLastStep(
+        at time: Double,
+        into result: inout State
+    )
+
+    func interpolateLastStep<
+        Functional: ODEStateLinearFunctional
+    >(
+        at time: Double,
+        linearFunctional: borrowing Functional
+    ) -> Double where Functional.State == State
+    
+    func interpolateLastStep<
+        Functional: ODEStateComplexLinearFunctional
+    >(
+        at time: Double,
+        linearFunctional: borrowing Functional
+    ) -> Complex<Double> where Functional.State == State
+}
+
+public protocol UniqueFixedStepODESolver: ~Copyable, ~Escapable, UniqueDenseOutputODESolver {}
+
+public protocol UniqueAdaptiveStepODESolver: ~Copyable, ~Escapable, UniqueDenseOutputODESolver where State: AdaptiveStepODESolverState {}

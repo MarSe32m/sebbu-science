@@ -16,7 +16,7 @@ import Numerics
 public struct UniqueDOPRISolver<
     State: ~Copyable & AdaptiveStepODESolverState,
     RHS: ~Copyable & ~Escapable & ODERHSFunction
->: ~Copyable, ~Escapable where RHS.State == State {
+>: ~Copyable, ~Escapable, UniqueAdaptiveStepODESolver where RHS.State == State {
     @usableFromInline
     internal var _t: Double
 
@@ -392,11 +392,17 @@ public struct UniqueDOPRISolver<
         }
     }
 
+    @inlinable
+    @inline(always)
+    public mutating func restart(at time: Double) {
+        restart(at: time, proposedStepSize: nil)
+    }
+    
     /// Restarts the solver after a discontinuity or rollback.
     @inlinable
     public mutating func restart(
         at time: Double,
-        proposedStepSize: Double? = nil
+        proposedStepSize: Double?
     ) {
         precondition(time.isFinite, "Restart time must be finite")
         if let proposedStepSize {
