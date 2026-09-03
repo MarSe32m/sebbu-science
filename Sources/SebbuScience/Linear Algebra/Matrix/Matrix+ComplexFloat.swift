@@ -226,7 +226,7 @@ public extension MatrixOperations {
         var rightEigenVectors: [Vector<Complex<Float>>] = [Vector<Complex<Float>>](repeating: .zero(N), count: N)
         for i in 0..<N {
             for j in 0..<N {
-                rightEigenVectors[j][i] = vl[N * i + j]
+                rightEigenVectors[j][i] = vr[N * i + j]
             }
         }
         return (eigenValues, rightEigenVectors)
