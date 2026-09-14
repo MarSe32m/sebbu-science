@@ -3,7 +3,7 @@
 
 import Numerics
 
-extension UnsafeMutablePointer where Pointee: AlgebraicField {
+public extension UnsafeMutablePointer where Pointee: AlgebraicField {
     @inlinable
     @inline(always)
     func _unsafeAdd(_ other: Self, count: Int) {
@@ -124,7 +124,7 @@ extension UnsafeMutablePointer where Pointee: AlgebraicField {
     }
 }
 
-extension UnsafeMutablePointer where Pointee == Complex<Double> {
+public extension UnsafeMutablePointer where Pointee == Complex<Double> {
     @inlinable
     @inline(always)
     func _unsafeAdd(_ other: Self, multiplied: Double, count: Int) {
@@ -243,7 +243,7 @@ extension UnsafeMutablePointer where Pointee == Complex<Double> {
     }
 }
 
-extension UnsafeMutablePointer where Pointee == Complex<Float> {
+public extension UnsafeMutablePointer where Pointee == Complex<Float> {
     @inlinable
     @inline(always)
     func _unsafeAdd(_ other: Self, multiplied: Float, count: Int) {
@@ -362,7 +362,7 @@ extension UnsafeMutablePointer where Pointee == Complex<Float> {
     }
 }
 
-extension UnsafeMutablePointer {
+public extension UnsafeMutablePointer {
     @inlinable
     @inline(always)
     func _unsafeCopy(from: Self, count: Int) {

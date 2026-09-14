@@ -8,6 +8,7 @@ public extension UniqueMatrix where T: AlgebraicField {
     /// The inverse of the matrix, if invertible.
     /// - Note: This operation is very expensive and will be calculated each time this variable is accessed.
     /// Thus you should store the inverse if you need it later again.
+    @inlinable
     var inverse: Self? { fatalError("TODO: Not yet implemented") }
     
     @inlinable

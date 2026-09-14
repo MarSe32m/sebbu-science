@@ -89,6 +89,97 @@ public extension UniqueMatrix where T: AlgebraicField {
     }
 }
 
+//MARK: Matrix-Vector multiplication for ConjugatableScalar
+public extension UniqueMatrix where T: ConjugatableScalar {
+    @inlinable
+    func adjointDot(_ vector: borrowing UniqueVector<T>) -> UniqueVector<T> {
+        var result: UniqueVector<T> = .zero(columns)
+        adjointDot(vector, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func adjointDot(_ vector: borrowing UniqueVector<T>, multiplied: T) -> UniqueVector<T> {
+        var result: UniqueVector<T> = .zero(columns)
+        adjointDot(vector, multiplied: multiplied, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func adjointDot(_ vector: borrowing UniqueVector<T>, into: inout UniqueVector<T>) {
+        precondition(vector.count == rows && into.count == columns, "Vector dimensions do not match")
+        unsafeAdjointDot(vector.components, into: into.components)
+    }
+    
+    @inlinable
+    func adjointDot(_ vector: borrowing UniqueVector<T>, multiplied: T, into: inout UniqueVector<T>) {
+        precondition(vector.count == rows && into.count == columns, "Vector dimensions do not match")
+        unsafeAdjointDot(vector.components, multiplied: multiplied, into: into.components)
+    }
+    
+    @inlinable
+    func adjointDot(_ vector: borrowing UniqueVector<T>, addingInto into: inout UniqueVector<T>) {
+        precondition(vector.count == rows && into.count == columns, "Vector dimensions do not match")
+        unsafeAdjointDot(vector.components, addingInto: into.components)
+    }
+    
+    @inlinable
+    func adjointDot(_ vector: borrowing UniqueVector<T>, multiplied: T, addingInto into: inout UniqueVector<T>) {
+        precondition(vector.count == rows && into.count == columns, "Vector dimensions do not match")
+        unsafeAdjointDot(vector.components, multiplied: multiplied, addingInto: into.components)
+    }
+    
+    @inlinable
+    func unsafeAdjointDot(_ vector: UnsafePointer<T>, into: UnsafeMutablePointer<T>) {
+        for j in 0..<columns { into[j] = .zero }
+        for i in 0..<rows {
+            let vi = vector[i]
+            for j in 0..<columns {
+                into[j] = Relaxed.multiplyAdd(self[unchecked: i, unchecked: j].conjugate, vi, into[j])
+            }
+        }
+    }
+    
+    @inlinable
+    func unsafeAdjointDot(_ vector: UnsafePointer<T>, multiplied: T, into: UnsafeMutablePointer<T>) {
+        for j in 0..<columns { into[j] = .zero }
+        for i in 0..<rows {
+            let scaledVector = Relaxed.product(vector[i], multiplied)
+            for j in 0..<columns {
+                into[j] = Relaxed.multiplyAdd(
+                    self[unchecked: i, unchecked: j].conjugate,
+                    scaledVector,
+                    into[j]
+                )
+            }
+        }
+    }
+    
+    @inlinable
+    func unsafeAdjointDot(_ vector: UnsafePointer<T>, addingInto into: UnsafeMutablePointer<T>) {
+        for i in 0..<rows {
+            let vi = vector[i]
+            for j in 0..<columns {
+                into[j] = Relaxed.multiplyAdd(self[unchecked: i, unchecked: j].conjugate, vi, into[j])
+            }
+        }
+    }
+    
+    @inlinable
+    func unsafeAdjointDot(_ vector: UnsafePointer<T>, multiplied: T, addingInto into: UnsafeMutablePointer<T>) {
+        for i in 0..<rows {
+            let scaledVector = Relaxed.product(vector[i], multiplied)
+            for j in 0..<columns {
+                into[j] = Relaxed.multiplyAdd(
+                    self[unchecked: i, unchecked: j].conjugate,
+                    scaledVector,
+                    into[j]
+                )
+            }
+        }
+    }
+}
+
 //MARK: Matrix-Vector multiplication for Double
 public extension UniqueMatrix<Double> {
     @inlinable
@@ -124,6 +215,46 @@ public extension UniqueMatrix<Double> {
     func unsafeDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = 1.0, addingInto into: UnsafeMutablePointer<T>) {
         let layout: BLAS.Layout = .rowMajor
         let trans: BLAS.Transpose = .noTranspose
+        let m = rows, n = columns
+        let lda = n
+        let beta: T = 1.0
+        BLAS.dgemv(layout: layout, transpose: trans, m: m, n: n, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
+    }
+    
+    
+    @inlinable
+    func adjointDotBLAS(_ vector: borrowing UniqueVector<T>, multiplied: T = 1.0) -> UniqueVector<T> {
+        var result: UniqueVector<T> = .zero(columns)
+        adjointDotBLAS(vector, multiplied: multiplied, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func adjointDotBLAS(_ vector: borrowing UniqueVector<T>, multiplied: T = 1.0, into: inout UniqueVector<T>) {
+        precondition(vector.count == rows && into.count == columns, "Vector dimensions do not match")
+        unsafeAdjointDotBLAS(vector.components, multiplied: multiplied, into: into.components)
+    }
+    
+    @inlinable
+    func adjointDotBLAS(_ vector: borrowing UniqueVector<T>, multiplied: T = 1.0, addingInto into: inout UniqueVector<T>) {
+        precondition(vector.count == rows && into.count == columns, "Vector dimensions do not match")
+        unsafeAdjointDotBLAS(vector.components, multiplied: multiplied, addingInto: into.components)
+    }
+    
+    @inlinable
+    func unsafeAdjointDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = 1.0, into: UnsafeMutablePointer<T>) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = rows, n = columns
+        let lda = n
+        let beta: T = .zero
+        BLAS.dgemv(layout: layout, transpose: trans, m: m, n: n, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
+    }
+    
+    @inlinable
+    func unsafeAdjointDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = 1.0, addingInto into: UnsafeMutablePointer<T>) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
         let m = rows, n = columns
         let lda = n
         let beta: T = 1.0
@@ -171,6 +302,45 @@ public extension UniqueMatrix<Float> {
         let beta: T = 1.0
         BLAS.sgemv(layout: layout, transpose: trans, m: m, n: n, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
+    
+    @inlinable
+    func adjointDotBLAS(_ vector: borrowing UniqueVector<T>, multiplied: T = 1.0) -> UniqueVector<T> {
+        var result: UniqueVector<T> = .zero(columns)
+        adjointDotBLAS(vector, multiplied: multiplied, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func adjointDotBLAS(_ vector: borrowing UniqueVector<T>, multiplied: T = 1.0, into: inout UniqueVector<T>) {
+        precondition(vector.count == columns && into.count == rows, "Vector dimensions do not match")
+        unsafeAdjointDotBLAS(vector.components, multiplied: multiplied, into: into.components)
+    }
+    
+    @inlinable
+    func adjointDotBLAS(_ vector: borrowing UniqueVector<T>, multiplied: T = 1.0, addingInto into: inout UniqueVector<T>) {
+        precondition(vector.count == columns && into.count == rows, "Vector dimensions do not match")
+        unsafeAdjointDotBLAS(vector.components, multiplied: multiplied, addingInto: into.components)
+    }
+    
+    @inlinable
+    func unsafeAdjointDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = 1.0, into: UnsafeMutablePointer<T>) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = rows, n = columns
+        let lda = n
+        let beta: T = .zero
+        BLAS.sgemv(layout: layout, transpose: trans, m: m, n: n, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
+    }
+    
+    @inlinable
+    func unsafeAdjointDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = 1.0, addingInto into: UnsafeMutablePointer<T>) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .transpose
+        let m = rows, n = columns
+        let lda = n
+        let beta: T = 1.0
+        BLAS.sgemv(layout: layout, transpose: trans, m: m, n: n, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
+    }
 }
 
 //MARK: Matrix-Vector multiplication for Complex<Double>
@@ -213,6 +383,45 @@ public extension UniqueMatrix<Complex<Double>> {
         let beta: T = .one
         BLAS.zgemv(layout: layout, transpose: trans, m: m, n: n, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
     }
+    
+    @inlinable
+    func adjointDotBLAS(_ vector: borrowing UniqueVector<T>, multiplied: T = .one) -> UniqueVector<T> {
+        var result: UniqueVector<T> = .zero(columns)
+        adjointDotBLAS(vector, multiplied: multiplied, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func adjointDotBLAS(_ vector: borrowing UniqueVector<T>, multiplied: T = .one, into: inout UniqueVector<T>) {
+        precondition(vector.count == columns && into.count == rows, "Vector dimensions do not match")
+        unsafeAdjointDotBLAS(vector.components, multiplied: multiplied, into: into.components)
+    }
+    
+    @inlinable
+    func adjointDotBLAS(_ vector: borrowing UniqueVector<T>, multiplied: T = .one, addingInto into: inout UniqueVector<T>) {
+        precondition(vector.count == columns && into.count == rows, "Vector dimensions do not match")
+        unsafeAdjointDotBLAS(vector.components, multiplied: multiplied, addingInto: into.components)
+    }
+    
+    @inlinable
+    func unsafeAdjointDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = .one, into: UnsafeMutablePointer<T>) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .conjugateTranspose
+        let m = rows, n = columns
+        let lda = n
+        let beta: T = .zero
+        BLAS.zgemv(layout: layout, transpose: trans, m: m, n: n, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
+    }
+    
+    @inlinable
+    func unsafeAdjointDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = .one, addingInto into: UnsafeMutablePointer<T>) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .conjugateTranspose
+        let m = rows, n = columns
+        let lda = n
+        let beta: T = .one
+        BLAS.zgemv(layout: layout, transpose: trans, m: m, n: n, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
+    }
 }
 
 //MARK: Matrix-Vector multiplication for Complex<Float>
@@ -250,6 +459,45 @@ public extension UniqueMatrix<Complex<Float>> {
     func unsafeDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = .one, addingInto into: UnsafeMutablePointer<T>) {
         let layout: BLAS.Layout = .rowMajor
         let trans: BLAS.Transpose = .noTranspose
+        let m = rows, n = columns
+        let lda = n
+        let beta: T = .one
+        BLAS.cgemv(layout: layout, transpose: trans, m: m, n: n, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
+    }
+    
+    @inlinable
+    func adjointDotBLAS(_ vector: borrowing UniqueVector<T>, multiplied: T = .one) -> UniqueVector<T> {
+        var result: UniqueVector<T> = .zero(columns)
+        dotBLAS(vector, multiplied: multiplied, into: &result)
+        return result
+    }
+    
+    @inlinable
+    func adjointDotBLAS(_ vector: borrowing UniqueVector<T>, multiplied: T = .one, into: inout UniqueVector<T>) {
+        precondition(vector.count == columns && into.count == rows, "Vector dimensions do not match")
+        unsafeDotBLAS(vector.components, multiplied: multiplied, into: into.components)
+    }
+    
+    @inlinable
+    func adjointDotBLAS(_ vector: borrowing UniqueVector<T>, multiplied: T = .one, addingInto into: inout UniqueVector<T>) {
+        precondition(vector.count == columns && into.count == rows, "Vector dimensions do not match")
+        unsafeAdjointDotBLAS(vector.components, multiplied: multiplied, addingInto: into.components)
+    }
+    
+    @inlinable
+    func unsafeAdjointDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = .one, into: UnsafeMutablePointer<T>) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .conjugateTranspose
+        let m = rows, n = columns
+        let lda = n
+        let beta: T = .zero
+        BLAS.cgemv(layout: layout, transpose: trans, m: m, n: n, alpha: multiplied, a: elements, lda: lda, x: vector, incX: 1, beta: beta, y: into, incY: 1)
+    }
+    
+    @inlinable
+    func unsafeAdjointDotBLAS(_ vector: UnsafePointer<T>, multiplied: T = .one, addingInto into: UnsafeMutablePointer<T>) {
+        let layout: BLAS.Layout = .rowMajor
+        let trans: BLAS.Transpose = .conjugateTranspose
         let m = rows, n = columns
         let lda = n
         let beta: T = .one
