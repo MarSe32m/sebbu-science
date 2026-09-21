@@ -15,7 +15,7 @@ public extension RandomNumberGenerator {
     @inlinable
     @inline(always)
     mutating func nextUnitDoubleOpen() -> Double {
-        (Double(next() >> 11) + 0.5) * 0x1.0p-53
+        min((Double(next() >> 11) + 0.5) * 0x1.0p-53, Double(1).nextDown)
     }
 
     /// Uniform random Double in [-1, 1).

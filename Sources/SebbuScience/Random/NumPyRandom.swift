@@ -5,6 +5,7 @@ import Numerics
 
 /// Random number generator implementing the NumPy's C [implementation](https://github.com/numpy/numpy/blob/v1.0/numpy/random/mtrand/randomkit.c).
 /// The implementation uses a Mersenne Twister 19937 generator under the hood.
+@available(*, deprecated, message: "This random number generator is obsolete. Prefer using for example Xoshiro, SplitMix64 or Pihlox4x64.")
 public struct NumPyRandom: RandomNumberGenerator {
     @usableFromInline
     internal struct _RandomGeneratorState {

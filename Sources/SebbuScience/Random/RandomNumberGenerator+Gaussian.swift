@@ -25,16 +25,34 @@ public extension RandomNumberGenerator {
     }
     
     @inlinable
+    mutating func nextGaussian(filling span: inout MutableSpan<Double>) {
+        if span.isEmpty { return }
+        var index = 0
+        while index < span.count - 1 {
+            let pair = nextGaussian()
+            span[index] = pair.0
+            span[index &+ 1] = pair.1
+            index &+= 1
+        }
+        if index < span.count {
+            span[index] = nextGaussian().0
+        }
+    }
+    
+    @inlinable
+    mutating func nextGaussian(filling span: inout OutputSpan<Double>) {
+        while !span.isFull {
+            let pair = nextGaussian()
+            span.append(pair.0)
+            if !span.isFull { span.append(pair.1) }
+        }
+    }
+    
+    @inlinable
     mutating func nextGaussian(count: Int) -> [Double] {
-        if count == 0 { return [] }
-        if count == 1 { return [nextGaussian().0] }
-        return .init(capacity: count) { span in 
-            while true {
-                let (gaussian1, gaussian2) = nextGaussian()
-                span.append(gaussian1)
-                if span.isFull { break }
-                span.append(gaussian2)
-            }
+        precondition(count >= 0)
+        return .init(capacity: count) { span in
+            nextGaussian(filling: &span)
         }
     }
 
