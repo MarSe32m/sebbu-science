@@ -17,6 +17,10 @@ public struct UniqueCSRMatrix<T>: ~Copyable {
     public let columns: Int
     public let rows: Int
     
+    public var nonZeroElements: Int {
+        values.count
+    }
+    
     @inlinable
     var transpose: UniqueCSRMatrix<T> {
         //TODO: Is there a way to optimize this?
@@ -140,15 +144,13 @@ public extension UniqueCSRMatrix where T: AlgebraicField {
             fatalError("Not implemented")
         }
     }
-}
-
-public extension UniqueCSRMatrix where T == Complex<Double> {
+    
     @inlinable
-    init(from matrix: Matrix<T>, relativeTolerance: T.Magnitude = .ulpOfOne.squareRoot()) {
+    init(from matrix: Matrix<T>) {
         var rowColumnValueTuples: [(row: Int, column: Int, value: T)] = []
         for i in 0..<matrix.rows {
             for j in 0..<matrix.columns {
-                if matrix[i, j].isApproximatelyEqual(to: .zero)  {
+                if matrix[i, j] != .zero  {
                     rowColumnValueTuples.append((i, j, matrix[i, j]))
                 }
             }
@@ -157,6 +159,22 @@ public extension UniqueCSRMatrix where T == Complex<Double> {
         setValuesFromRowColumnValueTuples(tuples: rowColumnValueTuples)
     }
     
+    @inlinable
+    init(from matrix: borrowing UniqueMatrix<T>) {
+        var rowColumnValueTuples: [(row: Int, column: Int, value: T)] = []
+        for i in 0..<matrix.rows {
+            for j in 0..<matrix.columns {
+                if matrix[i, j] != .zero {
+                    rowColumnValueTuples.append((i, j, matrix[i, j]))
+                }
+            }
+        }
+        self = .zero(rows: matrix.rows, columns: matrix.columns)
+        setValuesFromRowColumnValueTuples(tuples: rowColumnValueTuples)
+    }
+}
+
+public extension UniqueCSRMatrix where T == Complex<Double> {
     @inlinable
     var conjugate: UniqueCSRMatrix<T> {
         let newValues: UniqueArray<T> = .init(capacity: values.count) { span in
@@ -228,6 +246,7 @@ public extension UniqueCSRMatrix where T: AlgebraicField {
     static func zero(rows: Int, columns: Int) -> Self {
         .init(rows: rows, columns: columns, values: .init(), rowIndices: .init(), columnIndices: .init())
     }
+    
     @inlinable
     @_optimize(speed)
     func dot(_ vector: Vector<T>) -> Vector<T> {

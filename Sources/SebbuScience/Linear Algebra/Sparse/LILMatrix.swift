@@ -11,6 +11,14 @@ public struct LILMatrix<T>: SparseMatrix where T: AlgebraicField {
     public let rows: Int
     public let columns: Int
     
+    public var nonZeroElements: Int {
+        var result = 0
+        for row in rowList {
+            result += row.count
+        }
+        return result
+    }
+    
     public init(rows: Int, columns: Int) {
         self.rows = rows
         self.columns = columns

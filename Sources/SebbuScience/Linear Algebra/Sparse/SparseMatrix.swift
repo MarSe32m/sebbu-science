@@ -9,6 +9,7 @@ public protocol SparseMatrix: CustomStringConvertible {
     
     var rows: Int { get }
     var columns: Int { get }
+    var nonZeroElements: Int { get }
     
     func rowColumnValueTuples() -> [(row: Int, column: Int, value: T)]
 }
