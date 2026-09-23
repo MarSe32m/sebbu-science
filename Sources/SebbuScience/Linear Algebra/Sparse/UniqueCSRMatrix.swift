@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumericsExtensions
-import BasicContainers
 
 public struct UniqueCSRMatrix<T>: ~Copyable {
     @usableFromInline

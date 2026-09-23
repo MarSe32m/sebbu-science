@@ -1,10 +1,10 @@
-// swift-tools-version: 6.2
+// swift-tools-version: 6.4
 
 import PackageDescription
 
 let package = Package(
     name: "sebbu-science",
-    platforms: [.macOS(.v26)],
+    platforms: [.macOS(.v27)],
     products: [
         .library(name: "SebbuScience", targets: ["SebbuScience"]),
     ],
@@ -41,7 +41,6 @@ let package = Package(
                 .target(name: "_SebbuScienceCommon"),
                 .target(name: "NumericsExtensions"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
-                .product(name: "BasicContainers", package: "swift-collections"),
                 .product(name: "Numerics", package: "swift-numerics"),
                 .product(name: "SebbuCollections", package: "sebbu-collections"),
                 .product(name: "SebbuBLAS", package: "sebbu-blas"),
