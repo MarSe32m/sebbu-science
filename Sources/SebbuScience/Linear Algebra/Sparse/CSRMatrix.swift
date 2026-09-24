@@ -49,6 +49,18 @@ public struct CSRMatrix<T>: SparseMatrix {
     }
     
     @inlinable
+    public init(copying matrix: CSRMatrix<T>) {
+        self.init(rows: matrix.rows, columns: matrix.columns, values: matrix.values, rowIndices: matrix.rowIndices, columnIndices: matrix.columnIndices)
+    }
+    
+    @inlinable
+    public init(copying matrix: borrowing UniqueCSRMatrix<T>) where T: Copyable {
+        let rowColumnValueTuples = matrix.rowColumnValueTuples()
+        self.init(rows: matrix.rows, columns: matrix.columns, values: [], rowIndices: [], columnIndices: [])
+        setValuesFromRowColumnValueTuples(tuples: rowColumnValueTuples)
+    }
+    
+    @inlinable
     public func rowColumnValueTuples() -> [(row: Int, column: Int, value: T)] {
         var result: [(row: Int, column: Int, value: T)] = []
         for row in 0..<rows {
