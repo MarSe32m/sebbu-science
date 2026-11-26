@@ -22,9 +22,9 @@ public extension Array<Complex<Float>> {
 }
 
 public extension Array<Double> {
-    static func linearSpace(_ from: Double, _ to: Double, _ count: Int) -> Self {
-        (0..<count).map { i in
-            let t = Double(i) / Double(count)
+    static func linearSpace(_ from: Double, _ to: Double, _ intervals: Int) -> Self {
+        (0...intervals).map { i in
+            let t = Double(i) / Double(intervals)
             return from * (1 - t) + to * t
         }
     }

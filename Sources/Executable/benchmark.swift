@@ -28,7 +28,7 @@ public func benchmarkOperationDouble(name: String, runs: Int, iterations: Int, m
     var naiveTimes: [Int] = []
     var blasTimes: [Int] = []
     let dimensions = (2...maxDimension).map { $0 }
-    var random = NumPyRandom()
+    var random = Xoshiro256PlusPlus(seed: 0xC0FFEE)
     for dimension in dimensions {
         print("\(name): \((100 * dimension) / maxDimension) %")
         var x: Vector<Double> = .init((0..<dimension).map { _ in .random(in: -10...10, using: &random) } )
@@ -73,7 +73,7 @@ public func benchmarkOperationFloat(name: String, runs: Int, iterations: Int, ma
     var naiveTimes: [Int] = []
     var blasTimes: [Int] = []
     let dimensions = (2...maxDimension).map { $0 }
-    var random = NumPyRandom()
+    var random = Xoshiro256PlusPlus(seed: 0xC0FFEE)
     for dimension in dimensions {
         print("\(name): \((100 * dimension) / maxDimension) %")
         var x: Vector<Float> = .init((0..<dimension).map { _ in .random(in: -10...10, using: &random) } )
@@ -118,7 +118,7 @@ public func benchmarkOperationComplexDouble(name: String, runs: Int, iterations:
     var naiveTimes: [Int] = []
     var blasTimes: [Int] = []
     let dimensions = (2...maxDimension).map { $0 }
-    var random = NumPyRandom()
+    var random = Xoshiro256PlusPlus(seed: 0xC0FFEE)
     for dimension in dimensions {
         print("\(name): \((100 * dimension) / maxDimension) %")
         var x: Vector<Complex<Double>> = .init((0..<dimension).map { _ in .random(in: -10...10, using: &random) } )
@@ -163,7 +163,7 @@ public func benchmarkOperationComplexFloat(name: String, runs: Int, iterations: 
     var naiveTimes: [Int] = []
     var blasTimes: [Int] = []
     let dimensions = (2...maxDimension).map { $0 }
-    var random = NumPyRandom()
+    var random = Xoshiro256PlusPlus(seed: 0xC0FFEE)
     for dimension in dimensions {
         print("\(name): \((100 * dimension) / maxDimension) %")
         var x: Vector<Complex<Float>> = .init((0..<dimension).map { _ in .random(in: -10...10, using: &random) } )
@@ -213,7 +213,7 @@ public func plot(_ result: BenchmarkResult) {
     plt.close()
 }
 
-public func generateSymmetricMatrix<T: BinaryFloatingPoint & AlgebraicField>(dimension: Int, rng: inout NumPyRandom) -> Matrix<T> where T.RawSignificand: FixedWidthInteger {
+public func generateSymmetricMatrix<T: BinaryFloatingPoint & AlgebraicField, RNG: RandomNumberGenerator>(dimension: Int, rng: inout RNG) -> Matrix<T> where T.RawSignificand: FixedWidthInteger {
     var result: Matrix<T> = .zeros(rows: dimension, columns: dimension)
     for i in 0..<dimension {
         for j in i..<dimension {
@@ -225,7 +225,7 @@ public func generateSymmetricMatrix<T: BinaryFloatingPoint & AlgebraicField>(dim
     return result
 }
 
-public func generateHermitianMatrix<R: Real>(dimension: Int, rng: inout NumPyRandom) -> Matrix<Complex<R>> where R: BinaryFloatingPoint, R.RawSignificand: FixedWidthInteger {
+public func generateHermitianMatrix<R: Real, RNG: RandomNumberGenerator>(dimension: Int, rng: inout RNG) -> Matrix<Complex<R>> where R: BinaryFloatingPoint, R.RawSignificand: FixedWidthInteger {
     var result: Matrix<Complex<R>> = .zeros(rows: dimension, columns: dimension)
     for i in 0..<dimension {
         for j in i..<dimension {

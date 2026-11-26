@@ -21,14 +21,14 @@ func testMultiNoiseSRK2() {
 }
 
 private func noiseDouble(tSpace: [Double], deviation: Double = 1.0) -> (Double) -> Double {
-    var random = NumPyRandom()
+    var random = Xoshiro256PlusPlus(seed: 0xC0FFEE)
     let samples: [Double] = random.nextNormal(count: tSpace.count)
     let spline = NearestNeighbourInterpolator(x: tSpace, y: samples)
     return { t in deviation * spline.sample(t) }
 }
 
 private func noiseComplex(tSpace: [Double], deviation: Double = 1.0) -> (Double) -> Complex<Double> {
-    var random = NumPyRandom()
+    var random = Xoshiro256PlusPlus(seed: 0xC0FFEE)
     let samples: [Complex<Double>] = random.nextNormal(count: tSpace.count)
     let spline = NearestNeighbourInterpolator(x: tSpace, y: samples)
     return { t in deviation * spline.sample(t) }

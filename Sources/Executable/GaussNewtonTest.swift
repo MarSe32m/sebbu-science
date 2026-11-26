@@ -12,7 +12,7 @@ public func _testGaussNewtonDouble() {
             //.cos(x)
     }
     let tSpace = [Double].linearSpace(0, .pi, 200)
-    var random = NumPyRandom()
+    var random = Xoshiro256PlusPlus(seed: 0xC0FFEE)
     let exact = tSpace.map { x in targetFunc(x) + random.nextNormal(mean: 0.0, stdev: 0.001) as Double }
     for iterations in 1..<1000 {
         let result = Optimize.gaussNewton(initial: initialParameters, maxIterations: iterations, residuals: { parameters in
@@ -57,7 +57,7 @@ public func _testLevenbergMarquardt() {
             .cos(x)
     }
     let tSpace = [Double].linearSpace(0, .pi, 200)
-    var random = NumPyRandom()
+    var random = Xoshiro256PlusPlus(seed: 0xC0FFEE)
     let exact = tSpace.map { x in targetFunc(x) + random.nextNormal(mean: 0.0, stdev: 0.001) as Double }
     for iterations in 1..<1000 {
         let result = try! Optimize.levenbergMarquardt(initial: initialParameters) { parameters in
